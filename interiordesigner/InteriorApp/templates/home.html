@@ -1,0 +1,228 @@
+{% load static %}
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aura Designs - Home</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Times New Roman, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        header {
+            background-color: #333;
+            color: white;
+            padding: 15px 0;
+            text-align: center;
+            position: relative;
+        }
+        header h1 {
+            margin: 0;
+        }
+        nav {
+            background-color: #444;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+        }
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+            padding: 10px 20px;
+            border-radius: 5px;
+            background-color: black;
+            transition: background-color 0.3s ease;
+            display: inline-block;
+            font-weight: bold;
+        }
+        nav a:hover {
+            background-color: #333;
+        }
+        .hero {
+            background-image: url('images/hero-design.jpg');
+            background-size: cover;
+            background-position: center;
+            height: 400px;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+        }
+        .hero h2 {
+            font-size: 48px;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
+            margin-bottom: 20px;
+        }
+        .section-title {
+            text-align: center;
+            margin: 40px 0;
+            font-size: 32px;
+            color: #444;
+        }
+        .portfolio, .services {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 0 15px;
+        }
+        .portfolio img, .service-box img {
+            width: 300px;
+            height: 200px;
+            margin: 15px;
+            border-radius: 8px;
+            object-fit: cover;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease-in-out;
+        }
+        .portfolio img:hover {
+            transform: scale(1.05);
+        }
+        .about, .services {
+            background-color: white;
+            padding: 60px 20px;
+            text-align: center;
+        }
+        .about p, .service-box p {
+            font-size: 18px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        .service-box {
+            text-align: center;
+            width: 30%;
+            padding: 20px;
+            background-color: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+        .service-box img {
+            width: 400px;
+            margin-bottom: 20px;
+        }
+        footer {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+        footer p {
+            margin: 0;
+        }
+        .section-btn {
+            display: block;
+            width: 200px;
+            padding: 10px;
+            margin: 20px auto;
+            text-align: center;
+            background-color: black;
+            color: white;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .section-btn:hover {
+            background-color: #333;
+        }
+        
+        /* Positioning login and register above portfolio section */
+        .btn-container-centered {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            margin-bottom: 40px;
+        }
+        .btn-container-centered a {
+            background-color: black;
+            color: white;
+            padding: 20px 40px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 24px;
+            font-weight: bold;
+            margin-left: 20px;
+            transition: background-color 0.3s ease;
+        }
+        .btn-container-centered a:hover {
+            background-color: #555;
+        }
+    </style>
+</head>
+<body style="background-color: #C7A350">
+
+    <!-- Header Section -->
+    <header>
+        <h1> AURA DESIGNS</h1>
+        <p></p>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <h2>Your Dream Spaces Start Here</h2>
+        <br>
+        <br>
+        <br><br>
+
+        <!-- Login/Register Buttons placed between Hero text and Explore Designs -->
+        <div class="btn-container-centered">
+            <a href="/login">Login</a>
+            <a href="/register">Register</a>
+        </div>
+    </section>
+
+    <!-- Explore Designs Button -->
+
+    <!-- Portfolio Section -->
+    <section id="portfolio">
+        <h2 class="section-title">Design Portfolio</h2>
+        <div class="portfolio">
+            <img src="{% static 'images/Office-Design.jpeg' %}">
+            <img src="{% static 'images/living_room.jpeg' %}">
+            <img src="{% static 'images/Dining-Room.jpeg' %}">
+            <img src="{% static 'images/Bedroom-Design.jpeg' %}">
+            <img src="{% static 'images/Kitchen-Design.jpeg' %}">
+            <img src="{% static 'images/Bathroom-Design.jpeg' %}">
+            <img src="{% static 'images/Kitchen-Design.jpeg' %}">
+        </div>
+    </section>
+
+    <!-- About Us Section -->
+
+    <!-- Services Section -->
+    <a href="#services" class="section-btn">Explore Our Services</a>
+    <section id="services" class="services">
+        <div class="service-box">
+            <img src="{% static 'images/home-design2.jpeg' %}" alt="Service 1">
+            <h3>Home Design</h3>
+            <p>We craft modern and luxurious home interiors that match your lifestyle and taste.</p>
+        </div>
+        <div class="service-box">
+            <img src="{% static 'images/office-design2.jpeg' %}" alt="Service 2">
+            <h3>Office Design</h3>
+            <p>Our office designs are built to foster creativity and productivity while maintaining a professional look.</p>
+        </div>
+        <div class="service-box">
+            <img src="{% static 'images/furniture.jpeg' %}" alt="Service 3">
+            <h3>Custom Furniture</h3>
+            <p>Our custom-made furniture adds a unique touch to any space with functionality and style.</p>
+        </div>
+    </section>
+
+    <!-- Footer Section -->
+    <footer>
+        <p>&copy; 2024 AURA DESIGNS. All Rights Reserved.</p>
+    </footer>
+
+</body>
+</html>

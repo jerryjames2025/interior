@@ -1,0 +1,177 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio | Virtual Interior Designer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        header {
+            background-color: #333;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        header h1 {
+            margin: 0;
+        }
+        nav {
+            background-color: #444;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+        }
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+            margin: 0 15px;
+        }
+        nav a:hover {
+            text-decoration: underline;
+        }
+        .section-title {
+            text-align: center;
+            margin: 40px 0;
+            font-size: 32px;
+            color: #444;
+        }
+        .portfolio-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 0 20px;
+        }
+        .portfolio-item {
+            position: relative;
+            overflow: hidden;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            background-color: white;
+        }
+        .portfolio-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease-in-out;
+        }
+        .portfolio-item:hover img {
+            transform: scale(1.05);
+        }
+        .portfolio-info {
+            position: absolute;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            width: 100%;
+            padding: 10px;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+        .portfolio-item:hover .portfolio-info {
+            opacity: 1;
+        }
+        .portfolio-info h3 {
+            margin: 0;
+            font-size: 20px;
+        }
+        .portfolio-info p {
+            margin-top: 5px;
+            font-size: 14px;
+        }
+        footer {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-top: 40px;
+        }
+        footer p {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Section -->
+    <header>
+        <h1>Our Portfolio</h1>
+        <p>Explore Our Interior Design Projects</p>
+    </header>
+
+    <!-- Navigation Bar -->
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="#portfolio">Portfolio</a>
+        <a href="#about">About Us</a>
+        <a href="#services">Services</a>
+        <a href="#contact">Contact</a>
+    </nav>
+
+    <!-- Portfolio Section -->
+    <section id="portfolio">
+        <h2 class="section-title">Design Projects</h2>
+        <div class="portfolio-grid">
+            <div class="portfolio-item">
+                <img src="{% static 'images/Dining-Room.jpeg' %}" alt="" class="img-fluid">
+                <div class="portfolio-info">
+                    <h3>Modern Living Room</h3>
+                    <p>Elegant and stylish living room design with a modern touch.</p>
+                </div>
+            </div>
+            <div class="portfolio-item">
+                <img src="{% static 'images/Bedroom-Design.jpeg' %}" alt="" class="img-fluid">
+                <div class="portfolio-info">
+                    <h3>Cozy Bedroom</h3>
+                    <p>Warm and comfortable bedroom design for relaxation.</p>
+                </div>
+            </div>
+            <div class="portfolio-item">
+                <img src="{% static 'images/Kitchen-Design.jpeg' %}" alt="" class="img-fluid">
+                <div class="portfolio-info">
+                    <h3>Contemporary Kitchen</h3>
+                    <p>A sleek, modern kitchen with cutting-edge design features.</p>
+                </div>
+            </div>
+            <div class="portfolio-item">
+                <img src="{% static 'images/Office-Design.jpeg' %}" alt="" class="img-fluid">
+                <div class="portfolio-info">
+                    <h3>Home Office</h3>
+                    <p>A functional home office designed to boost productivity.</p>
+                </div>
+            </div>
+            <div class="portfolio-item">
+                <img src="{% static 'images/Bathroom-Design.jpeg' %}" alt="" class="img-fluid">
+                <div class="portfolio-info">
+                    <h3>Luxurious Bathroom</h3>
+                    <p>Chic and clean bathroom with a spa-like atmosphere.</p>
+                </div>
+            </div>
+            <div class="portfolio-item">
+                <img src="{% static 'images/Dining-Room.jpeg' %}" alt="" class="img-fluid">
+                <div class="portfolio-info">
+                    <h3>Elegant Dining Room</h3>
+                    <p>Formal dining room design with classic aesthetics.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer Section -->
+    <footer>
+        <p>&copy; 2024 Virtual Interior Designer. All Rights Reserved.</p>
+    </footer>
+
+</body>
+</html>

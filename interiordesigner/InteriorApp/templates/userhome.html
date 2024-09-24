@@ -1,0 +1,201 @@
+{% load static %}
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Interior Designer - Home</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Times New Roman, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        header {
+            background-color: #333;
+            color: white;
+            padding: 15px 0;
+            text-align: center;
+            position: relative;
+        }
+        header h1 {
+            margin: 0;
+        }
+        .btn-container {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+        }
+        .btn-container a {
+            background-color: white;
+            color: black;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .btn-container a:hover {
+            background-color: #f4f4f4;
+        }
+        nav {
+            background-color: white;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+        }
+        nav a {
+            color: black;
+            text-decoration: none;
+            font-size: 16px;
+            padding: 10px 20px; 
+            border-radius: 5px;
+            background-color: #f4f4f4; 
+            transition: background-color 0.3s ease;
+            display: inline-block;
+            font-weight: bold;
+        }
+        nav a:hover {
+            background-color: #ddd;
+        }
+        .hero {
+            background-image: url('{% static "images/hero-design.jpg" %}');
+            background-size: cover;
+            background-position: center;
+            height: 400px;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .hero h2 {
+            font-size: 48px;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
+        }
+        .section-title {
+            text-align: center;
+            margin: 40px 0;
+            font-size: 32px;
+            color: #444;
+        }
+        .products {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 0 15px;
+        }
+        .product-box {
+            width: 300px;
+            margin: 15px;
+            border-radius: 8px;
+            background-color: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            padding: 20px;
+            transition: transform 0.3s ease-in-out;
+        }
+        .product-box:hover {
+            transform: scale(1.05);
+        }
+        .product-box img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        .product-box h3 {
+            margin: 10px 0;
+        }
+        .product-box p {
+            margin: 5px 0;
+            font-size: 16px;
+        }
+        .product-box a {
+            text-decoration: none;
+            color: white;
+            background-color: black;
+            padding: 10px 20px;
+            border-radius: 5px;
+            display: inline-block;
+            margin-top: 10px;
+        }
+        .product-box a:hover {
+            background-color: #333;
+        }
+        footer {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+        footer p {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Section -->
+    <header>
+        <h1>Virtual Interior Designer</h1>
+        <p>Transforming spaces with elegance</p>
+    </header>
+
+    <!-- Navigation Bar -->
+    <nav>
+        <a href="#portfolio">Portfolio</a>
+        <a href="#about">About Us</a>
+        <a href="#services">Services</a>
+        <a href="#contact">Contact</a>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <h2>Your Dream Spaces Start Here</h2>
+    </section>
+
+    <!-- Products Section -->
+    <section id="products">
+        <h2 class="section-title">Furniture & Decor Items</h2>
+        <div class="products">
+            <div class="product-box">
+                <img src="{% static 'images/sofa.jpeg' %}" alt="Sofa">
+                <h3>Modern Sofa</h3>
+                <p>Price: $500</p>
+                <a href="#">View Details</a>
+            </div>
+            <div class="product-box">
+                <img src="{% static 'images/dining_table.jpeg' %}" alt="Dining Table">
+                <h3>Dining Table Set</h3>
+                <p>Price: $700</p>
+                <a href="#">View Details</a>
+            </div>
+            <div class="product-box">
+                <img src="{% static 'images/bed.jpeg' %}" alt="Bed">
+                <h3>King Size Bed</h3>
+                <p>Price: $1000</p>
+                <a href="#">View Details</a>
+            </div>
+            <div class="product-box">
+                <img src="{% static 'images/lamp.jpeg' %}" alt="Lamp">
+                <h3>Decorative Lamp</h3>
+                <p>Price: $80</p>
+                <a href="#">View Details</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer Section -->
+    <footer>
+        <p>&copy; 2024 Virtual Interior Designer. All Rights Reserved.</p>
+    </footer>
+
+</body>
+</html>
