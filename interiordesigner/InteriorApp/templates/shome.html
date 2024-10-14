@@ -1,0 +1,151 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seller Home - Manage Products</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            background-color: #f4f4f4;
+        }
+
+        header {
+            background-color: #333;
+            color: white;
+            padding: 10px 0;
+            text-align: center;
+        }
+
+        header h1 {
+            margin: 0;
+        }
+
+        nav {
+            background-color: #444;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            background-color: black;
+            transition: background-color 0.3s ease;
+            font-weight: bold;
+        }
+
+        nav a:hover {
+            background-color: #333;
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 40px;
+        }
+
+        .product-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .product-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .product-card h3 {
+            font-size: 20px;
+            margin: 10px 0;
+        }
+
+        .product-card p {
+            color: #666;
+        }
+
+        .product-card button {
+            background-color: #C7A350;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+
+        .product-card button:hover {
+            background-color: #333;
+        }
+
+        .product-card:hover {
+            transform: scale(1.05);
+        }
+
+        .add-product-btn {
+            display: block;
+            margin: 20px auto;
+            padding: 15px 30px;
+            background-color: #C7A350;
+            color: white;
+            text-align: center;
+            font-size: 18px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+
+        .add-product-btn:hover {
+            background-color: #333;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Section -->
+    <header>
+        <h1>Seller Dashboard - Manage Products</h1>
+    </header>
+
+    <!-- Navigation Section -->
+    <nav>
+       
+        <a href="/logout">Logout</a>
+    </nav>
+
+    <!-- Add Product Button -->
+    <a href="/add-product" class="add-product-btn">Add New Product</a>
+
+    <!-- Products Grid Section -->
+    <section class="products-grid">
+        {% for product in products %}
+        <div class="product-card">
+            <img src="{{ product.image.url }}" alt="{{ product.product_name }}">
+            <h3>{{ product.product_name }}</h3>
+            <p>${{ product.price }}</p>
+            <a href="{% url 'edit_product' product.id %}" class="btn btn-sm btn-warning">Edit</a>
+        </div>
+        {% endfor %}
+    </section>
+
+</body>
+</html>

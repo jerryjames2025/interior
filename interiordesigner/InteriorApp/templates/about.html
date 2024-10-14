@@ -1,0 +1,183 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>AURA DESIGNS - About Us</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <meta content="Free HTML Templates" name="keywords">
+    <meta content="Free HTML Templates" name="description">
+
+    <!-- Favicon -->
+    <link href="{% static 'landing/img/favicon.ico' %}" rel="icon">
+
+    <!-- Google Web Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat&family=Oswald:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Libraries Stylesheet -->
+    <link href="{% static 'landing/lib/owlcarousel/assets/owl.carousel.min.css' %}" rel="stylesheet">
+    <link href="{% static 'landing/lib/lightbox/css/lightbox.min.css' %}" rel="stylesheet">
+
+    <!-- Customized Bootstrap Stylesheet -->
+    <link href="{% static 'landing/css/style.css' %}" rel="stylesheet">
+</head>
+
+<body>
+    <!-- Topbar Start -->
+    <div class="container-fluid bg-dark py-3">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6 text-center text-lg-left mb-2 mb-lg-0">
+                    <div class="d-inline-flex align-items-center">
+                        <a class="text-white pr-3" href="">FAQs</a>
+                        <span class="text-white">|</span>
+                        <a class="text-white px-3" href="">Help</a>
+                        <span class="text-white">|</span>
+                        <a class="text-white pl-3" href="">Support</a>
+                    </div>
+                </div>
+                <div class="col-md-6 text-center text-lg-right">
+                    <div class="d-inline-flex align-items-center">
+                        <a class="text-white px-3" href="">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a class="text-white px-3" href="">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a class="text-white px-3" href="">
+                            <i class="fab fa-linkedin-in"></i>
+                        </a>
+                        <a class="text-white px-3" href="">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a class="text-white px-3" href="">
+                            <i class="fab fa-youtube"></i>
+                        </a>
+                        <!-- Logout Button -->
+                        <a href="{% url 'logout' %}" class="btn btn-light ml-3">Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Topbar End -->
+
+    <!-- Navbar Start -->
+    <div class="container-fluid position-relative nav-bar p-0">
+        <div class="container position-relative" style="z-index: 9;">
+            <nav class="navbar navbar-expand-lg bg-secondary navbar-dark py-3 py-lg-0 pl-3 pl-lg-5">
+                <a href="" class="navbar-brand">
+                    <h1 class="m-0 display-5 text-white"><span class="text-primary">AURA</span> DESIGNS</h1>
+                </a>
+                <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbarCollapse">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse justify-content-between px-3" id="navbarCollapse">
+                    <div class="navbar-nav ml-auto py-0">
+                        <a href="{% url 'userhome' %}" class="nav-item nav-link">Home</a>
+                        <a href="{% url 'about' %}" class="nav-item nav-link active">About</a>
+                        <a href="{% url 'service' %}" class="nav-item nav-link">Service</a>
+                        <a href="project.html" class="nav-item nav-link">Project</a>
+                        <a href="contact.html" class="nav-item nav-link">Contact</a>
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </div>
+    <!-- Navbar End -->
+
+    <!-- About Us Section Start -->
+    <div class="container-fluid py-5">
+        <div class="container py-5">
+            <div class="row justify-content-center">
+                <div class="col-lg-7 text-center">
+                    <h1 class="display-4">About <span class="text-primary">Aura Designs</span></h1>
+                    <p class="lead">We create elegant and modern spaces that blend aesthetics with functionality. At Aura Designs, we believe that great design should be accessible to everyone, and our mission is to turn your dream spaces into reality.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- About Us Section End -->
+
+    <!-- Team Section Start -->
+    <div class="container-fluid bg-light py-5">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-7 text-center">
+                    <h1 class="display-4">Meet Our <span class="text-primary">Team</span></h1>
+                    <p>Our expert team of designers brings passion and creativity to each project, ensuring unique designs that fit your personal style and needs.</p>
+                </div>
+            </div>
+            <div class="row">
+                <!-- Team Member 1 -->
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="team-item text-center">
+                        <img class="img-fluid rounded-circle mb-4" src="{% static 'landing/img/team-1.jpg' %}" alt="">
+                        <h5 class="font-weight-bold">Sarah Johnson</h5>
+                        <span>Lead Designer</span>
+                        <p>Sarah has over 10 years of experience in creating stunning and functional spaces for residential and commercial clients.</p>
+                    </div>
+                </div>
+                <!-- Team Member 2 -->
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="team-item text-center">
+                        <img class="img-fluid rounded-circle mb-4" src="{% static 'landing/img/team-2.jpg' %}" alt="">
+                        <h5 class="font-weight-bold">Michael Brown</h5>
+                        <span>Interior Architect</span>
+                        <p>Michael specializes in modern architecture and interior layouts that maximize space and natural light.</p>
+                    </div>
+                </div>
+                <!-- Team Member 3 -->
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="team-item text-center">
+                        <img class="img-fluid rounded-circle mb-4" src="{% static 'landing/img/team-3.jpg' %}" alt="">
+                        <h5 class="font-weight-bold">Emily Davis</h5>
+                        <span>Furniture Designer</span>
+                        <p>Emily creates bespoke furniture designs that complement any space with a perfect blend of form and function.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Team Section End -->
+
+    <!-- Facts Section Start -->
+    <div class="container-fluid py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-3 col-md-6 text-center">
+                    <h1 class="display-4 text-primary" data-toggle="counter-up">1234</h1>
+                    <p class="lead">Happy Clients</p>
+                </div>
+                <div class="col-lg-3 col-md-6 text-center">
+                    <h1 class="display-4 text-primary" data-toggle="counter-up">567</h1>
+                    <p class="lead">Projects Completed</p>
+                </div>
+                <div class="col-lg-3 col-md-6 text-center">
+                    <h1 class="display-4 text-primary" data-toggle="counter-up">89</h1>
+                    <p class="lead">Awards Won</p>
+                </div>
+                <div class="col-lg-3 col-md-6 text-center">
+                    <h1 class="display-4 text-primary" data-toggle="counter-up">24</h1>
+                    <p class="lead">Years of Experience</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Facts Section End -->
+
+    <!-- Footer Section Start -->
+    <footer class="container-fluid bg-dark text-white py-5">
+        <div class="container text-center">
+            <p class="mb-0">&copy; 2024 Aura Designs. All Rights Reserved.</p>
+        </div>
+    </footer>
+    <!-- Footer Section End -->
+
+    <!-- jQuery and Bootstrap Scripts -->
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1

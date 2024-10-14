@@ -1,6 +1,5 @@
 {% load static %}
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -31,21 +30,35 @@
             background-color: #444;
             padding: 10px;
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .nav-container {
+            width: 60%; /* Controls the overall width of the navigation container */
+            display: flex;
+            justify-content: space-between;
+            margin: 0 auto;
         }
         nav a {
             color: white;
             text-decoration: none;
-            font-size: 16px;
-            padding: 10px 20px;
+            font-size: 20px; /* Increased font size */
+            padding: 20px 40px; /* Increased padding for bigger buttons */
             border-radius: 5px;
             background-color: black;
             transition: background-color 0.3s ease;
-            display: inline-block;
             font-weight: bold;
         }
         nav a:hover {
             background-color: #333;
+        }
+        .designer-btn {
+            position: relative;
+            left: 25%; /* Positioned between center and right */
+        }
+        .seller-btn {
+            position: relative;
+            right: 25%; /* Positioned between center and left */
         }
         .hero {
             background-image: url('images/hero-design.jpg');
@@ -164,8 +177,15 @@
     <!-- Header Section -->
     <header>
         <h1> AURA DESIGNS</h1>
-        <p></p>
     </header>
+
+    <!-- Navigation Section -->
+    <nav>
+        <div class="nav-container">
+            <a href="{% url 'slogin' %}" class="seller-btn">Seller's Corner</a> <!-- Seller's Corner Button -->
+            <a href="{% url 'dlogin' %}" class="designer-btn">Designer's Corner</a> <!-- Designer's Corner Button -->
+        </div>
+    </nav>
 
     <!-- Hero Section -->
     <section class="hero">
@@ -176,12 +196,10 @@
 
         <!-- Login/Register Buttons placed between Hero text and Explore Designs -->
         <div class="btn-container-centered">
-            <a href="/login">Login</a>
-            <a href="/register">Register</a>
-        </div>
+            <a href="/login">User Login</a>
+            <a href="{% url 'register' %}">Register</a>
+        </div>  
     </section>
-
-    <!-- Explore Designs Button -->
 
     <!-- Portfolio Section -->
     <section id="portfolio">
@@ -196,8 +214,6 @@
             <img src="{% static 'images/Kitchen-Design.jpeg' %}">
         </div>
     </section>
-
-    <!-- About Us Section -->
 
     <!-- Services Section -->
     <a href="#services" class="section-btn">Explore Our Services</a>

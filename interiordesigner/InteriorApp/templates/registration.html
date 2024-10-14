@@ -1,6 +1,7 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,7 +11,7 @@
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-image: url('{% static "images/registrationbackgrnd.jpg" %}'); /* Add your image URL */
+            background-image: url('{% static "images/registrationbackgrnd.jpg" %}');
             background-size: cover;
             background-position: center;
             height: 100vh;
@@ -18,6 +19,7 @@
             justify-content: center;
             align-items: center;
         }
+
         .container {
             width: 100%;
             max-width: 500px;
@@ -26,25 +28,30 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             border-radius: 10px;
         }
+
         h2 {
             text-align: center;
             color: #333;
             margin-bottom: 20px;
         }
+
         form {
             display: flex;
             flex-direction: column;
         }
+
         input[type="text"],
         input[type="email"],
         input[type="password"],
-        input[type="tel"] {
+        input[type="tel"],
+        select {
             padding: 10px;
             margin: 10px 0;
             border: 1px solid #ccc;
             border-radius: 5px;
             font-size: 16px;
         }
+
         input[type="submit"] {
             background-color: #28a745;
             color: white;
@@ -55,73 +62,172 @@
             border-radius: 5px;
             margin-top: 20px;
         }
+
         input[type="submit"]:hover {
             background-color: #218838;
         }
-    </style>
-    <script>
-        function validateForm() {
-            // Validate first name and last name
-            var firstName = document.forms["registrationForm"]["first_name"].value;
-            var lastName = document.forms["registrationForm"]["last_name"].value;
-            if (!/^[A-Za-z]+$/.test(firstName)) {
-                alert("First Name must contain only letters");
-                return false;
-            }
-            if (!/^[A-Za-z]+$/.test(lastName)) {
-                alert("Last Name must contain only letters");
-                return false;
-            }
 
-            // Validate email
-            var email = document.forms["registrationForm"]["email"].value;
-            var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailPattern.test(email)) {
-                alert("Please enter a valid email address");
-                return false;
-            }
-
-            // Validate phone number (10 digits)
-            var phone = document.forms["registrationForm"]["phone"].value;
-            if (!/^\d{10}$/.test(phone)) {
-                alert("Phone Number must be exactly 10 digits");
-                return false;
-            }
-
-            // Validate username
-            var username = document.forms["registrationForm"]["username"].value;
-            if (username == "") {
-                alert("Username cannot be empty");
-                return false;
-            }
-
-            // Validate password (min 8 characters)
-            var password = document.forms["registrationForm"]["password"].value;
-            if (password.length < 8) {
-                alert("Password must be at least 8 characters long");
-                return false;
-            }
-
-            return true;
+        .error-message {
+            color: red;
+            font-size: 14px;
+            display: none;
         }
-    </script>
+
+        .success {
+            border-color: green;
+        }
+
+        .error {
+            border-color: red;
+        }
+    </style>
 </head>
+
 <body>
     <div class="container">
         <h2>Register</h2>
-        <form name="registrationForm" action="{% url 'registration' %}" method="POST" onsubmit="return validateForm()">
+        {% if messages %}
+        {{ message }}
+        {% endif %}
+        <form id="registrationForm" action="{% url 'register' %}" method="POST">
             {% csrf_token %}
-            <input type="text" name="first_name" placeholder="First Name" required>
-            <input type="text" name="last_name" placeholder="Last Name" required>
-            <input type="email" name="email" placeholder="Email ID" required>
-            <input type="tel" name="phone" placeholder="Phone Number" required>
-            <input type="text" name="username" placeholder="Username" required>
-            <input type="password" name="password1" placeholder="Password" required>
-            <input type="password" name="password2" placeholder="Confirm Password" required>
+            <input type="text" id="first_name" name="first_name" placeholder="First Name" required>
+            <span class="error-message" id="firstNameError">First name must only contain letters and start with an uppercase letter.</span>
+
+            <input type="text" id="last_name" name="last_name" placeholder="Last Name" required>
+            <span class="error-message" id="lastNameError">Last name must only contain letters and start with an uppercase letter.</span>
+
+            <input type="email" id="email" name="email" placeholder="Email ID" required>
+            <span class="error-message" id="emailError">Please enter a valid email address.</span>
+
+            <div>
+                <select id="country_code" required>
+                    <option value="+1">+1 (US)</option>
+                    <option value="+44">+44 (UK)</option>
+                    <option value="+91">+91 (India)</option>
+                    <!-- Add more country codes as needed -->
+                </select>
+                <input type="tel" id="phone" name="phone" placeholder="Phone Number" required>
+                <span class="error-message" id="phoneError">Phone Number must be exactly 10 digits.</span>
+            </div>
+
+            <input type="text" id="username" name="username" placeholder="Username" required>
+            <span class="error-message" id="usernameError">Username is already taken or invalid.</span>
+
+            <input type="password" id="password" name="password1" placeholder="Password" required>
+            <span class="error-message" id="passwordError">Password must be at least 6 characters long and contain letters, numbers, and symbols.</span>
+
             <input type="submit" value="Register">
         </form>
     </div>
+
+    <script>
+        const firstName = document.getElementById('first_name');
+        const lastName = document.getElementById('last_name');
+        const email = document.getElementById('email');
+        const phone = document.getElementById('phone');
+        const username = document.getElementById('username');
+        const password = document.getElementById('password');
+        const form = document.getElementById('registrationForm');
+
+        function showError(input, errorElement, message) {
+            input.classList.add('error');
+            input.classList.remove('success');
+            errorElement.style.display = 'block';
+            errorElement.textContent = message;
+        }
+
+        function showSuccess(input, errorElement) {
+            input.classList.add('success');
+            input.classList.remove('error');
+            errorElement.style.display = 'none';
+        }
+
+        // Validate first name
+        firstName.addEventListener('input', function () {
+            const firstNamePattern = /^[A-Z][a-zA-Z]*$/;
+            const errorElement = document.getElementById('firstNameError');
+
+            if (!firstNamePattern.test(firstName.value)) {
+                showError(firstName, errorElement, 'First name must only contain letters and start with an uppercase letter.');
+            } else {
+                showSuccess(firstName, errorElement);
+            }
+        });
+
+        // Validate last name
+        lastName.addEventListener('input', function () {
+            const lastNamePattern = /^[A-Z][a-zA-Z]*$/;
+            const errorElement = document.getElementById('lastNameError');
+
+            if (!lastNamePattern.test(lastName.value)) {
+                showError(lastName, errorElement, 'Last name must only contain letters and start with an uppercase letter.');
+            } else {
+                showSuccess(lastName, errorElement);
+            }
+        });
+
+        // Validate email
+        email.addEventListener('input', function () {
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            const errorElement = document.getElementById('emailError');
+
+            if (!emailPattern.test(email.value)) {
+                showError(email, errorElement, 'Please enter a valid email address.');
+            } else {
+                showSuccess(email, errorElement);
+            }
+        });
+
+        // Validate phone number
+        phone.addEventListener('input', function () {
+            const phonePattern = /^\d{10}$/;
+            const errorElement = document.getElementById('phoneError');
+
+            if (!phonePattern.test(phone.value)) {
+                showError(phone, errorElement, 'Phone Number must be exactly 10 digits.');
+            } else {
+                showSuccess(phone, errorElement);
+            }
+        });
+
+        // Simulate username check from the server (for demo purposes)
+        const takenUsernames = ['testuser', 'johndoe', 'admin'];
+
+        username.addEventListener('input', function () {
+            const errorElement = document.getElementById('usernameError');
+
+            if (takenUsernames.includes(username.value)) {
+                showError(username, errorElement, 'Username is already taken.');
+            } else {
+                showSuccess(username, errorElement);
+            }
+        });
+
+        // Validate password
+        password.addEventListener('input', function () {
+            const passwordPattern = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$/;
+            const errorElement = document.getElementById('passwordError');
+
+            if (!passwordPattern.test(password.value)) {
+                showError(password, errorElement, 'Password must be at least 6 characters long and contain letters, numbers, and symbols.');
+            } else {
+                showSuccess(password, errorElement);
+            }
+        });
+
+        // Prevent form submission if there are errors
+        form.addEventListener('submit', function (event) {
+            const inputs = [firstName, lastName, email, phone, username, password];
+            const errors = inputs.filter(input => input.classList.contains('error'));
+
+            if (errors.length > 0) {
+                event.preventDefault(); // Prevent form submission if there are errors
+            }
+        });
+    </script>
 </body>
+
 </html>
 
 

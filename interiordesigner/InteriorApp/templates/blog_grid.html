@@ -1,0 +1,96 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog Grid - AURA DESIGNS</title>
+
+    <!-- Favicon -->
+    <link href="{% static 'landing/img/favicon.ico' %}" rel="icon">
+
+    <!-- Google Web Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat&family=Oswald:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Customized Bootstrap Stylesheet -->
+    <link href="{% static 'landing/css/style.css' %}" rel="stylesheet">
+</head>
+
+<body>
+    <!-- Navbar Start -->
+    {% include 'navbar.html' %}
+    <!-- Navbar End -->
+
+    <!-- Page Header Start -->
+    <div class="container-fluid bg-primary py-5">
+        <div class="container py-5">
+            <div class="row align-items-center py-4">
+                <div class="col-md-6 text-center text-md-left">
+                    <h1 class="display-4 mb-4 mb-md-0 text-secondary text-uppercase">Blog Grid</h1>
+                </div>
+                <div class="col-md-6 text-center text-md-right">
+                    <div class="d-inline-flex align-items-center">
+                        <a class="btn btn-outline-light" href="{% url 'userhome' %}">Home</a>
+                        <i class="fas fa-angle-right text-white mx-2"></i>
+                        <a class="btn btn-outline-light disabled" href="#">Blog Grid</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Page Header End -->
+
+    <!-- Blog Grid Start -->
+    <div class="container-fluid py-5">
+        <div class="container">
+            <div class="row">
+                <!-- Blog Post 1 -->
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="blog-item position-relative overflow-hidden">
+                        <img class="img-fluid" src="{% static 'images/blog1.jpg' %}" alt="Blog Post 1">
+                        <div class="blog-content bg-white p-4">
+                            <h4 class="text-uppercase mb-3">Design Trends 2024</h4>
+                            <p>Discover the latest design trends for 2024. From modern minimalism to eclectic styles, here’s what’s trending.</p>
+                            <a href="{% url 'blog_detail' %}" class="btn btn-outline-primary">Read More</a>
+                        </div>
+                    </div>
+                </div>
+                <!-- Blog Post 2 -->
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="blog-item position-relative overflow-hidden">
+                        <img class="img-fluid" src="{% static 'images/blog2.jpg' %}" alt="Blog Post 2">
+                        <div class="blog-content bg-white p-4">
+                            <h4 class="text-uppercase mb-3">Eco-Friendly Designs</h4>
+                            <p>Explore sustainable and eco-friendly designs that are gaining popularity in the interior design world.</p>
+                            <a href="{% url 'blog_detail' %}" class="btn btn-outline-primary">Read More</a>
+                        </div>
+                    </div>
+                </div>
+                <!-- Blog Post 3 -->
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="blog-item position-relative overflow-hidden">
+                        <img class="img-fluid" src="{% static 'images/blog3.jpg' %}" alt="Blog Post 3">
+                        <div class="blog-content bg-white p-4">
+                            <h4 class="text-uppercase mb-3">Color Palettes</h4>
+                            <p>Choosing the right color palette is essential for any design project. Learn how to select colors that work.</p>
+                            <a href="{% url 'blog_detail' %}" class="btn btn-outline-primary">Read More</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Blog Grid End -->
+
+    <!-- Footer Start -->
+    {% include 'footer.html' %}
+    <!-- Footer End -->
+
+</body>
+
+</html>
+

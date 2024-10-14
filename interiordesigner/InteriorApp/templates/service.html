@@ -1,0 +1,169 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Our Services - Aura Designs</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <meta content="Interior Design Services" name="keywords">
+    <meta content="Interior Design Services Page" name="description">
+
+    <!-- Favicon -->
+    <link href="{% static 'landing/img/favicon.ico' %}" rel="icon">
+
+    <!-- Google Web Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat&family=Oswald:wght@400;500;600&display=swap" rel="stylesheet"> 
+
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Flaticon Font -->
+    <link href="{% static 'landing/lib/flaticon/font/flaticon.css' %}" rel="stylesheet">
+
+    <!-- Libraries Stylesheet -->
+    <link href="{% static 'landing/lib/owlcarousel/assets/owl.carousel.min.css' %}" rel="stylesheet">
+    <link href="{% static 'landing/lib/lightbox/css/lightbox.min.css' %}" rel="stylesheet">
+
+    <!-- Customized Bootstrap Stylesheet -->
+    <link href="{% static 'landing/css/style.css' %}" rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- Navbar Start -->
+    <div class="container-fluid position-relative nav-bar p-0">
+        <div class="container position-relative" style="z-index: 9;">
+            <nav class="navbar navbar-expand-lg bg-secondary navbar-dark py-3 py-lg-0 pl-3 pl-lg-5">
+                <a href="{% url 'userhome' %}" class="navbar-brand">
+                    <h1 class="m-0 display-5 text-white"><span class="text-primary">AURA </span>DESIGNS</h1>
+                </a>
+                <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbarCollapse">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse justify-content-between px-3" id="navbarCollapse">
+                    <div class="navbar-nav ml-auto py-0">
+                        <a href="{% url 'userhome' %}" class="nav-item nav-link">Home</a>
+                        <a href="{% url 'about' %}" class="nav-item nav-link">About</a>
+                        <a href="{% url 'service' %}" class="nav-item nav-link active">Service</a>
+                        <a href="{% url 'portfolio' %}" class="nav-item nav-link">Project</a>
+                        <a href="#" class="nav-item nav-link">Contact</a>
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </div>
+    <!-- Navbar End -->
+
+    <!-- Page Header Start -->
+    <div class="container-fluid bg-primary py-5 mb-5 page-header">
+        <div class="container py-5">
+            <div class="row align-items-center py-4">
+                <div class="col-md-6 text-center text-md-left">
+                    <h1 class="display-4 mb-4 mb-md-0 text-secondary text-uppercase">Our Services</h1>
+                </div>
+                <div class="col-md-6 text-center text-md-right">
+                    <div class="d-inline-flex align-items-center">
+                        <a class="btn text-white" href="{% url 'userhome' %}">Home</a>
+                        <i class="fas fa-angle-right text-white"></i>
+                        <a class="btn text-white disabled" href="{% url 'service' %}">Services</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Page Header End -->
+
+    <!-- Services Section Start -->
+    <div class="container-fluid pt-5">
+        <div class="container pb-5">
+            <div class="row mb-5">
+                <div class="col text-center">
+                    <h6 class="text-primary text-uppercase" style="letter-spacing: 5px;">Our Services</h6>
+                    <h1 class="display-4">What We Offer</h1>
+                </div>
+            </div>
+            <div class="row">
+                <!-- Service Item 1 -->
+                <div class="col-lg-4 col-md-6 mb-5">
+                    <div class="service-item bg-light text-center p-4">
+                        <i class="fa fa-2x fa-paint-brush text-primary mb-4"></i>
+                        <h4 class="mb-3">Interior Design</h4>
+                        <p>We create spaces that are not only aesthetically pleasing but also functional, balancing form and function seamlessly.</p>
+                        <a class="btn btn-primary" href="">Read More</a>
+                    </div>
+                </div>
+
+                <!-- Service Item 2 -->
+                <div class="col-lg-4 col-md-6 mb-5">
+                    <div class="service-item bg-light text-center p-4">
+                        <i class="fa fa-2x fa-ruler-combined text-primary mb-4"></i>
+                        <h4 class="mb-3">Space Planning</h4>
+                        <p>Expert planning services to make the most out of your available space while keeping aesthetics intact.</p>
+                        <a class="btn btn-primary" href="">Read More</a>
+                    </div>
+                </div>
+
+                <!-- Service Item 3 -->
+                <div class="col-lg-4 col-md-6 mb-5">
+                    <div class="service-item bg-light text-center p-4">
+                        <i class="fa fa-2x fa-lightbulb text-primary mb-4"></i>
+                        <h4 class="mb-3">Lighting Design</h4>
+                        <p>Perfect lighting solutions for every corner of your home, tailored to your preferences and needs.</p>
+                        <a class="btn btn-primary" href="">Read More</a>
+                    </div>
+                </div>
+
+                <!-- Service Item 4 -->
+                <div class="col-lg-4 col-md-6 mb-5">
+                    <div class="service-item bg-light text-center p-4">
+                        <i class="fa fa-2x fa-palette text-primary mb-4"></i>
+                        <h4 class="mb-3">Custom Furniture</h4>
+                        <p>Unique and custom-made furniture that adds a personal touch to your living space, combining comfort and style.</p>
+                        <a class="btn btn-primary" href="">Read More</a>
+                    </div>
+                </div>
+
+                <!-- Service Item 5 -->
+                <div class="col-lg-4 col-md-6 mb-5">
+                    <div class="service-item bg-light text-center p-4">
+                        <i class="fa fa-2x fa-tools text-primary mb-4"></i>
+                        <h4 class="mb-3">Renovation Services</h4>
+                        <p>We breathe new life into your spaces, transforming old interiors into modern, functional, and stylish homes.</p>
+                        <a class="btn btn-primary" href="">Read More</a>
+                    </div>
+                </div>
+
+                <!-- Service Item 6 -->
+                <div class="col-lg-4 col-md-6 mb-5">
+                    <div class="service-item bg-light text-center p-4">
+                        <i class="fa fa-2x fa-leaf text-primary mb-4"></i>
+                        <h4 class="mb-3">Sustainable Design</h4>
+                        <p>We focus on eco-friendly designs that not only look great but also reduce your carbon footprint.</p>
+                        <a class="btn btn-primary" href="">Read More</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Services Section End -->
+
+    <!-- Footer Start -->
+    <div class="container-fluid bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="m-0">&copy; <a class="text-white font-weight-bold" href="#">Aura Designs</a>. All Rights Reserved.</p>
+        </div>
+    </div>
+    <!-- Footer End -->
+
+    <!-- JavaScript Libraries -->
+    <script src="{% static 'landing/lib/jquery/jquery.min.js' %}"></script>
+    <script src="{% static 'landing/lib/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'landing/lib/owlcarousel/owl.carousel.min.js' %}"></script>
+    <script src="{% static 'landing/lib/lightbox/js/lightbox.min.js' %}"></script>
+
+    <!-- Template Javascript -->
+    <script src="{% static 'landing/js/main.js' %}"></script>
+</body>
+
+</html>
