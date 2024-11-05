@@ -632,3 +632,47 @@ def remove_design(request, id):
         design.delete()
         return redirect('dhome')
     return HttpResponseForbidden("Only POST requests allowed for delete.")
+
+@login_required
+def designer_cart_view(request):
+    # Fetch designer's cart items
+    designer_cart_items = DesignerCartItem.objects.filter(user=request.user)
+    
+    # Calculate total price and service charges
+    designer_total_price = sum(item.design.price * item.quantity for item in designer_cart_items)
+    designer_service_charges = 100  # Set your service charge, or calculate as needed
+    
+    context = {
+        'designer_cart_items': designer_cart_items,
+        'designer_total_price': designer_total_price,
+        'designer_service_charges': designer_service_charges,
+    }
+    return render(request, 'dcart.html', context)
+
+@login_required
+def update_designer_cart(request, item_id):
+    # Get the specific cart item
+    item = get_object_or_404(DesignerCartItem, id=item_id, user=request.user)
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        
+        # Increase or decrease item quantity based on action
+        if action == 'increase':
+            item.quantity = F('quantity') + 1
+        elif action == 'decrease' and item.quantity > 1:
+            item.quantity = F('quantity') - 1
+        item.save()
+        item.refresh_from_db()
+
+    return redirect('dcart')
+
+@login_required
+def remove_from_designer_cart(request, item_id):
+    # Get the specific cart item and delete it
+    item = get_object_or_404(DesignerCartItem, id=item_id, user=request.user)
+    
+    if request.method == 'POST':
+        item.delete()
+    
+    return redirect('dcart')

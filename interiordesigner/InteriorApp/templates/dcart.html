@@ -1,0 +1,85 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Designer Cart</title>
+    <!-- MDBootstrap CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/3.10.2/mdb.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+
+<body>
+    <div class="container">
+        <h2 class="text-center my-4">Designer Cart</h2>
+
+        <div class="container mt-4">
+            <a href="{% url 'realhome' %}" class="btn btn-secondary mb-4">
+                <i class="fas fa-arrow-left"></i> Back to Designer Home
+            </a>
+        </div> 
+
+        {% if designer_cart_items %}
+        <div class="row">
+            <div class="col-md-8">
+                {% for item in designer_cart_items %}
+                <div class="card mb-4">
+                    <div class="row g-0">
+                        <div class="col-md-4">
+                            <img src="{{ item.design.image.url }}" class="img-fluid rounded-start" alt="{{ item.design.design_name }}">
+                        </div>
+                        <div class="col-md-8">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ item.design.design_name }}</h5>
+                                <p class="card-text">Price: ₹{{ item.design.price }}</p>
+                                <p class="card-text">Quantity: {{ item.quantity }}</p>
+
+                                <div class="d-flex">
+                                    <!-- Quantity Control -->
+                                    <form method="POST" action="{% url 'update_dcart' item.id %}" class="me-2">
+                                        {% csrf_token %}
+                                        <button type="submit" name="action" value="decrease" class="btn btn-outline-secondary">-</button>
+                                        <span>{{ item.quantity }}</span>
+                                        <button type="submit" name="action" value="increase" class="btn btn-outline-secondary">+</button>
+                                    </form>
+
+                                    <!-- Remove from Cart -->
+                                    <form method="POST" action="{% url 'remove_from_dcart' item.id %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-danger">Remove</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Order Summary -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Order Summary</h5>
+                        <p class="card-text">Total Price: ₹{{ designer_total_price }}</p>
+                        <p class="card-text">Service Charges: ₹{{ designer_service_charges }}</p>
+                        <hr>
+                        <p class="card-text"><strong>Total: ₹{{ designer_total_price|add:designer_service_charges }}</strong></p>
+                        <button class="btn btn-primary btn-lg btn-block">Proceed to Checkout</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <p class="text-center">Your designer cart is empty.</p>
+        {% endif %}
+    </div>
+
+    <!-- MDBootstrap JS -->
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/3.10.2/mdb.min.js"></script>
+</body>
+
+</html>

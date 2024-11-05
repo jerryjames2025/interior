@@ -57,6 +57,9 @@ urlpatterns = [
     
     path('designs/edit/<int:id>/', views.edit_design, name='edit_design'),
     path('designs/remove/<int:id>/', views.remove_design, name='remove_design'),
+    path('dcart/', views.designer_cart_view, name='dcart'),
+    path('dcart/update/<int:item_id>/', views.update_designer_cart, name='update_dcart'),
+    path('dcart/remove/<int:item_id>/', views.remove_from_designer_cart, name='remove_from_dcart'),
 ]
 
 
