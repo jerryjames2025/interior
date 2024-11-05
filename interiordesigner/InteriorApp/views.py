@@ -181,6 +181,7 @@ def add_product(request):
         description = request.POST.get('description')
         price = request.POST.get('price')
         stock = request.POST.get('stock')
+        category = request.POST.get('category')
         image = request.FILES.get('image')
         seller_id = request.session['id']
         seller = Seller.objects.get(id = seller_id)
@@ -191,6 +192,7 @@ def add_product(request):
                 product_name=product_name,
                 description=description,
                 price=price,
+                category=category,
                 stock=stock,
                 image=image,
             )
@@ -363,21 +365,51 @@ def dregister_view(request):
 
     return render(request, 'dregister.html')
 
+
 def dlogin_view(request):
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
         
-        # Authenticate the user
-        designer = authenticate(request, username=username, password=password)
-        if designer is not None:
-            # Log the user in
-            login(request, designer)
-            messages.success(request, 'Login successful!')
-            return redirect('dhome')  # Redirect to a home or dashboard page after login
-        else:
+        try:
+            # Check if designer exists in the custom Designer table
+            designer = Designer.objects.get(username=username)
+            
+            # Validate the password directly (note: this is not secure)
+            if designer.password == password:  # Direct comparison
+                # Log the user in (manual login)
+                request.session['designer_id'] = designer.id  # Save designer's ID in session
+                messages.success(request, 'Login successful!')
+                return redirect('dhome')  # Redirect to designer's home/dashboard page
+            else:
+                messages.error(request, 'Invalid username or password')
+        except Designer.DoesNotExist:
             messages.error(request, 'Invalid username or password')
 
     return render(request, 'dlogin.html')
+def add_design(request):
+    if request.method == 'POST':
+        # Get data from the form
+        name = request.POST['name']
+        price = request.POST['price']
+        origin = request.POST['origin']
+        description = request.POST.get('description', '')  # Optional field
+        design_image = request.FILES.get('image')  # Image file
 
+        # Create a new Design instance
+        design = Design(
+            name=name,
+            price=price,
+            origin=origin,
+            description=description,
+            image=design_image
+        )
+
+        # Save the design to the database
+        design.save()
+
+        messages.success(request, 'Design added successfully!')
+        return redirect('dhome')  # Redirect to a home or portfolio page after adding
+
+    return render(request, 'add_design.html')
 

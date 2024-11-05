@@ -67,7 +67,7 @@
 
 <div class="registration-container">
     <h2>Designer Registration</h2>
-    <form action="/register/" method="POST">
+    <form action="{% url 'dregister' %}" method="POST">
         {% csrf_token %}
         <div class="form-group">
             <label for="full_name">Full Name</label>

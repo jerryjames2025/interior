@@ -54,6 +54,12 @@ class Seller(models.Model):
 
 
 class Product(models.Model):
+    CATEGORY_CHOICES = [
+        ('Chair', 'Chair'),
+        ('Bed', 'Bed'),
+        ('Table', 'Table'),
+        # Add more categories as needed
+    ]
     seller = models.ForeignKey(Seller, on_delete=models.CASCADE, related_name='products')
     product_name = models.CharField(max_length=255)
     description = models.TextField()
@@ -62,6 +68,7 @@ class Product(models.Model):
     image = models.ImageField(upload_to='product_images/', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
 
     def __str__(self):
         return self.product_name

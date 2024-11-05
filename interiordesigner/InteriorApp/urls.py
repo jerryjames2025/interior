@@ -39,6 +39,7 @@ urlpatterns = [
     path('dregister/', views.dregister_view, name='dregister'),
     path('dlogin/', views.dlogin_view, name='dlogin'),
     path('addnewproduct/', views.add_product, name='addnewproduct'),
+    path('add_design/', views.add_design, name='add_design'),
 ]
 
 

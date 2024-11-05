@@ -18,10 +18,42 @@
             color: #fff;
             padding: 20px;
             text-align: center;
+            position: relative;
         }
         header h1 {
             margin: 0;
             font-size: 36px;
+        }
+        .logout-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: #ff5c5c;
+            color: #fff;
+            padding: 10px 20px;
+            font-size: 16px;
+            text-decoration: none;
+            border-radius: 5px;
+            display: inline-block;
+        }
+        .logout-btn:hover {
+            background-color: #e14a4a;
+        }
+        .add-design-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            display: block;
+            margin: 20px auto;
+            text-align: center;
+            text-decoration: none;
+        }
+        .add-design-btn:hover {
+            background-color: #45a049;
         }
         .portfolio {
             display: flex;
@@ -105,30 +137,31 @@
 
 <header>
     <h1>Designer Portfolio</h1>
+    <a href= "{% url 'home' %}" class="logout-btn">Logout</a> <!-- Logout Button as a Link -->
 </header>
 
+<!-- Add a Design Button -->
+<a href="{% url 'add_design' %}" class="add-design-btn">Add a Design</a>
+
 <section class="portfolio">
-    <!-- Design 1 -->
+    {% for design in designs %}
     <div class="design-card">
-        <img src="{% static 'images/elr.jpeg' %}" alt="Design 1" onclick="openModal('modal1')">
+        <img src="{{ design.image.url }}" alt="{{ design.name }}" onclick="openModal('modal{{ forloop.counter }}')">
         <div class="design-info">
-            <h3>Elegant Living Room</h3>
-            <p>Price: <span class="price">$2,500</span></p>
-            <p>Origin: California</p>
+            <h3>{{ design.name }}</h3>
+            <p>Price: <span class="price">${{ design.price }}</span></p>
+            <p>Origin: {{ design.origin }}</p>
         </div>
     </div>
 
-    <!-- Design 2 -->
-    <div class="design-card">
-        <img src="{% static 'images/mk.jpeg' %}" alt="Design 2" onclick="openModal('modal2')">
-        <div class="design-info">
-            <h3>Modern Kitchen</h3>
-            <p>Price: <span class="price">$3,000</span></p>
-            <p>Origin: New York</p>
+    <!-- Modal for fullscreen image -->
+    <div id="modal{{ forloop.counter }}" class="modal">
+        <span class="close" onclick="closeModal('modal{{ forloop.counter }}')">&times;</span>
+        <div class="modal-content">
+            <img src="{{ design.image.url }}" alt="{{ design.title }} Fullscreen">
         </div>
     </div>
-
-    <!-- More design cards can be added here -->
+    {% endfor %}
 </section>
 
 <!-- Modal for fullscreen image 1 -->
@@ -163,4 +196,3 @@
 
 </body>
 </html>
-

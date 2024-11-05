@@ -38,6 +38,11 @@
 
     <div class="login-container">
         <h2>Designer Login</h2>
+        {% if messages %}
+        {% for message in messages %}
+        {{ message }}
+        {% endfor %}
+        {% endif %}
         <form method="POST">
             {% csrf_token %}
             <div class="mb-3">
