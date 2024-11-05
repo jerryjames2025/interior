@@ -1,0 +1,132 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Designer Portfolio - Home">
+    <title>Designer Portfolio - Home</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f8f8;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: #333;
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 36px;
+        }
+        .logout-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: #ff5c5c;
+            color: #fff;
+            padding: 10px 20px;
+            font-size: 16px;
+            text-decoration: none;
+            border-radius: 5px;
+            display: inline-block;
+        }
+        .logout-btn:hover {
+            background-color: #e14a4a;
+        }
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: #777;
+            color: white;
+            padding: 10px 20px;
+            font-size: 16px;
+            text-decoration: none;
+            border-radius: 5px;
+            display: inline-block;
+        }
+        .back-btn:hover {
+            background-color: #666;
+        }
+        .view-all-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            cursor: pointer;
+            border-radius: 5px;
+            display: block;
+            margin: 20px auto;
+            text-align: center;
+            text-decoration: none;
+        }
+        .view-all-btn:hover {
+            background-color: #45a049;
+        }
+
+        /* Large category buttons */
+        .category-btn {
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            padding: 30px;
+            font-size: 24px;
+            cursor: pointer;
+            border-radius: 8px;
+            display: block;
+            width: 80%;
+            margin: 20px auto;
+            text-align: center;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+        }
+        .category-btn:hover {
+            background-color: #1e88e5;
+        }
+
+        .portfolio {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 20px;
+        }
+        footer {
+            background-color: #333;
+            color: #fff;
+            padding: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Designer Portfolio - Categories</h1>
+    <a href="{% url 'home' %}" class="logout-btn">Logout</a> <!-- Logout Button as a Link -->
+    <a href="{% url 'dhome' %}" class="back-btn">Previous Page</a> <!-- Back Button -->
+</header>
+
+<!-- View All Designs Button -->
+<a href="{% url 'designp' %}" class="view-all-btn">View All Designs</a>
+
+<!-- Large Category Buttons -->
+    {% comment %} <a href="{% url 'kitchen_designs' %}" class="category-btn">Kitchen Design</a>
+    <a href="{% url 'bathroom_designs' %}" class="category-btn">Bathroom Design</a>
+    <a href="{% url 'hallway_designs' %}" class="category-btn">Hallway Design</a>
+    <a href="{% url 'living_room_designs' %}" class="category-btn">Living Room Design</a>
+    <a href="{% url 'dining_hall_designs' %}" class="category-btn">Dining Hall Design</a>
+    <a href="{% url 'office_designs' %}" class="category-btn">Office Design</a> {% endcomment %}
+
+<footer>
+    <p>© 2024 Designer Portfolio. All rights reserved.</p>
+</footer>
+
+</body>
+</html>

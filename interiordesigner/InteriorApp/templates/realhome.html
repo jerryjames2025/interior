@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+{% block body %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interior Designer Home Page</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    /* Navigation Bar */
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #333;
+      padding: 10px;
+    }
+    .navbar-logo {
+      color: white;
+      font-size: 24px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    .navbar ul {
+      list-style-type: none;
+      display: flex;
+      gap: 20px;
+    }
+    .navbar ul li {
+      position: relative;
+    }
+    .navbar ul li a {
+      color: white;
+      text-decoration: none;
+      padding: 10px;
+      display: block;
+    }
+    .navbar ul li:hover .dropdown {
+      display: block;
+    }
+    .dropdown {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      background-color: #fff;
+      min-width: 200px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    }
+    .dropdown a {
+      color: #333;
+      padding: 10px;
+      display: block;
+      text-decoration: none;
+    }
+    .dropdown a:hover {
+      background-color: #f0f0f0;
+    }
+    .search-container {
+      display: flex;
+      gap: 10px;
+    }
+    .search-container input {
+      padding: 5px;
+      font-size: 16px;
+    }
+    .search-container button {
+      padding: 5px 10px;
+      font-size: 16px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    .search-container button:hover {
+      background-color: #218838;
+    }
+    /* Main Content */
+    .design-categories {
+      padding: 20px;
+      text-align: center;
+    }
+    .design-categories h2 {
+      margin-bottom: 20px;
+    }
+    .design-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+    .design-item {
+      border: 1px solid #ccc;
+      padding: 20px;
+      text-align: center;
+      transition: transform 0.3s ease;
+    }
+    .design-item img {
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+    }
+    .design-item:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .design-item a {
+      text-decoration: none;
+      color: #333;
+      font-size: 18px;
+      font-weight: bold;
+      display: block;
+      margin-top: 10px;
+    }
+    /* Right Corner Cart and Favorites */
+    .right-menu {
+      display: flex;
+      gap: 15px;
+    }
+    .right-menu a {
+      color: white;
+      text-decoration: none;
+      padding: 10px;
+    }
+    .right-menu a:hover {
+      background-color: #555;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <div class="navbar-logo">
+      <img src="{% static 'images/logo.jpeg' %}" alt="Logo" style="height: 50px;" /> <!-- Set the height or width as needed -->
+    </div>
+    <ul>
+      <li>
+        <a href="#">Designs</a>
+        <div class="dropdown">
+          <a href="#"><img src="{% static 'images/Bedroom-Design.jpeg' %}" alt="Bedroom" style="width: 100px;"> Bedroom</a>
+          <a href="#"><img src="{% static 'images/Kitchen-Design.jpeg' %}" alt="Kitchen" style="width: 100px;"> Kitchen</a>
+          <a href="#"><img src="{% static 'images/Office-Design.jpeg' %}" alt="Office" style="width: 100px;"> Office</a>
+        </div>
+      </li>
+      <li>
+        <a href="{% url 'userhome' %}">Products</a>
+        {% comment %} <div class="dropdown">
+          <a href="#">Furniture</a>
+          <a href="#">Lighting</a>
+          <a href="#">Decor Items</a>
+        </div> {% endcomment %}
+      </li>
+      <li><a href="#">Designers</a></li>
+    </ul>
+    <div class="search-container">
+      <input type="text" placeholder="Search designs or products...">
+      <button>Search</button>
+    </div>
+    <div class="right-menu">
+      <a href="{% url 'cart' %}">Cart</a>
+      <a href="#">Favorites</a>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="design-categories">
+    <h2>Explore Designs</h2>
+    <div class="design-grid">
+      {% for design in designs %}
+        <div class="design-item">
+          <img src="{{ design.image.url }}" alt="{{ design.design_name }}">
+          <a href="#">{{ design.design_name }}</a>
+          <p>${{ design.price }}</p>
+        </div>
+      {% empty %}
+        <p>No designs available at the moment.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <script>
+    // JS for search functionality (placeholder)
+    document.querySelector('button').addEventListener('click', function () {
+      const searchValue = document.querySelector('input').value;
+      alert(`Searching for: ${searchValue}`);
+    });
+  </script>
+
+</body>
+</html>
+{% endblock %}
+

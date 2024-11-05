@@ -1,0 +1,111 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <title>AURA DESIGNS - Edit Design</title>
+
+  <!-- Bootstrap core CSS -->
+  <link rel="stylesheet" type="text/css" href="{% static 'css/bootstrap.css' %}" />
+
+  <!-- Fonts style -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <!-- Font Awesome style -->
+  <link href="{% static 'css/font-awesome.min.css' %}" rel="stylesheet" />
+  <!-- Custom styles -->
+  <link href="{% static 'css/style.css' %}" rel="stylesheet" />
+  <!-- Responsive style -->
+  <link href="{% static 'css/responsive.css' %}" rel="stylesheet" />
+
+  <style>
+    /* Styling */
+    .form-container { max-width: 600px; margin: 50px auto; padding: 30px; border-radius: 10px; background: #f9f9f9; }
+    .btn-submit { background-color: #C7A350; color: white; font-weight: bold; padding: 10px 20px; }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="form-container">
+      <h2>Edit Design</h2>
+      <form method="post" enctype="multipart/form-data" action="{% url 'edit_design' design.id %}" id="editForm">
+        {% csrf_token %}
+        <div class="form-group">
+          <label for="design_name">Design Name:</label>
+          <input type="text" id="design_name" name="design_name" class="form-control" value="{{ design.design_name }}" required>
+        </div>
+
+        <div class="form-group">
+          <label for="price">Price (INR):</label>
+          <input type="number" id="price" name="price" class="form-control" step="0.01" value="{{ design.price }}" required>
+        </div>
+
+        <div class="form-group">
+          <label for="origin">Origin:</label>
+          <input type="text" id="origin" name="origin" class="form-control" value="{{ design.origin }}">
+        </div>
+
+        <div class="form-group">
+          <label for="description">Description:</label>
+          <textarea id="description" name="description" class="form-control" rows="4">{{ design.description }}</textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="image">Update Image:</label>
+          <input type="file" id="image" name="image" class="form-control">
+          {% if design.image %}
+            <p>Current image:</p>
+            <img src="{{ design.image.url }}" alt="{{ design.design_name }}" style="width: 100px; height: 100px; object-fit: cover; margin-top: 10px;">
+          {% endif %}
+        </div>
+
+        <div class="form-group text-center">
+          <button type="submit" class="btn-submit">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- jQuery -->
+  <script src="{% static 'js/jquery-3.4.1.min.js' %}"></script>
+  
+  <script>
+    // Inline JavaScript for validation
+    document.addEventListener("DOMContentLoaded", function() {
+      const form = document.getElementById("editForm");
+      const designNameInput = document.getElementById("design_name");
+      const descriptionInput = document.getElementById("description");
+      const fileInput = document.getElementById("image");
+
+      // Validate file type on input change
+      fileInput.addEventListener("change", function() {
+        const file = fileInput.files[0];
+        if (file && !["image/png", "image/jpg", "image/jpeg"].includes(file.type)) {
+          alert("Only image files (PNG, JPG, JPEG) are allowed.");
+          fileInput.value = '';  // Clear the file input
+        }
+      });
+
+      // Form validation before submission
+      form.addEventListener("submit", function(event) {
+        const lettersOnly = /^[A-Za-z ]+$/;
+
+        if (!lettersOnly.test(designNameInput.value)) {
+          alert("Design name should contain letters only.");
+          event.preventDefault();
+        }
+
+        if (!lettersOnly.test(descriptionInput.value)) {
+          alert("Description should contain letters only.");
+          event.preventDefault();
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>
+
+

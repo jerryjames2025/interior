@@ -19,6 +19,9 @@ from django.shortcuts import redirect
 from django.shortcuts import render
 from .models import *
 from django.core.files.storage import FileSystemStorage
+from django.contrib.auth.decorators import login_required
+import re
+
 
 def home(request):
     return render(request, 'home.html')
@@ -38,7 +41,8 @@ def user_login(request):
         
         if user is not None:
             login(request, user)
-            return redirect('userhome')
+            request.session['id']=user.id
+            return redirect('realhome')
         else:
             # Check if username exists
             if not User.objects.filter(username=username).exists():
@@ -95,7 +99,8 @@ def portfolio(request):
     return render(request, 'portfolio.html')
 
 def userhome(request):
-    return render(request, 'user_home.html')
+    featured_products = Product.objects.all()  # Fetch top 6 products as featured
+    return render(request, 'user_home.html', {'featured_products': featured_products})
 
 def forgotpass(request):
     if request.method == 'POST':
@@ -192,7 +197,6 @@ def add_product(request):
                 product_name=product_name,
                 description=description,
                 price=price,
-                category=category,
                 stock=stock,
                 image=image,
             )
@@ -248,8 +252,6 @@ def seller_login(request):
         username = request.POST['username']
         password = request.POST['password']
 
-        # Authenticate the user
-        # user = authenticate(request, username=username, password=password)
         try:
             seller = Seller.objects.get(username=username, password=password)
         except Seller.DoesNotExist:
@@ -257,26 +259,36 @@ def seller_login(request):
             return redirect('slogin')
 
         if seller is not None:
-            # If user is authenticated, log them in
-            # login(request, seller, backend='django.contrib.auth.backends.ModelBackend')
-            request.session['seller']= seller.username
-            request.session['id']= seller.id
-            return redirect('shome')  # Redirect to a seller dashboard or homepage after login
+            # Ensure you're storing the correct seller ID in the session
+            request.session['seller'] = seller.username  # Store seller's username
+            request.session['id'] = seller.id  # Store seller's ID (which should be an integer)
+            return redirect('shome')
         else:
-            # If authentication fails, display an error message
             messages.error(request, 'Invalid username or password.')
 
     return render(request, 'slogin.html')
 
 def shome(request):
-    if 'seller' in request.session:
-        seller_id = request.session.get('id')
-        print(seller_id)
-        products = Product.objects.filter(seller=seller_id)
-        print(products)
-        return render(request, 'shome.html',{'products': products}) 
+    seller_id = request.session.get('id')
+    print(seller_id)
+    if seller_id:
+        try:
+            # Ensure you are passing an integer ID to this query
+            seller = Seller.objects.get(id=seller_id)
+            products = Product.objects.filter(seller=seller)
+            print(seller_id)
+        except Seller.DoesNotExist:
+            print("ii")
+            messages.error(request, 'Seller not found.')
+            return redirect('slogin')
     else:
+        print("jj")
+        messages.error(request, 'You need to login first.')
         return redirect('slogin')
+    print(products)
+    print("")
+    return render(request, 'shome.html', {'products': products})
+
 
 
 def sregister(request):
@@ -390,17 +402,17 @@ def dlogin_view(request):
 def add_design(request):
     if request.method == 'POST':
         # Get data from the form
-        name = request.POST['name']
+        design_name = request.POST['design_name']
         price = request.POST['price']
-        origin = request.POST['origin']
+        # origin = request.POST['origin']
         description = request.POST.get('description', '')  # Optional field
         design_image = request.FILES.get('image')  # Image file
 
         # Create a new Design instance
         design = Design(
-            name=name,
+            design_name=design_name,
             price=price,
-            origin=origin,
+            # origin=origin,
             description=description,
             image=design_image
         )
@@ -413,3 +425,210 @@ def add_design(request):
 
     return render(request, 'add_design.html')
 
+def designp(request):
+    # Fetch all designs from the database
+    designs = Design.objects.all()
+
+    # Group designs by their category
+    categorized_designs = {}
+    for design in designs:
+        category = design.category  # Assuming category is a field in the Design model
+        if category not in categorized_designs:
+            categorized_designs[category] = []
+        categorized_designs[category].append(design)
+
+    # Context to pass to the template
+    context = {
+        'categorized_designs': categorized_designs
+    }
+
+    return render(request, 'designp.html', context)
+
+def decorella(request):
+    return render(request, 'decorella.html')
+
+def uphome(request):
+    featured_products = Product.objects.all()[:6]  # Fetch top 6 products as featured
+    return render(request, 'uphome.html', {'featured_products': featured_products})
+
+# # Product detail view - individual product details
+# def product_detail(request, product_id):
+#     product = get_object_or_404(Product, id=product_id)
+#     return render(request, 'product_detail.html', {'product': product})
+
+#  Add to cart view
+def add_to_cart(request, product_id):
+    # Here you will add the product to the user's cart (this depends on your cart logic)
+    product = get_object_or_404(Product, id=product_id)
+    user = request.session['id']
+    # Assuming you have a Cart model or session-based cart
+    cart, created = Cart.objects.get_or_create(user=user)
+    print(cart.id)
+    cart_item, created = CartItem.objects.get_or_create(cart=cart, product=product)
+
+    if not created:
+        # If the cart item already exists, increment the quantity
+        cart_item.quantity += 1
+        cart_item.save()
+    return redirect('cart')
+
+# Cart view - display items in cart
+#  def cart_view(request):
+#      cart_product_ids = request.session.get('cart', [])
+#      cart_products = Product.objects.filter(id__in=cart_product_ids)
+#      return render(request, 'cart.html', {'cart_products': cart_products})
+
+# # Favorites view
+# def favorites_view(request):
+#     # Assuming you are storing favorites in the session or in a database model
+#     favorite_product_ids = request.session.get('favorites', [])
+#     favorite_products = Product.objects.filter(id__in=favorite_product_ids)
+#     return render(request, 'favorites.html', {'favorite_products': favorite_products})
+
+# # Add to favorites
+# def add_to_favorites(request, product_id):
+#     product = get_object_or_404(Product, id=product_id)
+#     favorites = request.session.get('favorites', [])
+#     if product.id not in favorites:
+#         favorites.append(product.id)
+#     request.session['favorites'] = favorites
+#     return redirect('favorites')
+
+# # Search functionality
+# def search(request):
+#     query = request.GET.get('q')
+#     products = Product.objects.filter(product_name__icontains=query)
+#     return render(request, 'search_results.html', {'products': products, 'query': query})
+
+
+# def cart_view(request):
+#     cart_items = Cart.objects.filter(user=request.user.id)
+#     return render(request, 'cart.html', {'cart_items': cart_items})
+
+# def search_products(request):
+#     query = request.GET.get('query')
+#     products = Product.objects.filter(product_name__icontains=query)
+#     return render(request, 'search_results.html', {'products': products})
+
+# def remove_from_cart(request, item_id):
+#     item = get_object_or_404(Cart, id=item_id, user=request.user)
+#     item.delete()
+#     return redirect('cart')
+
+def cart_view(request):
+    user = request.session['id']
+    print(user)
+    try:
+        cart = Cart.objects.get(user=user)
+        print(cart)
+        cart_items = CartItem.objects.filter(cart=cart)
+        total_price = sum(item.product.price * item.quantity for item in cart_items)
+        context = {
+            'cart_items': cart_items,
+            'total_price': total_price,
+            'delivery_charges': 50  # You can customize delivery charges or add logic based on cart total
+        }
+        return render(request, 'cart.html', context)
+    except Cart.DoesNotExist:
+        return render(request, 'cart.html')
+
+# View to remove product from cart
+@login_required
+def remove_from_cart(request, item_id):
+    user = request.session['id']
+    cart_item = get_object_or_404(CartItem, id=item_id, user=user)
+    cart_item.delete()
+    messages.success(request, "Product removed from cart.")
+    return redirect('cart')
+
+# Update the cart (increase/decrease quantity)
+@login_required
+def update_cart(request, item_id):
+    if 'id' in request.session:
+        user = request.session['id']
+        cart_item = get_object_or_404(CartItem, id=item_id)
+
+        action = request.POST.get('action')
+        if action == 'increase':
+            cart_item.quantity += 1
+        elif action == 'decrease' and cart_item.quantity > 1:
+            cart_item.quantity -= 1
+
+        cart_item.save()
+        return redirect('cart')
+    else:
+        return redirect('login')
+    
+    
+    
+def realhome(request):
+    designs = Design.objects.all()  # Get all designs from the database
+    return render(request, 'realhome.html', {'designs': designs})
+
+# Designers Page View
+def designers_page(request):
+    # Logic for listing designers can go here (e.g., querying a Designer model)
+    return render(request, 'dhome.html')
+
+# # Design Details View
+# def design_details(request, design_id):
+#     design = get_object_or_404(Design, id=design_id)  # Fetch the design by ID
+#     return render(request, 'design_details.html', {'design': design})
+
+# Search View
+# def search(request):
+#     query = request.GET.get('q')
+#     if query:
+#         designs = Design.objects.filter(Q(name__icontains=query) | Q(description__icontains=query))
+#     else:
+#         designs = Design.objects.none()
+#     return render(request, 'search_results.html', {'designs': designs})
+
+
+
+def edit_design(request, id):
+    design = get_object_or_404(Design, id=id)
+
+    if request.method == 'POST':
+        design_name = request.POST.get('design_name')
+        price = request.POST.get('price')
+        # origin = request.POST.get('origin')
+        description = request.POST.get('description')
+        image = request.FILES.get('image')
+
+        # Validation for design_name - letters only
+        if not re.match("^[A-Za-z ]+$", design_name):
+            messages.error(request, "Design name should contain letters only.")
+            return render(request, 'edit_design.html', {'design': design})
+
+        # Validation for description - letters only
+        if not re.match("^[A-Za-z ]+$", description):
+            messages.error(request, "Description should contain letters only.")
+            return render(request, 'edit_design.html', {'design': design})
+
+        # Validation for image - only allow specific types
+        if image:
+            if not image.name.endswith(('.png', '.jpg', '.jpeg')):
+                messages.error(request, "Only image files (PNG, JPG, JPEG) are allowed.")
+                return render(request, 'edit_design.html', {'design': design})
+
+            design.image = image
+
+        # Update other fields
+        design.design_name = design_name
+        design.price = price
+        # design.origin = origin
+        design.description = description
+        design.save()
+        return redirect('dhome')
+
+    return render(request, 'edit_design.html', {'design': design})
+
+
+
+def remove_design(request, id):
+    design = get_object_or_404(Design, id=id)
+    if request.method == 'POST':
+        design.delete()
+        return redirect('dhome')
+    return HttpResponseForbidden("Only POST requests allowed for delete.")

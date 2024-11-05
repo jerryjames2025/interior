@@ -52,36 +52,43 @@ class Seller(models.Model):
     def has_module_perms(self, app_label):
         return True
 
-
 class Product(models.Model):
-    CATEGORY_CHOICES = [
-        ('Chair', 'Chair'),
-        ('Bed', 'Bed'),
-        ('Table', 'Table'),
-        # Add more categories as needed
-    ]
     seller = models.ForeignKey(Seller, on_delete=models.CASCADE, related_name='products')
     product_name = models.CharField(max_length=255)
     description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
     stock = models.PositiveIntegerField()
     image = models.ImageField(upload_to='product_images/', blank=True, null=True)
+    category = models.CharField(
+        max_length=50,
+        choices=[
+            ('Furniture', 'Furniture'),
+            ('Lighting', 'Lighting'),
+            ('Home Decor', 'Home Decor'),
+            ('Kitchen & Dining', 'Kitchen & Dining'),
+            ('Outdoor & Garden', 'Outdoor & Garden'),
+            ('Storage Solutions', 'Storage Solutions'),
+            ('Bathroom Accessories', 'Bathroom Accessories'),
+            ('Other', 'Other')
+        ]
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
 
     def __str__(self):
         return self.product_name
+
     
     from django.db import models
 from django.contrib.auth.models import User
 
 class Design(models.Model):
-    name = models.CharField(max_length=200)  # Design name like 'Elegant Living Room'
+    design_name = models.CharField(max_length=200)  # Design name like 'Elegant Living Room'
     price = models.DecimalField(max_digits=10, decimal_places=2)  # Price of the design
-    origin = models.CharField(max_length=100)  # Origin (e.g., 'California')
+    origin = models.CharField(max_length=100, null=True)  # Origin (e.g., 'California')
     image = models.ImageField(upload_to='designs/')  # Image field for the design
     description = models.TextField(blank=True, null=True)  # Optional description
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.name
@@ -95,4 +102,26 @@ class Designer(models.Model):
 
     def __str__(self):
         return self.full_name
+    
+    from django.db import models
+from django.contrib.auth.models import User  # Assuming you're using Django's built-in User model
 
+# Model to represent an entire shopping cart for a user
+class Cart(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='carts')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
+    def get_cart_total(self):
+        return sum(item.get_total_price() for item in self.items.all())  # Calculate total price of the cart
+
+
+# Model to represent a single item within a cart
+class CartItem(models.Model):
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='items')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1)
+
+    def __str__(self):
+        return f'{self.product.product_name} - {self.quantity}'

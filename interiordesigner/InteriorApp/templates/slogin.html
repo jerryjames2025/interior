@@ -119,7 +119,9 @@
     <div class="login-container">
         <h2>Seller Login</h2>
         {% if messages %}
-        {{ messages }}
+        {% for message in messages %}
+        {{ message }}
+        {% endfor %}
         {% endif %}
         <!-- Username Field -->
         <form action="{% url 'slogin' %}" method="POST">

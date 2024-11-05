@@ -6,10 +6,11 @@ from django.contrib import messages
 from django.conf import settings
 from django.conf.urls.static import static
 
-class CustomLogoutView(auth_views.LogoutView):
-    def dispatch(self, request, *args, **kwargs):
-        messages.success(request, "You have been logged out successfully.")
-        return super().dispatch(request, *args, **kwargs)
+
+# class CustomLogoutView(auth_views.LogoutView):
+#     def dispatch(self, request, *args, **kwargs):
+#         messages.success(request, "You have been logged out successfully.")
+#         return super().dispatch(request, *args, **kwargs)
 
 urlpatterns = [
     path('', views.home, name='home'),
@@ -23,7 +24,7 @@ urlpatterns = [
     path('register/', views.registration, name='register'),
     path('social-auth/', include('social_django.urls', namespace='social')),
     path('logout/', views.logout_view, name='logout'),
-    path('logout/', CustomLogoutView.as_view(), name='logout'),
+    # path('logout/', CustomLogoutView.as_view(), name='logout'),
     path('about/', views.about, name='about'),
     path('service/', views.service, name='service'),
     path('project/', views.project, name='project'),
@@ -40,6 +41,22 @@ urlpatterns = [
     path('dlogin/', views.dlogin_view, name='dlogin'),
     path('addnewproduct/', views.add_product, name='addnewproduct'),
     path('add_design/', views.add_design, name='add_design'),
+    path('designp/', views.designp, name='designp'),
+    path('decorella', views.decorella, name='decorella'),
+    path('uphome', views.uphome, name='uphome'), 
+    path('cart/', views.cart_view, name='cart'),
+    # path('search/', views.search_products, name='search_products'),
+    # path('remove/<int:item_id>/', views.remove_from_cart, name='remove_from_cart'),
+    path('cart/add/<int:product_id>/', views.add_to_cart, name='add_to_cart'),
+    path('cart/remove/<int:item_id>/', views.remove_from_cart, name='remove_from_cart'),
+    path('cart/update/<int:item_id>/', views.update_cart, name='update_cart'),
+    path('realhome', views.realhome, name='realhome'),  # Home Page
+    path('designers/', views.designers_page, name='designers'),  # Designers Page
+    # path('design/<int:design_id>/', views.design_details, name='design_details'),  # Design Detail Page
+    # path('search/', views.search, name='search'),  # Search Functionality
+    
+    path('designs/edit/<int:id>/', views.edit_design, name='edit_design'),
+    path('designs/remove/<int:id>/', views.remove_design, name='remove_design'),
 ]
 
 

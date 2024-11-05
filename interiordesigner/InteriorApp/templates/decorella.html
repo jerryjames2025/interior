@@ -1,0 +1,178 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Website</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            scroll-behavior: smooth;
+        }
+        nav {
+            background-color: #333;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .nav-btn {
+            background-color: #ffcc00;
+            color: black;
+            border: none;
+            padding: 16px 24px;
+            font-size: 18px;
+            margin: 0 10px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.3s ease;
+        }
+        .nav-btn:hover {
+            background-color: #e6b800;
+        }
+        .gallery {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center; /* Center the items horizontally */
+            padding: 120px 40px;
+        }
+        .gallery-item {
+            width: 30%; /* Reduced size */
+            margin: 15px 15px; /* Space between items */
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        .gallery-item.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .gallery-item img {
+            width: 100%;
+            height: auto;
+        }
+        .gallery-item p {
+            padding: 10px;
+            font-size: 16px;
+            text-align: center;
+            background-color: #fff;
+        }
+        .gallery-item a {
+            text-decoration: none;
+            color: black;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navigation Bar -->
+<nav>
+    <a href="#" class="nav-btn">About</a>
+    <button class="nav-btn">Logout</button>
+</nav>
+
+<!-- Portfolio Section -->
+<div class="gallery" id="portfolio">
+    <div class="gallery-item">
+        <a href="living-room.html">
+            <img src="{% static 'images/mlr.jpeg' %}" alt="Modern Living Room">
+            <p>Modern Living Room Design</p>
+        </a>
+    </div>
+    <div class="gallery-item">
+        <a href="bedroom.html">
+            <img src="{% static 'images/ebr.jpeg' %}" alt="Cozy Bedroom">
+            <p>Bedroom Design</p>
+        </a>
+    </div>
+    <div class="gallery-item">
+        <a href="office.html">
+            <img src="{% static 'images/Office-Design.jpeg' %}" alt="Stylish Office">
+            <p>Stylish Office Design</p>
+        </a>
+    </div>
+    <div class="gallery-item">
+        <a href="kitchen.html">
+            <img src="{% static 'images/Kitchen-Design.jpeg' %}" alt="Kitchen Design">
+            <p>Kitchen Design</p>
+        </a>
+    </div>
+    <div class="gallery-item">
+        <a href="bathroom.html">
+            <img src="{% static 'images/Bathroom-Design.jpeg' %}" alt="Bathroom Design">
+            <p>Bathroom Design</p>
+        </a>
+    </div>
+    <div class="gallery-item">
+        <a href="hallway.html">
+            <img src="{% static 'images/hallway.jpeg' %}" alt="Hallway Design">
+            <p>Hallway Design</p>
+        </a>
+    </div>
+    <div class="gallery-item">
+        <a href="dining-hall.html">
+            <img src="{% static 'images/Dining-Room.jpeg' %}" alt="Dining Hall Design">
+            <p>Dining Hall Design</p>
+        </a>
+    </div>
+</div>
+
+<script>
+    // Smooth scroll for the navigation
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+            e.preventDefault();
+            document.querySelector(this.getAttribute('href')).scrollIntoView({
+                behavior: 'smooth'
+            });
+        });
+    });
+
+    // Fade-in effect on scroll for gallery items
+    const galleryItems = document.querySelectorAll('.gallery-item');
+
+    const showItemsOnScroll = () => {
+        const triggerHeight = window.innerHeight / 1.3;
+
+        galleryItems.forEach(item => {
+            const itemTop = item.getBoundingClientRect().top;
+            if(itemTop < triggerHeight) {
+                item.classList.add('show');
+            }
+        });
+    };
+
+    // Dynamic alignment on window resize
+    const alignGalleryItems = () => {
+        galleryItems.forEach(item => {
+            if (window.innerWidth > 768) {
+                item.style.width = '30%'; /* Adjusted size */
+            } else {
+                item.style.width = '100%';
+            }
+        });
+    };
+
+    window.addEventListener('scroll', showItemsOnScroll);
+    window.addEventListener('resize', alignGalleryItems);
+
+    // Initial check to show items already in view
+    showItemsOnScroll();
+    alignGalleryItems(); // Align items on page load
+</script>
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
