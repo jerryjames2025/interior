@@ -33,7 +33,7 @@ SECRET_KEY = 'django-insecure-70$pa(loht(3%wjnuc1di1^u7*4cn%6eqmh*x)7lxrrpo-is9)
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -121,14 +121,25 @@ WSGI_APPLICATION = 'interiordesigner.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'interior',
+#         'USER': 'root',
+#         'PASSWORD': '',
+#         'HOST': 'localhost',
+#         'PORT': '3306',
+#     }
+# }
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'interior',
-        'USER': 'root',
-        'PASSWORD': '',
-        'HOST': 'localhost',
-        'PORT': '3306',
+        'NAME': 'interior_glassblow',
+        'USER': 'interior_glassblow',
+        'PASSWORD': 'd2998b5fc4c2a175135ea7becb0e588b241645a2',
+        'HOST': 'q2jjx.h.filess.io',
+        'PORT': '3307',
     }
 }
 
