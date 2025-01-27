@@ -1,201 +1,435 @@
 {% load static %}
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Virtual Interior Designer - Home</title>
+    <!-- ... existing meta tags and links ... -->
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: Times New Roman, sans-serif;
-            background-color: #f4f4f4;
-            color: #333;
-        }
-        header {
-            background-color: #333;
-            color: white;
-            padding: 15px 0;
-            text-align: center;
+        /* ... existing styles ... */
+
+        /* New Sections Styling */
+        .category-section {
+            padding: 6rem 5%;
             position: relative;
         }
-        header h1 {
-            margin: 0;
+
+        .category-section:nth-child(even) {
+            background: var(--bg-light);
         }
-        .btn-container {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-        }
-        .btn-container a {
-            background-color: white;
-            color: black;
-            padding: 10px 20px;
-            border-radius: 5px;
-            text-decoration: none;
-            font-weight: bold;
-            margin-left: 10px;
-        }
-        .btn-container a:hover {
-            background-color: #f4f4f4;
-        }
-        nav {
-            background-color: white;
-            padding: 10px;
-            display: flex;
-            justify-content: center;
-        }
-        nav a {
-            color: black;
-            text-decoration: none;
-            font-size: 16px;
-            padding: 10px 20px; 
-            border-radius: 5px;
-            background-color: #f4f4f4; 
-            transition: background-color 0.3s ease;
-            display: inline-block;
-            font-weight: bold;
-        }
-        nav a:hover {
-            background-color: #ddd;
-        }
-        .hero {
-            background-image: url('{% static "images/hero-design.jpg" %}');
-            background-size: cover;
-            background-position: center;
-            height: 400px;
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+
+        .category-header {
             text-align: center;
+            margin-bottom: 3rem;
         }
-        .hero h2 {
-            font-size: 48px;
-            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
+
+        .category-header h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.8rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
         }
-        .section-title {
-            text-align: center;
-            margin: 40px 0;
-            font-size: 32px;
-            color: #444;
+
+        .category-header p {
+            color: #666;
+            max-width: 600px;
+            margin: 0 auto;
         }
-        .products {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            padding: 0 15px;
+
+        .design-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin-top: 2rem;
         }
-        .product-box {
-            width: 300px;
-            margin: 15px;
-            border-radius: 8px;
-            background-color: white;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            padding: 20px;
-            transition: transform 0.3s ease-in-out;
+
+        .design-card {
+            position: relative;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: var(--transition);
         }
-        .product-box:hover {
-            transform: scale(1.05);
+
+        .design-card:hover {
+            transform: translateY(-10px);
         }
-        .product-box img {
+
+        .design-image {
             width: 100%;
-            height: 200px;
+            height: 300px;
             object-fit: cover;
-            border-radius: 8px;
         }
-        .product-box h3 {
-            margin: 10px 0;
-        }
-        .product-box p {
-            margin: 5px 0;
-            font-size: 16px;
-        }
-        .product-box a {
-            text-decoration: none;
+
+        .design-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0,0,0,0.8));
+            padding: 2rem;
             color: white;
-            background-color: black;
-            padding: 10px 20px;
-            border-radius: 5px;
-            display: inline-block;
-            margin-top: 10px;
+            transform: translateY(100%);
+            transition: var(--transition);
         }
-        .product-box a:hover {
-            background-color: #333;
+
+        .design-card:hover .design-overlay {
+            transform: translateY(0);
         }
-        footer {
-            background-color: #333;
+
+        .stats-section {
+            background: var(--primary-color);
             color: white;
+            padding: 4rem 5%;
             text-align: center;
-            padding: 20px;
         }
-        footer p {
-            margin: 0;
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+        }
+
+        .stat-item h3 {
+            font-size: 2.5rem;
+            color: var(--accent-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .testimonials {
+            padding: 6rem 5%;
+            background: white;
+        }
+
+        .testimonial-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+
+        .testimonial-card {
+            background: var(--bg-light);
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .client-image {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin: 0 auto 1rem;
+        }
+
+        .rating {
+            color: gold;
+            margin: 1rem 0;
+        }
+
+        @media (max-width: 768px) {
+            .design-grid, .stats-grid, .testimonial-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Designer Cards */
+        .designer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            padding: 2rem;
+        }
+
+        .designer-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .designer-card:hover {
+            transform: translateY(-10px);
+        }
+
+        .designer-image img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+        }
+
+        .designer-info {
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .designer-stats {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin: 1rem 0;
+            color: var(--accent-color);
+        }
+
+        .view-profile-btn {
+            background: var(--accent-color);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 25px;
+            display: inline-block;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        /* Trending Section */
+        .trending-slider {
+            display: grid;
+            grid-auto-flow: column;
+            grid-auto-columns: 300px;
+            gap: 2rem;
+            overflow-x: auto;
+            padding: 2rem;
+            scroll-snap-type: x mandatory;
+            scrollbar-width: none;
+        }
+
+        .design-badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: var(--accent-color);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+
+        .design-meta {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .design-meta span {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Add responsive styles */
+        @media (max-width: 768px) {
+            .designer-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
-
-    <!-- Header Section -->
-    <header>
-        <h1>Virtual Interior Designer</h1>
-        <p>Transforming spaces with elegance</p>
+    <!-- Existing Header -->
+    <header class="header">
+        <!-- ... existing header content ... -->
     </header>
 
-    <!-- Navigation Bar -->
-    <nav>
-        <a href="#portfolio">Portfolio</a>
-        <a href="#about">About Us</a>
-        <a href="#services">Services</a>
-        <a href="#contact">Contact</a>
-    </nav>
-
-    <!-- Hero Section -->
-    <section class="hero">
-        <h2>Your Dream Spaces Start Here</h2>
+    <!-- Existing Hero Section -->
+    <section class="hero" id="home">
+        <!-- ... existing hero content ... -->
     </section>
 
-    <!-- Products Section -->
-    <section id="products">
-        <h2 class="section-title">Furniture & Decor Items</h2>
-        <div class="products">
-            <div class="product-box">
-                <img src="{% static 'images/sofa.jpeg' %}" alt="Sofa">
-                <h3>Modern Sofa</h3>
-                <p>Price: $500</p>
-                <a href="#">View Details</a>
+    <!-- Home Interiors Section -->
+    <section class="category-section" id="home-interiors">
+        <div class="category-header">
+            <h2>Home Interiors</h2>
+            <p>Transform your living spaces into stunning sanctuaries of comfort and style</p>
+        </div>
+        <div class="design-grid">
+            <div class="design-card">
+                <img src="{% static 'images/living-room.jpg' %}" alt="Living Room" class="design-image">
+                <div class="design-overlay">
+                    <h3>Modern Living Rooms</h3>
+                    <p>Contemporary designs for modern living</p>
+                    <a href="#" class="cta-btn">View Projects</a>
+                </div>
             </div>
-            <div class="product-box">
-                <img src="{% static 'images/dining_table.jpeg' %}" alt="Dining Table">
-                <h3>Dining Table Set</h3>
-                <p>Price: $700</p>
-                <a href="#">View Details</a>
+            <div class="design-card">
+                <img src="{% static 'images/bedroom.jpg' %}" alt="Bedroom" class="design-image">
+                <div class="design-overlay">
+                    <h3>Luxurious Bedrooms</h3>
+                    <p>Peaceful retreats for perfect rest</p>
+                    <a href="#" class="cta-btn">View Projects</a>
+                </div>
             </div>
-            <div class="product-box">
-                <img src="{% static 'images/bed.jpeg' %}" alt="Bed">
-                <h3>King Size Bed</h3>
-                <p>Price: $1000</p>
-                <a href="#">View Details</a>
-            </div>
-            <div class="product-box">
-                <img src="{% static 'images/lamp.jpeg' %}" alt="Lamp">
-                <h3>Decorative Lamp</h3>
-                <p>Price: $80</p>
-                <a href="#">View Details</a>
+            <div class="design-card">
+                <img src="{% static 'images/kitchen.jpg' %}" alt="Kitchen" class="design-image">
+                <div class="design-overlay">
+                    <h3>Designer Kitchens</h3>
+                    <p>Where functionality meets elegance</p>
+                    <a href="#" class="cta-btn">View Projects</a>
+                </div>
             </div>
         </div>
     </section>
 
-    <!-- Footer Section -->
-    <footer>
-        <p>&copy; 2024 Virtual Interior Designer. All Rights Reserved.</p>
-    </footer>
+    <!-- Office Interiors Section -->
+    <section class="category-section" id="office-interiors">
+        <div class="category-header">
+            <h2>Office Interiors</h2>
+            <p>Create productive and inspiring workspaces that reflect your brand</p>
+        </div>
+        <div class="design-grid">
+            <div class="design-card">
+                <img src="{% static 'images/corporate-office.jpg' %}" alt="Corporate Office" class="design-image">
+                <div class="design-overlay">
+                    <h3>Corporate Offices</h3>
+                    <p>Professional environments for success</p>
+                    <a href="#" class="cta-btn">View Projects</a>
+                </div>
+            </div>
+            <div class="design-card">
+                <img src="{% static 'images/meeting-room.jpg' %}" alt="Meeting Room" class="design-image">
+                <div class="design-overlay">
+                    <h3>Meeting Spaces</h3>
+                    <p>Collaborative spaces for innovation</p>
+                    <a href="#" class="cta-btn">View Projects</a>
+                </div>
+            </div>
+            <div class="design-card">
+                <img src="{% static 'images/creative-office.jpg' %}" alt="Creative Office" class="design-image">
+                <div class="design-overlay">
+                    <h3>Creative Studios</h3>
+                    <p>Inspiring spaces for creative teams</p>
+                    <a href="#" class="cta-btn">View Projects</a>
+                </div>
+            </div>
+        </div>
+    </section>
 
+    <!-- Statistics Section -->
+    <section class="stats-section">
+        <div class="stats-grid">
+            <div class="stat-item">
+                <h3>500+</h3>
+                <p>Projects Completed</p>
+            </div>
+            <div class="stat-item">
+                <h3>300+</h3>
+                <p>Happy Clients</p>
+            </div>
+            <div class="stat-item">
+                <h3>15+</h3>
+                <p>Years Experience</p>
+            </div>
+            <div class="stat-item">
+                <h3>50+</h3>
+                <p>Design Awards</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="testimonials">
+        <div class="category-header">
+            <h2>Client Testimonials</h2>
+            <p>What our clients say about our services</p>
+        </div>
+        <div class="testimonial-grid">
+            <div class="testimonial-card">
+                <img src="{% static 'images/client1.jpg' %}" alt="Client" class="client-image">
+                <div class="rating">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                </div>
+                <p>"AURA transformed our home beyond our expectations. Their attention to detail and creativity is unmatched."</p>
+                <h4>Sarah Johnson</h4>
+                <p class="client-title">Homeowner</p>
+            </div>
+            <!-- Add more testimonial cards -->
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="category-section" id="contact">
+        <div class="category-header">
+            <h2>Get In Touch</h2>
+            <p>Let's discuss your next project</p>
+        </div>
+        <!-- Add contact form or contact information -->
+    </section>
+
+    <!-- Featured Designers Section -->
+    <section class="category-section" id="featured-designers">
+        <div class="category-header">
+            <h2>Our Featured Designers</h2>
+            <p>Meet the creative minds behind stunning interiors</p>
+        </div>
+        <div class="designer-grid">
+            {% for designer in featured_designers %}
+            <div class="designer-card">
+                <div class="designer-image">
+                    <img src="{{ designer.profile_image.url }}" alt="{{ designer.name }}">
+                </div>
+                <div class="designer-info">
+                    <h3>{{ designer.name }}</h3>
+                    <p class="specialty">{{ designer.specialty }}</p>
+                    <div class="designer-stats">
+                        <span><i class="fas fa-star"></i> {{ designer.rating }}</span>
+                        <span><i class="fas fa-briefcase"></i> {{ designer.projects_count }} Projects</span>
+                    </div>
+                    <a href="{% url 'designer_profile' designer.id %}" class="view-profile-btn">View Profile</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- Trending Designs Section -->
+    <section class="category-section bg-light" id="trending">
+        <div class="category-header">
+            <h2>Trending Designs</h2>
+            <p>Most loved designs this month</p>
+        </div>
+        <div class="trending-slider">
+            {% for design in trending_designs %}
+            <div class="design-card">
+                <div class="design-badge">Trending</div>
+                <img src="{{ design.image.url }}" alt="{{ design.name }}" class="design-image">
+                <div class="design-overlay">
+                    <div class="design-meta">
+                        <span><i class="fas fa-heart"></i> {{ design.likes }}</span>
+                        <span><i class="fas fa-eye"></i> {{ design.views }}</span>
+                    </div>
+                    <h3>{{ design.name }}</h3>
+                    <p class="designer-name">by {{ design.designer.name }}</p>
+                    <div class="price">${{ design.price }}</div>
+                    <a href="{% url 'design_detail' design.id %}" class="view-details-btn">View Details</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- Add Footer -->
+
+    <!-- Search Section -->
+    <div class="search-section">
+        <form class="search-form">
+            <div class="search-filters">
+                <input type="text" placeholder="Search designs...">
+                <select name="category">
+                    <option value="">All Categories</option>
+                    <option value="living">Living Room</option>
+                    <option value="bedroom">Bedroom</option>
+                    <option value="kitchen">Kitchen</option>
+                </select>
+                <select name="budget">
+                    <option value="">Budget Range</option>
+                    <option value="budget">Under $1000</option>
+                    <option value="premium">$1000-$5000</option>
+                    <option value="luxury">$5000+</option>
+                </select>
+                <button type="submit">Search</button>
+            </div>
+        </form>
+    </div>
 </body>
 </html>

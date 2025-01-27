@@ -5,238 +5,293 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aura Designs - Home</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
+
         body {
-            font-family: Times New Roman, sans-serif;
-            background-color: white; /* Pure white background */
-            color: #333;
+            font-family: 'Poppins', sans-serif;
+            background-color: #f8f9fa;
+            color: #2c3e50;
+            line-height: 1.6;
         }
-        header {
-            background-color: #333;
-            color: white;
-            padding: 15px 0;
-            text-align: center;
-            position: relative;
+
+        /* Header Styles */
+        .header {
+            background-color: transparent;
+            position: fixed;
+            width: 100%;
+            z-index: 1000;
+            padding: 20px 0;
+            transition: 0.3s;
         }
-        header h1 {
-            margin: 0;
+
+        .header.scrolled {
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        nav {
-            background-color: white; /* Changed to white */
-            padding: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+
         .nav-container {
-            width: 60%; /* Controls the overall width of the navigation container */
+            max-width: 1200px;
+            margin: 0 auto;
             display: flex;
             justify-content: space-between;
-            margin: 0 auto;
-        }
-        nav a {
-            color: white; /* White text color */
-            text-decoration: none;
-            font-size: 20px; /* Increased font size */
-            padding: 20px 40px; /* Increased padding for bigger buttons */
-            border-radius: 5px;
-            background-color: black; /* Black background */
-            transition: background-color 0.3s ease;
-            font-weight: bold;
-        }
-        nav a:hover {
-            background-color: #555; /* Darker hover effect */
-        }
-        .designer-btn {
-            position: relative;
-            left: 25%; /* Positioned between center and right */
-        }
-        .seller-btn {
-            position: relative;
-            right: 25%; /* Positioned between center and left */
-        }
-        .hero {
-            background-color: #E4FBFF; /* Light background color */
-            height: 400px;
-            color: black; /* Changed text color to black */
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
             align-items: center;
-            text-align: center;
-            position: relative;
+            padding: 0 20px;
         }
-        .hero h2 {
-            font-size: 48px;
-            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 28px;
+            color: #2c3e50;
+            text-decoration: none;
+        }
+
+        .nav-links a {
+            color: #2c3e50;
+            text-decoration: none;
+            margin-left: 30px;
+            font-weight: 500;
+            transition: 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #e67e22;
+        }
+
+        /* Hero Section */
+        .hero {
+            height: 100vh;
+            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('{% static "images/hero-bg.jpg" %}');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+        }
+
+        .hero-content {
+            max-width: 800px;
+            padding: 0 20px;
+        }
+
+        .hero h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 4rem;
             margin-bottom: 20px;
         }
+
+        .hero p {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+        }
+
+        .cta-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .cta-btn {
+            padding: 15px 40px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: 0.3s;
+        }
+
+        .primary-btn {
+            background-color: #e67e22;
+            color: white;
+        }
+
+        .secondary-btn {
+            background-color: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+
+        .cta-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        /* Portfolio Section */
+        .portfolio {
+            padding: 100px 0;
+            background-color: white;
+        }
+
         .section-title {
             text-align: center;
-            margin: 40px 0;
-            font-size: 32px;
-            color: #444;
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            margin-bottom: 50px;
         }
-        .portfolio, .services {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            padding: 0 15px;
+
+        .portfolio-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            padding: 0 20px;
+            max-width: 1200px;
+            margin: 0 auto;
         }
-        .portfolio img, .service-box img {
-            width: 300px;
-            height: 200px;
-            margin: 15px;
-            border-radius: 8px;
-            object-fit: cover;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease-in-out;
-        }
-        .portfolio img:hover {
-            transform: scale(1.05);
-        }
-        .about, .services {
-            background-color: white;
-            padding: 60px 20px;
-            text-align: center;
-        }
-        .about p, .service-box p {
-            font-size: 18px;
-            line-height: 1.6;
-            margin-bottom: 20px;
-        }
-        .service-box {
-            text-align: center;
-            width: 30%;
-            padding: 20px;
-            background-color: white;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+
+        .portfolio-item {
+            position: relative;
+            overflow: hidden;
             border-radius: 10px;
+            height: 300px;
         }
-        .service-box img {
-            width: 400px;
+
+        .portfolio-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: 0.5s;
+        }
+
+        .portfolio-item:hover img {
+            transform: scale(1.1);
+        }
+
+        /* Services Section */
+        .services {
+            padding: 100px 0;
+            background-color: #f8f9fa;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            padding: 0 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .service-card {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            transition: 0.3s;
+        }
+
+        .service-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .service-card img {
+            width: 80px;
             margin-bottom: 20px;
         }
+
+        /* Footer */
         footer {
-            background-color: #333;
+            background-color: #2c3e50;
             color: white;
+            padding: 50px 0;
             text-align: center;
-            padding: 20px;
-        }
-        footer p {
-            margin: 0;
-        }
-        .section-btn {
-            display: block;
-            width: 200px;
-            padding: 10px;
-            margin: 20px auto;
-            text-align: center;
-            background-color: black;
-            color: white;
-            border-radius: 5px;
-            text-decoration: none;
-            font-weight: bold;
-        }
-        .section-btn:hover {
-            background-color: #333;
-        }
-        
-        /* Positioning login and register above portfolio section */
-        .btn-container-centered {
-            display: flex;
-            justify-content: center;
-            margin-top: 20px;
-            margin-bottom: 40px;
-        }
-        .btn-container-centered a {
-            background-color: black;
-            color: white;
-            padding: 20px 40px;
-            border-radius: 5px;
-            text-decoration: none;
-            font-size: 24px;
-            font-weight: bold;
-            margin-left: 20px;
-            transition: background-color 0.3s ease;
-        }
-        .btn-container-centered a:hover {
-            background-color: #555;
         }
     </style>
 </head>
 <body>
-
-    <!-- Header Section -->
-    <header>
-        <h1> AURA DESIGNS</h1>
-    </header>
-
-    <!-- Navigation Section -->
-    <nav>
+    <!-- Header -->
+    <header class="header">
         <div class="nav-container">
-            <a href="{% url 'slogin' %}" class="seller-btn">Seller's Corner</a> <!-- Seller's Corner Button -->
-            <a href="{% url 'dlogin' %}" class="designer-btn">Designer's Corner</a> <!-- Designer's Corner Button -->
+            <a href="/" class="logo">AURA DESIGNS</a>
+            <nav class="nav-links">
+                <a href="{% url 'slogin' %}">Seller's Corner</a>
+                <a href="{% url 'dlogin' %}">Designer's Corner</a>
+                <a href="/login">Login</a>
+                <a href="{% url 'register' %}">Register</a>
+            </nav>
         </div>
-    </nav>
+    </header>
 
     <!-- Hero Section -->
     <section class="hero">
-        <h2>Your Dream Spaces Start Here</h2> <!-- Changed text color to black -->
-        <br>
-        <br>
-        <br><br>
-
-        <!-- Login/Register Buttons placed between Hero text and Explore Designs -->
-        <div class="btn-container-centered">
-            <a href="/login">User Login</a>
-            <a href="{% url 'register' %}">Register</a>
-        </div>  
+        <div class="hero-content">
+            <h1>Transform Your Space</h1>
+            <p>Create stunning interiors that reflect your personality and lifestyle</p>
+            <div class="cta-buttons">
+                <a href="/login" class="cta-btn primary-btn">Get Started</a>
+                <a href="#portfolio" class="cta-btn secondary-btn">View Our Work</a>
+            </div>
+        </div>
     </section>
 
     <!-- Portfolio Section -->
-    <section id="portfolio">
-        <h2 class="section-title">Design Portfolio</h2>
-        <div class="portfolio">
-            <img src="{% static 'images/Office-Design.jpeg' %}">
-            <img src="{% static 'images/living_room.jpeg' %}">
-            <img src="{% static 'images/Dining-Room.jpeg' %}">
-            <img src="{% static 'images/Bedroom-Design.jpeg' %}">
-            <img src="{% static 'images/Kitchen-Design.jpeg' %}">
-            <img src="{% static 'images/Bathroom-Design.jpeg' %}">
-            <img src="{% static 'images/Kitchen-Design.jpeg' %}">
+    <section id="portfolio" class="portfolio">
+        <h2 class="section-title">Our Portfolio</h2>
+        <div class="portfolio-grid">
+            <div class="portfolio-item">
+                <img src="{% static 'images/Office-Design.jpeg' %}" alt="Office Design">
+            </div>
+            <div class="portfolio-item">
+                <img src="{% static 'images/living_room.jpeg' %}" alt="Living Room">
+            </div>
+            <div class="portfolio-item">
+                <img src="{% static 'images/Dining-Room.jpeg' %}" alt="Dining Room">
+            </div>
+            <div class="portfolio-item">
+                <img src="{% static 'images/Bedroom-Design.jpeg' %}" alt="Bedroom">
+            </div>
+            <div class="portfolio-item">
+                <img src="{% static 'images/Kitchen-Design.jpeg' %}" alt="Kitchen">
+            </div>
+            <div class="portfolio-item">
+                <img src="{% static 'images/Bathroom-Design.jpeg' %}" alt="Bathroom">
+            </div>
         </div>
     </section>
 
     <!-- Services Section -->
-    <a href="#services" class="section-btn">Explore Our Services</a>
-    <section id="services" class="services">
-        <div class="service-box">
-            <img src="{% static 'images/home-design2.jpeg' %}" alt="Service 1">
-            <h3>Home Design</h3>
-            <p>We craft modern and luxurious home interiors that match your lifestyle and taste.</p>
-        </div>
-        <div class="service-box">
-            <img src="{% static 'images/office-design2.jpeg' %}" alt="Service 2">
-            <h3>Office Design</h3>
-            <p>Our office designs are built to foster creativity and productivity while maintaining a professional look.</p>
-        </div>
-        <div class="service-box">
-            <img src="{% static 'images/furniture.jpeg' %}" alt="Service 3">
-            <h3>Custom Furniture</h3>
-            <p>Our custom-made furniture adds a unique touch to any space with functionality and style.</p>
+    <section class="services">
+        <h2 class="section-title">Our Services</h2>
+        <div class="services-grid">
+            <div class="service-card">
+                <img src="{% static 'images/home-design2.jpeg' %}" alt="Home Design">
+                <h3>Home Design</h3>
+                <p>Create your dream living space with our expert interior designers</p>
+            </div>
+            <div class="service-card">
+                <img src="{% static 'images/office-design2.jpeg' %}" alt="Office Design">
+                <h3>Office Design</h3>
+                <p>Transform your workplace into a productive and inspiring environment</p>
+            </div>
+            <div class="service-card">
+                <img src="{% static 'images/furniture.jpeg' %}" alt="Custom Furniture">
+                <h3>Custom Furniture</h3>
+                <p>Unique, handcrafted furniture pieces tailored to your style</p>
+            </div>
         </div>
     </section>
 
-    <!-- Footer Section -->
+    <!-- Footer -->
     <footer>
         <p>&copy; 2024 AURA DESIGNS. All Rights Reserved.</p>
     </footer>
 
+    <script>
+        // Add scroll effect to header
+        window.addEventListener('scroll', function() {
+            const header = document.querySelector('.header');
+            if (window.scrollY > 50) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
+    </script>
 </body>
 </html>

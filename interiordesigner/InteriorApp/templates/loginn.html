@@ -2,184 +2,299 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Login</title>
-  <link rel="preconnect" href="https://fonts.gstatic.com">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <meta charset="UTF-8">
+    <title>Login - Aura Designs</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
-  <!--Stylesheet-->
-  <style>
-      * {
-          padding: 0;
-          margin: 0;
-          box-sizing: border-box;
-      }
-      body {
-          background-color: #080710;
-          font-family: 'Poppins', sans-serif;
-      }
-      .background {
-          position: absolute;
-          width: 100%;
-          height: 100%;
-          overflow: hidden;
-      }
-      /* Video background styles */
-      .background video {
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          min-width: 100%;
-          min-height: 100%;
-          width: auto;
-          height: auto;
-          z-index: -1;
-          transform: translate(-50%, -50%);
-          object-fit: cover;
-          filter: brightness(50%); /* Optional: Darken the video */
-      }
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
 
-      form {
-          height: 600px; /* Increased height to accommodate all elements */
-          width: 400px;
-          background-color: rgba(255, 255, 255, 0.13);
-          position: absolute;
-          transform: translate(-50%, -50%);
-          top: 50%;
-          left: 50%;
-          border-radius: 10px;
-          backdrop-filter: blur(10px);
-          border: 2px solid rgba(255, 255, 255, 0.1);
-          box-shadow: 0 0 40px rgba(8, 7, 16, 0.6);
-          padding: 50px 35px;
-      }
-      form * {
-          font-family: 'Poppins', sans-serif;
-          color: #ffffff;
-          letter-spacing: 0.5px;
-          outline: none;
-          border: none;
-      }
-      form h3 {
-          font-size: 32px;
-          font-weight: 500;
-          line-height: 42px;
-          text-align: center;
-      }
-      label {
-          display: block;
-          margin-top: 30px;
-          font-size: 16px;
-          font-weight: 500;
-      }
-      input {
-          display: block;
-          height: 50px;
-          width: 100%;
-          background-color: rgba(255, 255, 255, 0.07);
-          border-radius: 3px;
-          padding: 0 10px;
-          margin-top: 8px;
-          font-size: 14px;
-          font-weight: 300;
-      }
-      ::placeholder {
-          color: #e5e5e5;
-      }
-      button {
-          margin-top: 50px;
-          width: 100%;
-          background-color: #ffffff;
-          color: #080710;
-          padding: 15px 0;
-          font-size: 18px;
-          font-weight: 600;
-          border-radius: 5px;
-          cursor: pointer;
-      }
-      .social {
-          margin-top: 30px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-      }
-      .social div {
-          background-color: rgba(255, 255, 255, 0.27);
-          width: 100%;
-          text-align: center;
-          border-radius: 3px;
-          padding: 10px 10px;
-          color: #eaf0fb;
-          margin-bottom: 10px;
-      }
-      .social div:hover {
-          background-color: rgba(255, 255, 255, 0.47);
-      }
-      .social a {
-          display: inline-block;
-          color: white;
-          text-decoration: none;
-          font-weight: 500;
-      }
-      .social img {
-          margin-right: 8px;
-          vertical-align: middle;
-      }
-      /* Error message styling */
-      .error {
-          color: red;
-          font-size: 14px;
-          text-align: center;
-          margin-top: 15px;
-      }
-  </style>
+        body {
+            min-height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Video Background */
+        .video-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .video-background video {
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            object-fit: cover;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 0;
+        }
+
+        .container {
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        form {
+            width: 420px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 45px;
+            box-shadow: 0 0 40px rgba(8, 7, 16, 0.6);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .form-header .logo-icon {
+            font-size: 3.5rem;
+            color: #fff;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+        }
+
+        .form-header h3 {
+            font-size: 2.2rem;
+            color: #fff;
+            font-weight: 600;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+
+        .form-header p {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .form-group i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.2rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 15px 15px 15px 45px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            border-color: rgba(255, 255, 255, 0.5);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+            outline: none;
+        }
+
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(45deg, #00a8cc, #0097b2);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px rgba(0, 168, 204, 0.4);
+        }
+
+        .social {
+            margin-top: 35px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .social div {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .social div:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+        }
+
+        .social a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .social img {
+            width: 20px;
+            height: 20px;
+            object-fit: contain;
+        }
+
+        .social i {
+            font-size: 20px;
+        }
+
+        .register-link {
+            text-align: center;
+            margin-top: 25px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .register-link a {
+            color: #00a8cc;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .register-link a:hover {
+            color: #0097b2;
+            text-shadow: 0 0 10px rgba(0, 168, 204, 0.5);
+        }
+
+        @media (max-width: 480px) {
+            form {
+                width: 100%;
+                padding: 35px 25px;
+            }
+        }
+
+        .error {
+            background: rgba(255, 87, 87, 0.1);
+            border: 1px solid rgba(255, 87, 87, 0.3);
+            color: #ff5757;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+    </style>
 </head>
 
 <body>
-    <div class="background">
-        <!-- Add your video file here -->
-        <video autoplay muted loop>
+    <!-- Video Background -->
+    <div class="video-background">
+        <video autoplay muted loop playsinline>
             <source src="{% static 'videos/vdw-2.mp4.mp4' %}" type="video/mp4">
-            <!-- Fallback image if the video is not supported -->
-            <img src="{% static 'images/fallback.jpg' %}" alt="Background Image">
         </video>
     </div>
+    <div class="overlay"></div>
 
-    <form method="POST">
-        {% csrf_token %}
-        <h3>Login Here</h3>
-        
-        <!-- Display error messages -->
-        {% if messages %}
-        {% for message in messages %}
-            <div class="error">{{ message }}</div>
-        {% endfor %}
-        {% endif %}
-        
-        <label for="username">Username</label>
-        <input type="text" placeholder="Email or Username" id="username" name="username" required>
-
-        <label for="password">Password</label>
-        <input type="password" placeholder="Password" id="password" name="password" required>
-
-        <button type="submit" id="login">Log In</button>
-
-        <div class="social">
-            <!-- Google Login Button -->
-            <div class="go">
-                <a href="{% url 'social:begin' 'google-oauth2' %}">
-                    <img src="{% static 'images/g-logo3.png' %}" alt="Google Logo" style="width: 35px; height: 30px">
-                    Login With Google
-                </a>
+    <div class="container">
+        <form method="POST">
+            {% csrf_token %}
+            <div class="form-header">
+                <div class="logo-icon">
+                    <i class="fas fa-user"></i>
+                </div>
+                <h3>Welcome Back</h3>
+                <p>Please login to your account</p>
             </div>
-            <br>
-            <!-- Forgot Password Link -->
-            <div class="fb">
-                <a href="{% url 'forgotpassword' %}">
-                    Forgot Password
-                </a>
+
+            {% if messages %}
+            {% for message in messages %}
+                <div class="error">{{ message }}</div>
+            {% endfor %}
+            {% endif %}
+
+            <div class="form-group">
+                <i class="fas fa-user"></i>
+                <input type="text" placeholder="Email or Username" id="username" name="username" required>
             </div>
-        </div>
-    </form>
+
+            <div class="form-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" placeholder="Password" id="password" name="password" required>
+            </div>
+
+            <button type="submit" id="login">Sign In</button>
+
+            <div class="social">
+                <div class="go">
+                    <a href="{% url 'social:begin' 'google-oauth2' %}">
+                        <img src="{% static 'images/g-logo3.png' %}" alt="Google Logo" style="width: 20px; height: 20px;">
+                        <span>Continue with Google</span>
+                    </a>
+                </div>
+                <div class="fb">
+                    <a href="{% url 'forgotpassword' %}">
+                        <i class="fas fa-key"></i>
+                        <span>Forgot Password?</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="register-link">
+                New to our site? <a href="{% url 'register' %}">Sign Up</a>
+            </div>
+        </form>
+    </div>
 </body>
 </html>

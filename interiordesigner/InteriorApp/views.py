@@ -562,8 +562,11 @@ def update_cart(request, item_id):
     
     
 def realhome(request):
-    designs = Design.objects.all()  # Get all designs from the database
-    return render(request, 'realhome.html', {'designs': designs})
+    if 'id' in request.session:
+        designs = Design.objects.all()  # Get all designs from the database
+        return render(request, 'realhome.html', {'designs': designs})
+    else:
+        return redirect('login')
 
 # Designers Page View
 def designers_page(request):
@@ -676,3 +679,14 @@ def remove_from_designer_cart(request, item_id):
         item.delete()
     
     return redirect('dcart')
+
+def browse(request):
+    return render(request, 'browse.html')
+
+def dhome(request):
+    # Logic to get data for the designer dashboard
+    return render(request, 'dhome.html')
+
+def shome(request):
+    # Logic to get data for the seller dashboard
+    return render(request, 'shome.html')

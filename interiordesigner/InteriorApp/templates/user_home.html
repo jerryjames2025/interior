@@ -47,11 +47,50 @@
     <!-- Hero Section -->
     <section class="hero bg-light py-5">
         <div class="container text-center">
-            <h1 class="display-4">Welcome to Aura Furnitures</h1>
+            <h1 class="display-4">Welcome to Aura Designs</h1>
             <p class="lead">Your one-stop shop for all your home and lifestyle needs.</p>
         </div>
     </section>
     
+    <!-- Categories Section -->
+    <section class="categories py-5">
+        <div class="container">
+            <h2 class="text-center mb-4">Shop by Category</h2>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card text-center">
+                        <img src="{% static 'images/furniture.jpg' %}" class="card-img-top" alt="Furniture">
+                        <div class="card-body">
+                            <h5 class="card-title">Furniture</h5>
+                            <p class="card-text">Explore our wide range of furniture for every room.</p>
+                            <a href="{% url 'furniture_category' %}" class="btn btn-primary">Shop Now</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-center">
+                        <img src="{% static 'images/decor.jpg' %}" class="card-img-top" alt="Decor">
+                        <div class="card-body">
+                            <h5 class="card-title">Decor</h5>
+                            <p class="card-text">Find the perfect decor to enhance your space.</p>
+                            <a href="{% url 'decor_category' %}" class="btn btn-primary">Shop Now</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-center">
+                        <img src="{% static 'images/lighting.jpg' %}" class="card-img-top" alt="Lighting">
+                        <div class="card-body">
+                            <h5 class="card-title">Lighting</h5>
+                            <p class="card-text">Illuminate your home with our stylish lighting options.</p>
+                            <a href="{% url 'lighting_category' %}" class="btn btn-primary">Shop Now</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Featured Products Section -->
     <section class="featured-products py-5">
         <div class="container">
@@ -83,7 +122,7 @@
     <!-- Footer Section -->
     <footer class="bg-dark text-white py-4">
         <div class="container text-center">
-            <p>&copy; 2024 MultiShop. All Rights Reserved.</p>
+            <p>&copy; 2024 AURA DESIGNS. All Rights Reserved.</p>
         </div>
     </footer>
 

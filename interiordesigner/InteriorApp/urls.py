@@ -1,4 +1,3 @@
-
 from django.urls import path,include
 from . import views
 from django.contrib.auth import views as auth_views
@@ -60,6 +59,7 @@ urlpatterns = [
     path('dcart/', views.designer_cart_view, name='dcart'),
     path('dcart/update/<int:item_id>/', views.update_designer_cart, name='update_dcart'),
     path('dcart/remove/<int:item_id>/', views.remove_from_designer_cart, name='remove_from_dcart'),
+    path('browse/', views.browse, name='browse'),  # URL for the browse page
 ]
 
 

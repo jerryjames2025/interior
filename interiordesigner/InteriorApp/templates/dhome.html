@@ -1,205 +1,520 @@
 {% load static %}
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-  <!-- Basic -->
-  <meta charset="utf-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <!-- Mobile Metas -->
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-  <!-- Site Metas -->
-  <link rel="icon" href="images/fevicon/fevicon.png" type="image/gif" />
-  <meta name="keywords" content="" />
-  <meta name="description" content="" />
-  <meta name="author" content="" />
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AURA DESIGNS - Designer Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #C7A350;
+            --bg-light: #f8f9fa;
+            --text-dark: #2c3e50;
+            --border-color: #e1e1e1;
+        }
 
-  <title>AURA DESIGNS - Seller Dashboard (Add Designs)</title>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--bg-light);
+        }
 
-  <!-- bootstrap core css -->
-  <link rel="stylesheet" type="text/css" href="{% static 'css/bootstrap.css' %}" />
+        /* Navigation */
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
 
-  <!-- fonts style -->
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 5px;
+            margin-left: 15px;
+        }
 
-  <!-- font awesome style -->
-  <link href="{% static 'css/font-awesome.min.css' %}" rel="stylesheet" />
+        .logo-icon {
+            position: relative;
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--accent-color), #E8B96A);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: rotate(45deg);
+            box-shadow: 0 2px 15px rgba(199, 163, 80, 0.3);
+            margin-right: 5px;
+        }
 
-  <!-- Custom styles for this template -->
-  <link href="{% static 'css/style.css' %}" rel="stylesheet" />
-  <!-- responsive style -->
-  <link href="{% static 'css/responsive.css' %}" rel="stylesheet" />
+        .logo-icon::before {
+            content: '';
+            position: absolute;
+            width: 35px;
+            height: 35px;
+            border: 2px solid rgba(255, 255, 255, 0.6);
+            border-radius: 8px;
+        }
 
-  <style>
-    .design-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 20px auto;
-    }
+        .logo-icon i {
+            transform: rotate(-45deg);
+            color: white;
+            font-size: 1.4rem;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+        }
 
-    .design-table th,
-    .design-table td {
-      border: 1px solid #ddd;
-      padding: 12px;
-      text-align: left;
-    }
+        .brand-text {
+            display: flex;
+            flex-direction: column;
+            line-height: 1;
+            margin-left: 8px;
+        }
 
-    .design-table th {
-      background-color: #C7A350;
-      color: white;
-    }
+        .brand-name {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: white;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
 
-    .design-table td img {
-      width: 100px;
-      height: 100px;
-      object-fit: cover;
-      border-radius: 5px;
-    }
+        .brand-tagline {
+            font-size: 0.9rem;
+            color: var(--accent-color);
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
 
-    .edit-btn,
-    .remove-btn {
-      background-color: #C7A350;
-      color: white;
-      padding: 8px 12px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 8px 20px;
+            border-radius: 25px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--primary-color);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            text-decoration: none;
+            font-weight: 500;
+            z-index: 1000;
+        }
 
-    .remove-btn {
-      background-color: #FF6347;
-    }
+        .back-btn:hover {
+            transform: translateX(-5px);
+            background: white;
+            color: var(--accent-color);
+        }
 
-    .button-container {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin: 20px 0;
-    }
+        /* Updated Dashboard Header */
+        .dashboard-header {
+            background: linear-gradient(
+                rgba(0, 0, 0, 0.7),
+                rgba(0, 0, 0, 0.7)
+            ), url('{% static "images/designer-bg.jpg" %}');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            position: relative;
+            padding: 4rem 0;
+            color: white;
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
 
-    .add-design-btn {
-      padding: 15px 30px;
-      background-color: #C7A350;
-      color: white;
-      text-align: center;
-      font-size: 18px;
-      border-radius: 5px;
-      text-decoration: none;
-      font-weight: bold;
-      transition: background-color 0.3s ease;
-    }
+        .dashboard-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                linear-gradient(45deg, var(--accent-color) 0%, transparent 70%),
+                linear-gradient(-45deg, #2c3e50 0%, transparent 70%);
+            opacity: 0.3;
+        }
 
-    .add-design-btn:hover {
-      background-color: #333;
-    }
+        .dashboard-header .container {
+            position: relative;
+            z-index: 2;
+        }
 
-    .view-designs-btn {
-      padding: 15px 30px;
-      background-color: #C7A350;
-      color: white;
-      text-align: center;
-      font-size: 18px;
-      border-radius: 5px;
-      text-decoration: none;
-      font-weight: bold;
-      transition: background-color 0.3s ease;
-    }
+        .dashboard-header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
 
-    .view-designs-btn:hover {
-      background-color: #333;
-    }
-  </style>
+        .dashboard-header p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        /* Stats Cards */
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            padding: 1rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card i {
+            font-size: 2rem;
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+        }
+
+        .stat-card h3 {
+            font-size: 1.8rem;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        /* Design Grid */
+        .designs-container {
+            padding: 2rem;
+        }
+
+        .designs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .design-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .design-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .design-image {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+        }
+
+        .design-info {
+            padding: 1.5rem;
+        }
+
+        .design-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-dark);
+        }
+
+        .design-price {
+            color: var(--accent-color);
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .design-description {
+            color: #666;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .design-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn-action {
+            flex: 1;
+            padding: 0.5rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-edit {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .btn-delete {
+            background: #e74c3c;
+            color: white;
+        }
+
+        /* Enhanced Add Design Button */
+        .btn-add-design {
+            background: linear-gradient(135deg, var(--accent-color), #E8B96A);
+            color: white;
+            padding: 1rem 2.5rem;
+            border-radius: 30px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.8rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(199, 163, 80, 0.3);
+        }
+
+        .btn-add-design:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(199, 163, 80, 0.4);
+            background: linear-gradient(135deg, #E8B96A, var(--accent-color));
+        }
+
+        .btn-add-design i {
+            font-size: 1.2rem;
+        }
+
+        /* Optional: Add floating design elements */
+        .design-elements {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+
+        .design-element {
+            position: absolute;
+            opacity: 0.1;
+            color: white;
+        }
+
+        .element-1 { top: 10%; left: 5%; font-size: 3rem; }
+        .element-2 { top: 20%; right: 10%; font-size: 2rem; }
+        .element-3 { bottom: 15%; left: 15%; font-size: 2.5rem; }
+        .element-4 { bottom: 20%; right: 5%; font-size: 3.5rem; }
+
+        /* Updated Logo Container */
+        .navbar .container {
+            padding-left: 2rem;
+        }
+
+        /* Updated Home Link Styles */
+        .nav-link.home-link {
+            font-size: 1.2rem;
+            padding: 0.5rem 1.5rem;
+            margin-right: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link.home-link i {
+            font-size: 1.4rem;
+            color: var(--accent-color);
+        }
+
+        .nav-link.home-link:hover {
+            color: var(--accent-color);
+            transform: translateX(-5px);
+        }
+
+        /* Adjust navbar spacing */
+        .navbar-nav {
+            margin-right: 3rem; /* Increased right margin */
+        }
+
+        @media (max-width: 768px) {
+            .stats-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .designs-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .navbar .container {
+                padding-left: 1rem;
+            }
+            
+            .logo-container {
+                margin-left: 5px;
+            }
+        }
+
+        /* Add new logout button styles */
+        .logout-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(220, 53, 69, 0.9);
+            padding: 8px 20px;
+            border-radius: 25px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            text-decoration: none;
+            font-weight: 500;
+            z-index: 1000;
+        }
+
+        .logout-btn:hover {
+            background: #dc3545;
+            transform: translateY(-2px);
+            color: white;
+            text-decoration: none;
+        }
+    </style>
 </head>
-
 <body>
-
-  <div class="hero_area">
-    <!-- header section starts -->
-    <header class="header_section">
-      <div class="container-fluid">
-        <nav class="navbar navbar-expand-lg custom_nav-container ">
-          <a class="navbar-brand" href="/">
-            <span>AURA DESIGNS</span>
-          </a>
-
-          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
-            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class=""> </span>
-          </button>
-
-          <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul class="navbar-nav">
-              <li class="nav-item"><a class="nav-link" href="/about">About</a></li>
-              <li class="nav-item"><a class="nav-link" href="/designs">Designs</a></li>
-              <li class="nav-item"><a class="nav-link" href="/complaints">Complaints</a></li>
-            </ul>
-            <div class="user_optio_box">
-              <a href="/profile"><i class="fa fa-user" aria-hidden="true"></i></a>
-              <a href="/cart"><i class="fa fa-shopping-cart" aria-hidden="true"></i></a>
-              <a href="{% url 'logout' %}" class="btn btn-danger">Logout</a>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <div class="logo-container">
+                    <div class="logo-icon">
+                        <i class="fas fa-gem"></i>
+                    </div>
+                    <div class="brand-text">
+                        <span class="brand-name">AURA</span>
+                        <span class="brand-tagline">DESIGNS</span>
+                    </div>
+                </div>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link home-link" href="/">
+                            <i class="fas fa-home"></i>
+                            <span>Home</span>
+                        </a>
+                    </li>
+                </ul>
             </div>
-          </div>
-        </nav>
-      </div>
+        </div>
+    </nav>
+
+    <!-- Add Back Button -->
+    <a href="javascript:history.back()" class="back-btn">
+        <i class="fas fa-door-open"></i>
+        <span>Back</span>
+    </a>
+
+    <!-- Add the new logout button -->
+    <a href="{% url 'logout' %}" class="logout-btn">
+        <i class="fas fa-sign-out-alt"></i>
+        <span>Logout</span>
+    </a>
+
+    <!-- Dashboard Header -->
+    <header class="dashboard-header">
+        <div class="design-elements">
+            <i class="fas fa-ruler-combined design-element element-1"></i>
+            <i class="fas fa-pencil-ruler design-element element-2"></i>
+            <i class="fas fa-drafting-compass design-element element-3"></i>
+            <i class="fas fa-paint-roller design-element element-4"></i>
+        </div>
+        <div class="container text-center">
+            <h1>Designer Dashboard</h1>
+            <p>Transform spaces with your creative vision</p>
+            <a href="{% url 'add_design' %}" class="btn-add-design">
+                <i class="fas fa-plus-circle"></i>
+                Create New Design
+            </a>
+        </div>
     </header>
-    <!-- end header section --><br>
 
-    <!-- Button Section: Add Design (centered without changing color) -->
-    <div class="container text-center">
-      <a href="{% url 'add_design' %}" class="add-design-btn">Add New Design</a>
+    <!-- Statistics Cards -->
+    <div class="container">
+        <div class="stats-cards">
+            <div class="stat-card">
+                <i class="fas fa-paint-brush"></i>
+                <h3>{{ designs.count }}</h3>
+                <p>Total Designs</p>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-eye"></i>
+                <h3>{{ total_views }}</h3>
+                <p>Total Views</p>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-heart"></i>
+                <h3>{{ total_likes }}</h3>
+                <p>Total Likes</p>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-comment"></i>
+                <h3>{{ total_comments }}</h3>
+                <p>Total Comments</p>
+            </div>
+        </div>
     </div>
-    <br>
 
-    <!-- Designs Table Section -->
-    <section>
-      <table class="design-table">
-        <thead>
-          <tr>
-            <th>Image</th>
-            <th>Design Name</th>
-            <th>Description</th>
-            <th>Price</th>
-            <th>Created At</th>
-            <th>Edit</th>
-            <th>Remove</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for design in designs %}
-          <tr>
-            <td><img src="{{ design.image.url }}" alt="{{ design.design_name }}"></td>
-            <td>{{ design.design_name }}</td>
-            <td>{{ design.description }}</td>
-            <td>${{ design.price }}</td>
-            <td>{{ design.created_at|date:"Y-m-d" }}</td>
-            <td><a href="{% url 'edit_design' design.id %}" class="edit-btn">Edit</a></td>
-            <td>
-              <form action="{% url 'remove_design' design.id %}" method="post" style="display:inline;">
-                {% csrf_token %}
-                <button type="submit" class="remove-btn">Remove</button>
-              </form>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </section>
-  </div>
+    <!-- Designs Grid -->
+    <div class="designs-container">
+        <div class="container">
+            <div class="designs-grid">
+                {% for design in designs %}
+                <div class="design-card">
+                    <img src="{{ design.image.url }}" alt="{{ design.design_name }}" class="design-image">
+                    <div class="design-info">
+                        <h3 class="design-title">{{ design.design_name }}</h3>
+                        <div class="design-price">${{ design.price }}</div>
+                        <p class="design-description">{{ design.description|truncatechars:100 }}</p>
+                        <div class="design-actions">
+                            <a href="{% url 'edit_design' design.id %}" class="btn-action btn-edit">
+                                <i class="fas fa-edit"></i> Edit
+                            </a>
+                            <form action="{% url 'remove_design' design.id %}" method="post" style="flex: 1;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-action btn-delete" style="width: 100%;">
+                                    <i class="fas fa-trash"></i> Remove
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
 
-  <!-- footer section -->
-  <footer>
-    <!-- Footer content goes here -->
-  </footer>
-
-  <!-- jQuery -->
-  <script type="text/javascript" src="{% static 'js/jquery-3.4.1.min.js' %}"></script>
-  <!-- popper js -->
-  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
-  <!-- bootstrap js -->
-  <script type="text/javascript" src="{% static 'js/bootstrap.js' %}"></script>
-  <!-- custom js -->
-  <script type="text/javascript" src="{% static 'js/custom.js' %}"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-
 </html>

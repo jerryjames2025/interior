@@ -1,0 +1,214 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Browse Designs and Products">
+    <title>Browse Designs and Products | AURA Designs</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #e67e22;
+            --bg-light: #f8f9fa;
+            --text-dark: #2c3e50;
+            --text-light: #666;
+            --border-color: #e1e1e1;
+            --shadow: 0 5px 15px rgba(0,0,0,0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--bg-light);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('{% static "images/header-bg.jpg" %}');
+            background-size: cover;
+            background-position: center;
+            color: white;
+            padding: 6rem 2rem;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 2rem;
+        }
+
+        .featured-designs, .product-categories {
+            margin-bottom: 4rem;
+        }
+
+        h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--accent-color);
+            display: inline-block;
+            padding-bottom: 0.5rem;
+        }
+
+        .design-grid, .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .design-item, .category-item {
+            background: white;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            text-align: center;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .design-item img, .category-item img {
+            width: 100%;
+            height: auto;
+            transition: transform 0.3s ease;
+        }
+
+        .design-item:hover img, .category-item:hover img {
+            transform: scale(1.05);
+        }
+
+        .design-item:hover, .category-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .design-item h3, .category-item h3 {
+            margin: 1rem 0;
+            font-size: 1.5rem;
+            color: var(--primary-color);
+        }
+
+        .view-more {
+            display: inline-flex;
+            align-items: center;
+            margin: 2rem auto; /* Center the button */
+            padding: 0.5rem 1rem;
+            background: var(--accent-color);
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: background 0.3s ease;
+        }
+
+        .view-more i {
+            margin-left: 0.5rem; /* Space between text and icon */
+        }
+
+        .view-more:hover {
+            background: #d68a1c; /* Darker shade for hover effect */
+        }
+
+        .footer {
+            text-align: center;
+            padding: 1rem;
+            background: var(--primary-color);
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2.5rem;
+            }
+
+            h2 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>Browse Designs and Products</h1>
+        <p>Explore our collection of stunning designs and quality products.</p>
+    </header>
+
+    <div class="container">
+        <section class="featured-designs">
+            <h2>Featured Designs</h2>
+            <div class="design-grid">
+                <div class="design-item">
+                    <img src="{% static 'images/furniture-design.jpeg' %}" alt="Design 1">
+                    <h3>Modern Living Room</h3>
+                    <p>Elegant and contemporary living room design.</p>
+                </div>
+                <div class="design-item">
+                    <img src="{% static 'images/living_room.jpeg' %}" alt="Design 2">
+                    <h3>Cozy Bedroom</h3>
+                    <p>Warm and inviting bedroom design.</p>
+                </div>
+                <div class="design-item">
+                    <img src="{% static 'images/Kitchen-Design.jpeg' %}" alt="Design 3">
+                    <h3>Stylish Kitchen</h3>
+                    <p>Functional and stylish kitchen design.</p>
+                </div>
+                <!-- Add more design items as needed -->
+            </div>
+            <a href="{% url 'dhome' %}" class="view-more">View More Designs <i class="fas fa-arrow-right"></i></a>
+        </section>
+
+        <section class="product-categories">
+            <h2>Product Categories</h2>
+            <div class="category-grid">
+                <div class="category-item">
+                    <img src="{% static 'images/category1.jpg' %}" alt="Category 1">
+                    <h3>Furniture</h3>
+                </div>
+                <div class="category-item">
+                    <img src="{% static 'images/category2.jpg' %}" alt="Category 2">
+                    <h3>Decor</h3>
+                </div>
+                <div class="category-item">
+                    <img src="{% static 'images/category3.jpg' %}" alt="Category 3">
+                    <h3>Lighting</h3>
+                </div>
+                <div class="category-item">
+                    <img src="{% static 'images/category4.jpg' %}" alt="Category 4">
+                    <h3>Accessories</h3>
+                </div>
+                <!-- Add more product categories as needed -->
+            </div>
+            <a href="{% url 'shome' %}" class="view-more">View More Products <i class="fas fa-arrow-right"></i></a>
+        </section>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2023 AURA Designs. All rights reserved.</p>
+    </footer>
+</body>
+</html> 

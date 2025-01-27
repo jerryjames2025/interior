@@ -122,27 +122,27 @@ WSGI_APPLICATION = 'interiordesigner.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': 'interior',
-#         'USER': 'root',
-#         'PASSWORD': '',
-#         'HOST': 'localhost',
-#         'PORT': '3306',
-#     }
-# }
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'interior_glassblow',
-        'USER': 'interior_glassblow',
-        'PASSWORD': 'd2998b5fc4c2a175135ea7becb0e588b241645a2',
-        'HOST': 'q2jjx.h.filess.io',
-        'PORT': '3307',
+        'NAME': 'interior',
+        'USER': 'root',
+        'PASSWORD': '',
+        'HOST': 'localhost',
+        'PORT': '3306',
     }
 }
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'interior_glassblow',
+#         'USER': 'interior_glassblow',
+#         'PASSWORD': 'd2998b5fc4c2a175135ea7becb0e588b241645a2',
+#         'HOST': 'q2jjx.h.filess.io',
+#         'PORT': '3307',
+#     }
+# }
 
 
 # Password validation
