@@ -3,7 +3,7 @@ from django.shortcuts import redirect, render, get_object_or_404
 from django.http import HttpResponse
 from django.contrib.auth import authenticate, login as auth_login
 from django.contrib import messages
-from .models import UserProfile, Portfolio
+from .models import UserProfile, Portfolio, Product, Cart, CartItem
 from django.core.mail import send_mail
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str  # Ensure force_str is used
@@ -458,19 +458,24 @@ def uphome(request):
 
 #  Add to cart view
 def add_to_cart(request, product_id):
-    # Here you will add the product to the user's cart (this depends on your cart logic)
+    if 'id' not in request.session:
+        messages.error(request, "You need to log in to add items to your cart.")
+        return redirect('login')  # Redirect to the login page or wherever appropriate
+
     product = get_object_or_404(Product, id=product_id)
-    user = request.session['id']
-    # Assuming you have a Cart model or session-based cart
-    cart, created = Cart.objects.get_or_create(user=user)
-    print(cart.id)
+    user_id = request.session['id']  # Get the user ID from the session
+
+    # Assuming you have a Cart model and CartItem model
+    cart, created = Cart.objects.get_or_create(user_id=user_id)
     cart_item, created = CartItem.objects.get_or_create(cart=cart, product=product)
 
     if not created:
         # If the cart item already exists, increment the quantity
         cart_item.quantity += 1
         cart_item.save()
-    return redirect('cart')
+
+    messages.success(request, f"{product.product_name} has been added to your cart.")
+    return redirect('cart')  # Redirect to the cart page
 
 # Cart view - display items in cart
 #  def cart_view(request):
