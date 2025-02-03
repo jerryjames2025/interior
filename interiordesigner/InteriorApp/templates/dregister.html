@@ -239,11 +239,11 @@
                 <p>Join our creative community</p>
             </div>
 
-            <form action="{% url 'dregister' %}" method="POST">
+            <form action="{% url 'dregister' %}" method="POST" enctype="multipart/form-data">
                 {% csrf_token %}
                 <div class="form-group">
                     <i class="fas fa-user"></i>
-                    <input type="text" id="full_name" name="full_name" placeholder="Full Name" required>
+                    <input type="text" id="full_name" name="full_name" placeholder="Full Name" required pattern="^[A-Z].*">
                 </div>
 
                 <div class="form-group">
@@ -253,7 +253,7 @@
 
                 <div class="form-group">
                     <i class="fas fa-phone"></i>
-                    <input type="tel" id="phone" name="phone" placeholder="Phone Number" required>
+                    <input type="tel" id="phone" name="phone" placeholder="Phone Number" required pattern="^\d{10}$">
                 </div>
 
                 <div class="form-group">
@@ -263,7 +263,12 @@
 
                 <div class="form-group">
                     <i class="fas fa-lock"></i>
-                    <input type="password" id="password" name="password" placeholder="Create Password" required>
+                    <input type="password" id="password" name="password" placeholder="Create Password" required minlength="6">
+                </div>
+
+                <div class="form-group">
+                    <i class="fas fa-image"></i>
+                    <input type="file" id="profile_picture" name="profile_picture" accept="image/*" required>
                 </div>
 
                 <button type="submit" class="register-btn">Create Account</button>

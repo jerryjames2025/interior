@@ -12,6 +12,7 @@ from django.conf.urls.static import static
 #         return super().dispatch(request, *args, **kwargs)
 
 urlpatterns = [
+    path('dregister/', views.dregister, name='dregister'),  # Ensure this matches the function name
     path('', views.home, name='home'),
     path('login/', views.user_login, name='login'),
     # path('reg/', views.registration, name='registration'),
@@ -36,7 +37,7 @@ urlpatterns = [
     path('shome/', views.shome, name='shome'),
     path('sregister/', views.sregister, name='sregister'),
     path('dhome/', views.dportfolio_view, name='dhome'),
-    path('dregister/', views.dregister_view, name='dregister'),
+    path('dregister/', views.dregister, name='dregister'),
     path('dlogin/', views.dlogin_view, name='dlogin'),
     path('addnewproduct/', views.add_product, name='addnewproduct'),
     path('add_design/', views.add_design, name='add_design'),
@@ -50,7 +51,7 @@ urlpatterns = [
     path('cart/remove/<int:item_id>/', views.remove_from_cart, name='remove_from_cart'),
     path('cart/update/<int:item_id>/', views.update_cart, name='update_cart'),
     path('realhome', views.realhome, name='realhome'),  # Home Page
-    path('designers/', views.designers_page, name='designers'),  # Designers Page
+    path('designers/', views.designers_view, name='designers'),  # Designers Page
     # path('design/<int:design_id>/', views.design_details, name='design_details'),  # Design Detail Page
     # path('search/', views.search, name='search'),  # Search Functionality
     
@@ -60,6 +61,8 @@ urlpatterns = [
     path('dcart/update/<int:item_id>/', views.update_designer_cart, name='update_dcart'),
     path('dcart/remove/<int:item_id>/', views.remove_from_designer_cart, name='remove_from_dcart'),
     path('browse/', views.browse, name='browse'),  # URL for the browse page
+    path('designers/<int:designer_id>/', views.designer_detail, name='designer_detail'),
+    path('designers/remove/<int:designer_id>/', views.remove_designer, name='remove_designer'),
 ]
 
 

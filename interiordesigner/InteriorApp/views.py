@@ -348,32 +348,41 @@ def dportfolio_view(request):
     context = {'designs': designs}
     return render(request, 'dhome.html', context)
 
-def dregister_view(request):
+def dregister(request):
     if request.method == 'POST':
-        full_name = request.POST.get('full_name')
-        email = request.POST.get('email')
-        phone = request.POST.get('phone')
-        username = request.POST.get('username')
-        password = request.POST.get('password')
+        full_name = request.POST['full_name']
+        email = request.POST['email']
+        phone = request.POST['phone']
+        username = request.POST['username']
+        password = request.POST['password']
 
-        # Check if username or email already exists
-        if Designer.objects.filter(username=username).exists():
-            messages.error(request, 'Username already exists')
-        elif Designer.objects.filter(email=email).exists():
-            messages.error(request, 'Email already exists')
+        # Validate first name
+        if not full_name[0].isupper():
+            return render(request, 'dregister.html', {'error': 'First name must start with a capital letter.'})
+
+        # Validate phone number
+        if len(phone) != 10 or not phone.isdigit():
+            return render(request, 'dregister.html', {'error': 'Phone number must be 10 digits.'})
+
+        # Check if profile_picture is in request.FILES
+        if 'profile_picture' in request.FILES:
+            profile_picture = request.FILES['profile_picture']  # Get the uploaded file
         else:
-            # Create a new Designer with hashed password
-            designer = Designer(
-                full_name=full_name,
-                email=email,
-                phone=phone,
-                username=username,
-                password=password  # Hash the password before saving
-            )
-            designer.save()
-            
-            messages.success(request, 'Registration successful!')
-            return redirect('dlogin')  # Redirect to login page after successful registration
+            return render(request, 'dregister.html', {'error': 'Profile picture is required.'})
+
+        # Create user
+        user = User.objects.create_user(username=username, email=email, password=password)
+        first_name, last_name = full_name.split(' ', 1) if ' ' in full_name else (full_name, '')
+        user.first_name = first_name
+        user.last_name = last_name
+        user.save()
+
+        # Create user profile and set is_designer to True
+        user_profile = UserProfile.objects.create(user=user, phone=phone, is_designer=True)
+        user_profile.profile_picture = profile_picture  # Save the profile picture
+        user_profile.save()
+
+        return redirect('dlogin')  # Redirect to login or another page after registration
 
     return render(request, 'dregister.html')
 
@@ -574,9 +583,14 @@ def realhome(request):
         return redirect('login')
 
 # Designers Page View
-def designers_page(request):
-    # Logic for listing designers can go here (e.g., querying a Designer model)
-    return render(request, 'dhome.html')
+def designers_view(request):
+    designers = UserProfile.objects.filter(is_designer=True).select_related('user')  # Fetch designers
+    return render(request, 'designers.html', {'designers': designers})
+
+# Designer Detail View
+def designer_detail(request, designer_id):
+    designer = get_object_or_404(User, id=designer_id)  # Fetch the designer by ID
+    return render(request, 'designer_detail.html', {'designer': designer})  # Create this template
 
 # # Design Details View
 # def design_details(request, design_id):
@@ -695,3 +709,10 @@ def dhome(request):
 def shome(request):
     # Logic to get data for the seller dashboard
     return render(request, 'shome.html')
+
+# Remove Designer View
+def remove_designer(request, designer_id):
+    designer = get_object_or_404(User, id=designer_id)
+    designer.delete()  # Remove the designer
+    messages.success(request, 'Designer removed successfully.')
+    return redirect('designers')  # Redirect back to the designers page

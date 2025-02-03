@@ -6,7 +6,10 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     bio = models.TextField(blank=True, null=True)
     website = models.URLField(blank=True, null=True)
-    
+    profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, null=True)
+    phone = models.CharField(max_length=15)
+    is_designer = models.BooleanField(default=False)  # Field to indicate if the user is a designer
+
     def __str__(self):
         return self.user.username
 
@@ -83,15 +86,14 @@ class Product(models.Model):
 from django.contrib.auth.models import User
 
 class Design(models.Model):
-    design_name = models.CharField(max_length=200)  # Design name like 'Elegant Living Room'
-    price = models.DecimalField(max_digits=10, decimal_places=2)  # Price of the design
-    origin = models.CharField(max_length=100, null=True)  # Origin (e.g., 'California')
-    image = models.ImageField(upload_to='designs/')  # Image field for the design
-    description = models.TextField(blank=True, null=True)  # Optional description
-    created_at = models.DateTimeField(auto_now_add=True)
+    designer = models.ForeignKey(UserProfile, related_name='designs', on_delete=models.CASCADE)
+    image = models.ImageField(upload_to='designs/')
+    design_name = models.CharField(max_length=255)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    description = models.TextField()
 
     def __str__(self):
-        return self.name
+        return self.design_name
     
 class Designer(models.Model):
     full_name = models.CharField(max_length=100)

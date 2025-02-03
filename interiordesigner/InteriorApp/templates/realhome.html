@@ -137,7 +137,7 @@
   <!-- Navigation Bar -->
   <nav class="navbar">
     <div class="navbar-logo">
-      <img src="{% static 'images/logo.jpeg' %}" alt="Logo" style="height: 50px;" /> <!-- Set the height or width as needed -->
+      <img src="{% static 'images/logo.jpeg' %}" alt="Logo" style="height: 50px;" />
     </div>
     <ul>
       <li>
@@ -150,13 +150,8 @@
       </li>
       <li>
         <a href="{% url 'userhome' %}" id='products'>Products</a>
-        {% comment %} <div class="dropdown">
-          <a href="#">Furniture</a>
-          <a href="#">Lighting</a>
-          <a href="#">Decor Items</a>
-        </div> {% endcomment %}
       </li>
-      <li><a href="#">Designers</a></li>
+      <li><a href="{% url 'designers' %}">Designers</a></li>
     </ul>
     <div class="search-container">
       <input type="text" placeholder="Search designs or products...">
@@ -177,6 +172,7 @@
           <img src="{{ design.image.url }}" alt="{{ design.design_name }}">
           <a href="#">{{ design.design_name }}</a>
           <p>${{ design.price }}</p>
+          <p>{{ design.description }}</p>
         </div>
       {% empty %}
         <p>No designs available at the moment.</p>
