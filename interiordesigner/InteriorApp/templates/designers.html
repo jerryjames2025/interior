@@ -67,7 +67,7 @@
             color: #555;
             font-size: 14px;
         }
-        .view-profile {
+        .view-profile, .contact-designer {
             display: inline-block;
             margin-top: 10px;
             padding: 8px 12px;
@@ -76,7 +76,7 @@
             text-decoration: none;
             border-radius: 5px;
         }
-        .view-profile:hover {
+        .view-profile:hover, .contact-designer:hover {
             background-color: #0056b3;
         }
         .no-designers {
@@ -100,17 +100,10 @@
             width: 100px; /* Adjust size as needed */
             height: auto;
         }
-        .remove-designer {
-            display: inline-block;
-            margin-top: 10px;
-            padding: 8px 12px;
-            background-color: #dc3545;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-        }
-        .remove-designer:hover {
-            background-color: #c82333;
+        .designer-description {
+            margin: 10px 0;
+            font-size: 14px;
+            color: #666;
         }
     </style>
 </head>
@@ -127,11 +120,12 @@
         <div class="designer-grid">
             {% for designer in designers %}
             <div class="designer-card">
-                <img src="{{ designer.userprofile.profile_picture.url }}" alt="{{ designer.user.first_name }} {{ designer.user.last_name }}">
+                <img src="{{ designer.userprofile.profile_picture.url|default:'path/to/default/image.png' }}" alt="{{ designer.user.first_name }} {{ designer.user.last_name }}">
                 <div class="designer-name">{{ designer.user.first_name }} {{ designer.user.last_name }}</div>
                 <div class="designer-email">{{ designer.user.email }}</div>
                 <div class="designer-phone">{{ designer.phone }}</div>
-
+                <div class="designer-description">{{ designer.userprofile.bio|default:"No description available." }}</div>
+                
                 <!-- Display design photos -->
                 <div class="design-photos">
                     {% for design in designer.designs.all %}  <!-- Assuming you have a related_name 'designs' in your Design model -->
@@ -144,7 +138,7 @@
                 </div>
 
                 <a href="{% url 'designer_detail' designer.id %}" class="view-profile">View Profile</a>
-                <a href="{% url 'remove_designer' designer.id %}" class="remove-designer">Remove Designer</a>
+                <a href="{% url 'contact_designer' designer.id %}" class="contact-designer">Contact</a>
             </div>
             {% empty %}
             <div class="no-designers">No designers found.</div>

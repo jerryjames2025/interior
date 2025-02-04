@@ -63,6 +63,8 @@ urlpatterns = [
     path('browse/', views.browse, name='browse'),  # URL for the browse page
     path('designers/<int:designer_id>/', views.designer_detail, name='designer_detail'),
     path('designers/remove/<int:designer_id>/', views.remove_designer, name='remove_designer'),
+    path('designers/contact/<int:designer_id>/', views.contact_designer, name='contact_designer'),
+    path('feedback/', views.feedback_view, name='feedback'),
 ]
 
 

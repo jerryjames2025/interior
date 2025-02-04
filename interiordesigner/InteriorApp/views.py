@@ -3,7 +3,7 @@ from django.shortcuts import redirect, render, get_object_or_404
 from django.http import HttpResponse
 from django.contrib.auth import authenticate, login as auth_login
 from django.contrib import messages
-from .models import UserProfile, Portfolio, Product, Cart, CartItem
+from .models import UserProfile, Portfolio, Product, Cart, CartItem, Feedback
 from django.core.mail import send_mail
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str  # Ensure force_str is used
@@ -21,6 +21,7 @@ from .models import *
 from django.core.files.storage import FileSystemStorage
 from django.contrib.auth.decorators import login_required
 import re
+from .forms import FeedbackForm
 
 
 def home(request):
@@ -370,14 +371,14 @@ def dregister(request):
         else:
             return render(request, 'dregister.html', {'error': 'Profile picture is required.'})
 
-        # Create user
+        # Create User instance
         user = User.objects.create_user(username=username, email=email, password=password)
         first_name, last_name = full_name.split(' ', 1) if ' ' in full_name else (full_name, '')
         user.first_name = first_name
         user.last_name = last_name
         user.save()
 
-        # Create user profile and set is_designer to True
+        # Create UserProfile instance and set is_designer to True
         user_profile = UserProfile.objects.create(user=user, phone=phone, is_designer=True)
         user_profile.profile_picture = profile_picture  # Save the profile picture
         user_profile.save()
@@ -716,3 +717,38 @@ def remove_designer(request, designer_id):
     designer.delete()  # Remove the designer
     messages.success(request, 'Designer removed successfully.')
     return redirect('designers')  # Redirect back to the designers page
+
+def contact_designer(request, designer_id):
+    designer = get_object_or_404(UserProfile, id=designer_id)  # Fetch the designer's profile
+
+    if request.method == 'POST':
+        subject = request.POST.get('subject')
+        message = request.POST.get('message')
+        sender_email = request.POST.get('email')
+
+        # Send email (you may want to customize this)
+        send_mail(
+            subject,
+            message,
+            sender_email,
+            [designer.user.email],  # Send to the designer's email
+        )
+        messages.success(request, 'Your message has been sent successfully!')
+        return redirect('designers')  # Redirect back to the designers page
+
+    return render(request, 'contact_designer.html', {'designer': designer})
+
+def feedback_view(request):
+    if request.method == 'POST':
+        form = FeedbackForm(request.POST)
+        if form.is_valid():
+            feedback = form.save(commit=False)
+            feedback.user = request.user  # Associate feedback with the logged-in user
+            feedback.save()
+            messages.success(request, 'Your feedback has been submitted successfully!')
+            return redirect('feedback')  # Redirect to the feedback page or another page
+    else:
+        form = FeedbackForm()
+    
+    feedbacks = Feedback.objects.all()  # Fetch all feedbacks to display
+    return render(request, 'feedback.html', {'form': form, 'feedbacks': feedbacks})
