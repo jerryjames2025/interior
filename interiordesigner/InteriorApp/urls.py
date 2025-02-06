@@ -52,9 +52,7 @@ urlpatterns = [
     path('cart/update/<int:item_id>/', views.update_cart, name='update_cart'),
     path('realhome', views.realhome, name='realhome'),  # Home Page
     path('designers/', views.designers_view, name='designers'),  # Designers Page
-    # path('design/<int:design_id>/', views.design_details, name='design_details'),  # Design Detail Page
-    # path('search/', views.search, name='search'),  # Search Functionality
-    
+    path('design/<int:design_id>/', views.design_detail, name='design_detail'),
     path('designs/edit/<int:id>/', views.edit_design, name='edit_design'),
     path('designs/remove/<int:id>/', views.remove_design, name='remove_design'),
     path('dcart/', views.designer_cart_view, name='dcart'),

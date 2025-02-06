@@ -3,7 +3,7 @@ from django.shortcuts import redirect, render, get_object_or_404
 from django.http import HttpResponse
 from django.contrib.auth import authenticate, login as auth_login
 from django.contrib import messages
-from .models import UserProfile, Portfolio, Product, Cart, CartItem, Feedback
+from .models import UserProfile, Portfolio, Product, Cart, CartItem, Feedback, Design
 from django.core.mail import send_mail
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str  # Ensure force_str is used
@@ -752,3 +752,7 @@ def feedback_view(request):
     
     feedbacks = Feedback.objects.all()  # Fetch all feedbacks to display
     return render(request, 'feedback.html', {'form': form, 'feedbacks': feedbacks})
+
+def design_detail(request, design_id):
+    design = get_object_or_404(Design, id=design_id)
+    return render(request, 'design_detail.html', {'design': design})
