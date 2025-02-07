@@ -86,11 +86,20 @@ class Product(models.Model):
 from django.contrib.auth.models import User
 
 class Design(models.Model):
+    CATEGORY_CHOICES = [
+        ('Kitchen', 'Kitchen'),
+        ('Living Room', 'Living Room'),
+        ('Bedroom', 'Bedroom'),
+        ('Bathroom', 'Bathroom'),
+        # Add other categories as needed
+    ]
+
     designer = models.ForeignKey(UserProfile, related_name='designs', on_delete=models.CASCADE)
     image = models.ImageField(upload_to='designs/')
     design_name = models.CharField(max_length=255)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     description = models.TextField()
+    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
 
     def __str__(self):
         return self.design_name

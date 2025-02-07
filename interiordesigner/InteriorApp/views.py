@@ -411,20 +411,19 @@ def dlogin_view(request):
     return render(request, 'dlogin.html')
 def add_design(request):
     if request.method == 'POST':
-        # Get data from the form
         design_name = request.POST['design_name']
         price = request.POST['price']
-        # origin = request.POST['origin']
         description = request.POST.get('description', '')  # Optional field
         design_image = request.FILES.get('image')  # Image file
+        category = request.POST.get('category', 'Kitchen')  # Ensure category is set
 
         # Create a new Design instance
         design = Design(
             design_name=design_name,
             price=price,
-            # origin=origin,
             description=description,
-            image=design_image
+            image=design_image,
+            category=category  # Set the category here
         )
 
         # Save the design to the database
@@ -756,3 +755,20 @@ def feedback_view(request):
 def design_detail(request, design_id):
     design = get_object_or_404(Design, id=design_id)
     return render(request, 'design_detail.html', {'design': design})
+
+def kitchen_designs(request):
+    kitchen_designs = Design.objects.filter(category='Kitchen')
+    print(f"Number of kitchen designs fetched: {kitchen_designs.count()}")  # Debugging line
+    return render(request, 'kitchen_designs.html', {'kitchen_designs': kitchen_designs})
+
+def living_room_designs(request):
+    living_room_designs = Design.objects.filter(category='Living Room')
+    return render(request, 'living_room_designs.html', {'living_room_designs': living_room_designs})
+
+def bedroom_designs(request):
+    bedroom_designs = Design.objects.filter(category='Bedroom')
+    return render(request, 'bedroom_designs.html', {'bedroom_designs': bedroom_designs})
+
+def bathroom_designs(request):
+    bathroom_designs = Design.objects.filter(category='Bathroom')
+    return render(request, 'bathroom_designs.html', {'bathroom_designs': bathroom_designs})

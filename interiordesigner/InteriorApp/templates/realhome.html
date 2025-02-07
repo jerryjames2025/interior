@@ -7,6 +7,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Interior Designer Home Page</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -38,29 +39,35 @@
     .navbar ul li a {
       color: white;
       text-decoration: none;
-      padding: 10px;
+      padding: 10px 20px; /* Increased padding for oval shape */
       display: block;
+      border-radius: 25px; /* Rounded corners for oval shape */
+      transition: background-color 0.3s, color 0.3s; /* Smooth transition */
     }
     .navbar ul li:hover .dropdown {
       display: block;
+    }
+    .navbar ul li a:hover {
+      background-color: #f7dc6f; /* Light yellow color on hover */
+      color: #333; /* Change text color to dark for better contrast */
     }
     .dropdown {
       display: none;
       position: absolute;
       top: 100%;
       left: 0;
-      background-color: #fff;
+      background-color: #17202a;
       min-width: 200px;
       box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
     }
     .dropdown a {
-      color: #333;
+      color: black;
       padding: 10px;
       display: block;
       text-decoration: none;
     }
     .dropdown a:hover {
-      background-color: #f0f0f0;
+      background-color: #17202a;
     }
     .search-container {
       display: flex;
@@ -159,6 +166,9 @@
     .close-btn:hover {
       color: #000;
     }
+    .navbar ul li a i {
+      margin-left: 5px; /* Add some space between the text and the icon */
+    }
   </style>
 </head>
 <body>
@@ -170,11 +180,16 @@
     </div>
     <ul>
       <li>
-        <a href="#">Designs</a>
+        <a href="#">Designs <i class="fas fa-chevron-down"></i></a>
         <div class="dropdown">
-          <a href="#"><img src="{% static 'images/Bedroom-Design.jpeg' %}" alt="Bedroom" style="width: 100px;"> Bedroom</a>
-          <a href="#"><img src="{% static 'images/Kitchen-Design.jpeg' %}" alt="Kitchen" style="width: 100px;"> Kitchen</a>
-          <a href="#"><img src="{% static 'images/Office-Design.jpeg' %}" alt="Office" style="width: 100px;"> Office</a>
+          <a href="{% url 'kitchen_designs' %}">Kitchen Designs</a>
+          <a href="{% url 'living_room_designs' %}">Living Room Designs</a>
+          <a href="{% url 'bedroom_designs' %}">Bedroom Designs</a>
+          <a href="{% url 'bathroom_designs' %}">Bathroom Designs</a>
+          <a href="{% url 'bathroom_designs' %}">Dining Room Designs</a>
+          <a href="{% url 'bathroom_designs' %}">Business/Office Designs</a>
+          <a href="{% url 'bathroom_designs' %}">Hallway/Entry Designs</a>
+          
         </div>
       </li>
       <li>

@@ -63,6 +63,10 @@ urlpatterns = [
     path('designers/remove/<int:designer_id>/', views.remove_designer, name='remove_designer'),
     path('designers/contact/<int:designer_id>/', views.contact_designer, name='contact_designer'),
     path('feedback/', views.feedback_view, name='feedback'),
+    path('kitchen-designs/', views.kitchen_designs, name='kitchen_designs'),
+    path('living-room-designs/', views.living_room_designs, name='living_room_designs'),
+    path('bedroom-designs/', views.bedroom_designs, name='bedroom_designs'),
+    path('bathroom-designs/', views.bathroom_designs, name='bathroom_designs'),
 ]
 
 

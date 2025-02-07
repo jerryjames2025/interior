@@ -1,0 +1,109 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kitchen Designs - Aura Designs</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <script src="{% static 'js/scripts.js' %}" defer></script>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: url('{% static "images/kitchen-background.jpg" %}') no-repeat center center fixed;
+            background-size: cover;
+            color: #2c3e50;
+            line-height: 1.6;
+        }
+        .header {
+            background-color: rgba(255, 255, 255, 0.9);
+            position: fixed;
+            width: 100%;
+            z-index: 1000;
+            padding: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0 20px;
+        }
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 36px;
+            color: #e67e22;
+            text-decoration: none;
+        }
+        .section-title {
+            text-align: center;
+            font-size: 3rem;
+            margin: 100px 0 50px;
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        .kitchen-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .kitchen-item {
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s;
+        }
+        .kitchen-item:hover {
+            transform: scale(1.05);
+        }
+        .kitchen-item img {
+            width: 100%;
+            height: auto;
+        }
+        footer {
+            background-color: rgba(44, 62, 80, 0.9);
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+            position: relative;
+            bottom: 0;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="nav-container">
+            <a href="/" class="logo">AURA DESIGNS</a>
+        </div>
+    </header>
+
+    <!-- Kitchen Designs Section -->
+    <section>
+        <h2 class="section-title">Our Kitchen Designs</h2>
+        <div class="kitchen-gallery">
+            {% if kitchen_designs %}
+                {% for design in kitchen_designs %}
+                <div class="kitchen-item">
+                    <img src="{{ design.image.url }}" alt="{{ design.design_name }}">
+                </div>
+                {% endfor %}
+            {% else %}
+                <p>No kitchen designs available.</p>  <!-- Debugging message -->
+            {% endif %}
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2024 AURA DESIGNS. All Rights Reserved.</p>
+    </footer>
+</body>
+</html>
