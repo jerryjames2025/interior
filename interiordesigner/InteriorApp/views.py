@@ -412,26 +412,24 @@ def dlogin_view(request):
 def add_design(request):
     if request.method == 'POST':
         design_name = request.POST['design_name']
-        price = request.POST['price']
-        description = request.POST.get('description', '')  # Optional field
-        design_image = request.FILES.get('image')  # Image file
-        category = request.POST.get('category', 'Kitchen')  # Ensure category is set
-
-        # Create a new Design instance
-        design = Design(
-            design_name=design_name,
-            price=price,
-            description=description,
-            image=design_image,
-            category=category  # Set the category here
-        )
+        designer_name = request.POST['designer_name']
+        contact_number = request.POST['contact_number']
+        email = request.POST['email']
+        description = request.POST['description']
+        image = request.FILES['image']  # Ensure you handle file uploads correctly
+        category = request.POST['category']
 
         # Save the design to the database
-        design.save()
-
-        messages.success(request, 'Design added successfully!')
-        return redirect('dhome')  # Redirect to a home or portfolio page after adding
-
+        Design.objects.create(
+            design_name=design_name,
+            designer_name=designer_name,
+            contact_number=contact_number,
+            email=email,
+            description=description,
+            image=image,
+            category=category
+        )
+        return redirect('dhome')  # Replace with your success URL
     return render(request, 'add_design.html')
 
 def designp(request):
@@ -772,3 +770,27 @@ def bedroom_designs(request):
 def bathroom_designs(request):
     bathroom_designs = Design.objects.filter(category='Bathroom')
     return render(request, 'bathroom_designs.html', {'bathroom_designs': bathroom_designs})
+
+def product_1(request):
+    products = Product.objects.filter(category='Lighting')
+    return render(request, 'product_category.html', {'products': products})
+
+def product_2(request):
+    products = Product.objects.filter(category='Decor_Items')
+    return render(request, 'product_category.html', {'products': products})
+
+def product_3(request):
+    products = Product.objects.filter(category='Curtains')
+    return render(request, 'product_category.html', {'products': products})
+
+def dining_room_designs(request):
+    dining_room_designs = Design.objects.filter(category='Dining Room')
+    return render(request, 'dining_room_designs.html', {'dining_room_designs': dining_room_designs})
+
+def business_office_designs(request):
+    business_office_designs = Design.objects.filter(category='Business Office')
+    return render(request, 'business_office_designs.html', {'business_office_designs': business_office_designs})
+
+def hallway_entry_designs(request):
+    hallway_entry_designs = Design.objects.filter(category='Hallway/Entry')
+    return render(request, 'hallway_entry_designs.html', {'hallway_entry_designs': hallway_entry_designs})

@@ -67,6 +67,12 @@ urlpatterns = [
     path('living-room-designs/', views.living_room_designs, name='living_room_designs'),
     path('bedroom-designs/', views.bedroom_designs, name='bedroom_designs'),
     path('bathroom-designs/', views.bathroom_designs, name='bathroom_designs'),
+    path('products/category1/', views.product_1, name='Lighting'),
+    path('products/category2/', views.product_2, name='Decor_Items'),
+    path('products/category3/', views.product_3, name='Curtains'),
+    path('dining-room-designs/', views.dining_room_designs, name='dining_room_designs'),
+    path('business-office-designs/', views.business_office_designs, name='business_office_designs'),
+    path('hallway-entry-designs/', views.hallway_entry_designs, name='hallway_entry_designs'),
 ]
 
 

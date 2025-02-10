@@ -495,7 +495,7 @@
                     <img src="{{ design.image.url }}" alt="{{ design.design_name }}" class="design-image">
                     <div class="design-info">
                         <h3 class="design-title">{{ design.design_name }}</h3>
-                        <div class="design-price">${{ design.price }}</div>
+                       
                         <p class="design-description">{{ design.description|truncatechars:100 }}</p>
                         <div class="design-actions">
                             <a href="{% url 'edit_design' design.id %}" class="btn-action btn-edit">

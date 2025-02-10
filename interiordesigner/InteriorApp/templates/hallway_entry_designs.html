@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<section>
+    <h2 class="section-title center-align">Our Hallway/Entry Designs</h2>
+    <div class="hallway-entry-gallery">
+        {% if hallway_entry_designs %}
+            {% for design in hallway_entry_designs %}
+            <div class="hallway-entry-item">
+                <img src="{{ design.image.url }}" alt="{{ design.design_name }}">
+                <div class="card-content">
+                    <span class="card-title">{{ design.design_name }}</span>
+                    <p class="card-description">{{ design.description }}</p>
+                    <p class="price">Price: ${{ design.price }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p class="center-align">No hallway/entry designs available.</p>
+        {% endif %}
+    </div>
+</section>
+
+<style>
+    body {
+        font-family: 'Poppins', sans-serif;
+        background: url('/static/images/hallway-background.jpg') no-repeat center center fixed;
+        background-size: cover;
+        color: #2c3e50; /* Default text color */
+        line-height: 1.6;
+    }
+    .section-title {
+        font-size: 3rem;
+        margin: 50px 0;
+        color: #f7dc6f; /* Yellow color for the title */
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    }
+    .hallway-entry-gallery {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        padding: 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    .hallway-entry-item {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        transition: transform 0.3s, box-shadow 0.3s;
+        background-color: #fff; /* White background for cards */
+    }
+    .hallway-entry-item:hover {
+        transform: scale(1.05);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+    }
+    .hallway-entry-item img {
+        width: 100%;
+        height: auto;
+        border-bottom: 5px solid #FFD700; /* Yellow border for images */
+    }
+    .card-content {
+        padding: 15px;
+    }
+    .card-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #FFD700; /* Yellow color for the title */
+    }
+    .card-description {
+        font-size: 1rem;
+        color: #34495e; /* Slightly lighter color for description */
+    }
+    .price {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #e74c3c; /* Price color */
+    }
+</style>
+{% endblock %}
