@@ -1,9 +1,8 @@
 from django.contrib.auth.models import User
 from django.shortcuts import redirect, render, get_object_or_404
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.contrib.auth import authenticate, login as auth_login
 from django.contrib import messages
-from .models import UserProfile, Portfolio, Product, Cart, CartItem, Feedback, Design
 from django.core.mail import send_mail
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str  # Ensure force_str is used
@@ -22,7 +21,18 @@ from django.core.files.storage import FileSystemStorage
 from django.contrib.auth.decorators import login_required
 import re
 from .forms import FeedbackForm
+from django.core.paginator import Paginator
+from django.views.decorators.http import require_POST
+from django.db.models import Q
+from django.db.models import Sum
+import razorpay
+from django.views.decorators.csrf import csrf_exempt
+import json
+import requests.exceptions
 
+# Initialize Razorpay client
+razorpay_client = razorpay.Client(
+    auth=(settings.RAZORPAY_API_KEY, settings.RAZORPAY_API_SECRET))
 
 def home(request):
     return render(request, 'home.html')
@@ -372,7 +382,7 @@ def dregister(request):
             return render(request, 'dregister.html', {'error': 'Profile picture is required.'})
 
         # Create User instance
-        user = User.objects.create_user(username=username, email=email, password=password)
+        user = Designer.objects.create(username=username, email=email, password=password)
         first_name, last_name = full_name.split(' ', 1) if ' ' in full_name else (full_name, '')
         user.first_name = first_name
         user.last_name = last_name
@@ -409,27 +419,38 @@ def dlogin_view(request):
             messages.error(request, 'Invalid username or password')
 
     return render(request, 'dlogin.html')
+
 def add_design(request):
     if request.method == 'POST':
-        design_name = request.POST['design_name']
-        designer_name = request.POST['designer_name']
-        contact_number = request.POST['contact_number']
-        email = request.POST['email']
-        description = request.POST['description']
-        image = request.FILES['image']  # Ensure you handle file uploads correctly
-        category = request.POST['category']
+        try:
+            # Get the designer from the session
+            designer_id = request.session.get('designer_id')
+            if not designer_id:
+                messages.error(request, 'Please login as a designer first')
+                return redirect('dlogin')
+            
+            designer = Designer.objects.get(id=designer_id)
 
-        # Save the design to the database
-        Design.objects.create(
-            design_name=design_name,
-            designer_name=designer_name,
-            contact_number=contact_number,
-            email=email,
-            description=description,
-            image=image,
-            category=category
-        )
-        return redirect('dhome')  # Replace with your success URL
+            # Create the design
+            design = Design(
+                designer=designer,
+                design_name=request.POST.get('design_name'),
+                description=request.POST.get('description'),
+                category=request.POST.get('category'),
+                image=request.FILES.get('image')
+            )
+            design.save()
+
+            messages.success(request, 'Design added successfully!')
+            return redirect('dhome')  # Redirect to designs page
+
+        except Designer.DoesNotExist:
+            messages.error(request, 'Designer not found')
+            return redirect('dlogin')
+        except Exception as e:
+            messages.error(request, f'Error adding design: {str(e)}')
+            return render(request, 'add_design.html')
+
     return render(request, 'add_design.html')
 
 def designp(request):
@@ -465,24 +486,39 @@ def uphome(request):
 
 #  Add to cart view
 def add_to_cart(request, product_id):
-    if 'id' not in request.session:
-        messages.error(request, "You need to log in to add items to your cart.")
-        return redirect('login')  # Redirect to the login page or wherever appropriate
+    if not request.user.is_authenticated:
+        return JsonResponse({
+            'success': False,
+            'message': "Please login to add items to cart"
+        })
 
-    product = get_object_or_404(Product, id=product_id)
-    user_id = request.session['id']  # Get the user ID from the session
+    try:
+        product = get_object_or_404(Product, id=product_id)
+        cart, _ = Cart.objects.get_or_create(user_id=request.user.id)
+        cart_item, created = CartItem.objects.get_or_create(
+            cart=cart,
+            product=product,
+            defaults={'quantity': 1}
+        )
+        
+        if not created:
+            cart_item.quantity += 1
+            cart_item.save()
 
-    # Assuming you have a Cart model and CartItem model
-    cart, created = Cart.objects.get_or_create(user_id=user_id)
-    cart_item, created = CartItem.objects.get_or_create(cart=cart, product=product)
+        cart_count = CartItem.objects.filter(cart=cart).aggregate(
+            total_items=Sum('quantity'))['total_items'] or 0
 
-    if not created:
-        # If the cart item already exists, increment the quantity
-        cart_item.quantity += 1
-        cart_item.save()
-
-    messages.success(request, f"{product.product_name} has been added to your cart.")
-    return redirect('cart')  # Redirect to the cart page
+        return JsonResponse({
+            'success': True,
+            'message': f"{product.product_name} has been added to your cart",
+            'cartCount': cart_count
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        })
 
 # Cart view - display items in cart
 #  def cart_view(request):
@@ -490,12 +526,6 @@ def add_to_cart(request, product_id):
 #      cart_products = Product.objects.filter(id__in=cart_product_ids)
 #      return render(request, 'cart.html', {'cart_products': cart_products})
 
-# # Favorites view
-# def favorites_view(request):
-#     # Assuming you are storing favorites in the session or in a database model
-#     favorite_product_ids = request.session.get('favorites', [])
-#     favorite_products = Product.objects.filter(id__in=favorite_product_ids)
-#     return render(request, 'favorites.html', {'favorite_products': favorite_products})
 
 # # Add to favorites
 # def add_to_favorites(request, product_id):
@@ -529,20 +559,19 @@ def add_to_cart(request, product_id):
 
 def cart_view(request):
     user = request.session['id']
-    print(user)
     try:
         cart = Cart.objects.get(user=user)
-        print(cart)
         cart_items = CartItem.objects.filter(cart=cart)
         total_price = sum(item.product.price * item.quantity for item in cart_items)
         context = {
             'cart_items': cart_items,
             'total_price': total_price,
-            'delivery_charges': 50  # You can customize delivery charges or add logic based on cart total
+            'delivery_charges': 50,
+            'razorpay_key': settings.RAZORPAY_API_KEY
         }
         return render(request, 'cart.html', context)
     except Cart.DoesNotExist:
-        return render(request, 'cart.html')
+        return render(request, 'cart.html', {'razorpay_key': settings.RAZORPAY_API_KEY})
 
 # View to remove product from cart
 @login_required
@@ -574,11 +603,20 @@ def update_cart(request, item_id):
     
     
 def realhome(request):
+    designs = Design.objects.all()
+    user_favorites = []
+    
     if 'id' in request.session:
-        designs = Design.objects.all()  # Get all designs from the database
-        return render(request, 'realhome.html', {'designs': designs})
-    else:
-        return redirect('login')
+        user_favorites = Favorite.objects.filter(
+            user_id=request.session['id']
+        ).values_list('design_id', flat=True)
+    
+    context = {
+        'designs': designs,
+        'user_favorites': user_favorites
+    }
+    
+    return render(request, 'realhome.html', context)
 
 # Designers Page View
 def designers_view(request):
@@ -773,15 +811,15 @@ def bathroom_designs(request):
 
 def product_1(request):
     products = Product.objects.filter(category='Lighting')
-    return render(request, 'product_category.html', {'products': products})
+    return render(request, 'lighting.html', {'products': products})
 
 def product_2(request):
     products = Product.objects.filter(category='Decor_Items')
-    return render(request, 'product_category.html', {'products': products})
+    return render(request, 'decor_items.html', {'products': products})
 
 def product_3(request):
     products = Product.objects.filter(category='Curtains')
-    return render(request, 'product_category.html', {'products': products})
+    return render(request, 'curtains.html', {'products': products})
 
 def dining_room_designs(request):
     dining_room_designs = Design.objects.filter(category='Dining Room')
@@ -794,3 +832,480 @@ def business_office_designs(request):
 def hallway_entry_designs(request):
     hallway_entry_designs = Design.objects.filter(category='Hallway/Entry')
     return render(request, 'hallway_entry_designs.html', {'hallway_entry_designs': hallway_entry_designs})
+
+@require_POST
+def toggle_favorite(request, design_id):
+    if 'id' not in request.session:
+        return JsonResponse({'success': False, 'error': 'Please log in first'}, status=401)
+    try:
+        user_id = request.session['id']
+        design = Design.objects.get(id=design_id)
+        favorite, created = Favorite.objects.get_or_create(
+            user_id=user_id,
+            design=design
+        )
+        
+        if not created:
+            favorite.delete()
+            is_favorite = False
+        else:
+            is_favorite = True
+
+        return JsonResponse({
+            'success': True,
+            'is_favorite': is_favorite
+        })
+    except Design.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Design not found'}, status=404)
+    
+def fav(request):
+    return render(request, 'favourite.html')
+
+@login_required
+@require_POST
+def remove_from_favorites(request, design_id):
+    if 'id' not in request.session:
+        return JsonResponse({
+            'success': False,
+            'error': 'Please log in first'
+        }, status=401)
+    
+    user_id = request.session['id']
+    try:
+        favorite = Favorite.objects.get(
+            user_id=user_id,
+            design_id=design_id
+        )
+        favorite.delete()
+        
+        # Get updated favorite count
+        favorite_count = Favorite.objects.filter(user_id=user_id).count()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Design removed from favorites',
+            'favorite_count': favorite_count
+        })
+    except Favorite.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': 'Design was not in your favorites'
+        }, status=404)
+
+@login_required
+def favorites_view(request):
+    if 'id' not in request.session:
+        messages.error(request, "Please log in to view favorites")
+        return redirect('login')
+    
+    user_id = request.session['id']
+    favorites = Favorite.objects.filter(user_id=user_id).select_related('design')
+    
+    return render(request, 'favourites.html', {
+        'favorites': favorites,
+        'favorite_count': favorites.count()
+    })
+
+def search_designs(request):
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        query = request.GET.get('q', '').strip()
+        if len(query) >= 2:
+            try:
+                designs = Design.objects.filter(
+                    Q(design_name__icontains=query) |
+                    Q(description__icontains=query) |
+                    Q(category__icontains=query)
+                ).distinct()[:10]
+                
+                # Get user favorites if logged in
+                user_favorites = []
+                if 'id' in request.session:
+                    user_favorites = Favorite.objects.filter(
+                        user_id=request.session['id']
+                    ).values_list('design_id', flat=True)
+                
+                results = [{
+                    'id': design.id,
+                    'name': design.design_name,
+                    'category': design.category,
+                    'description': design.description[:100] + '...' if design.description else '',
+                    'image': design.image.url if design.image else None,
+                    'is_favorite': design.id in user_favorites
+                } for design in designs]
+                
+                return JsonResponse({
+                    'success': True,
+                    'results': results
+                })
+            except Exception as e:
+                return JsonResponse({
+                    'success': False,
+                    'error': str(e)
+                }, status=500)
+    
+    return JsonResponse({
+        'success': False,
+        'results': []
+    })
+
+def get_favorites_count(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({'count': 0})
+    
+    count = Favorite.objects.filter(user_id=request.session.get('id', 0)).count()
+    return JsonResponse({'count': count})
+
+def products_list(request):
+    # Get all filters from request
+    category = request.GET.get('category')
+    min_price = request.GET.get('min_price')
+    max_price = request.GET.get('max_price')
+    sort = request.GET.get('sort', 'newest')
+    
+    # Base queryset
+    products = Product.objects.all()
+    
+    # Apply filters
+    if category:
+        products = products.filter(category=category)
+    if min_price:
+        products = products.filter(price__gte=min_price)
+    if max_price:
+        products = products.filter(price__lte=max_price)
+    
+    # Apply sorting
+    if sort == 'price_low':
+        products = products.order_by('price')
+    elif sort == 'price_high':
+        products = products.order_by('-price')
+    elif sort == 'popular':
+        products = products.order_by('-views')
+    else:  # newest
+        products = products.order_by('-created_at')
+    
+    # Pagination
+    page = request.GET.get('page', 1)
+    paginator = Paginator(products, 12)  # Show 12 products per page
+    products = paginator.get_page(page)
+    
+    # Get distinct categories and price range for filters
+    categories = Product.objects.values_list('category', flat=True).distinct()
+    # price_range = Product.objects.aggregate(
+    #     min_price=Min('price'),
+    #     max_price=Max('price')
+    # )
+    
+    context = {
+        'products': products,
+        'categories': categories,
+        # 'price_range': price_range,
+        'selected_category': category,
+        'selected_sort': sort,
+        'min_price_filter': min_price,
+        'max_price_filter': max_price,
+        'cart_count': CartItem.objects.filter(cart__user_id=request.session.get('id', 0)).count()
+    }
+    
+    return render(request, 'products.html', context)
+
+def products_by_category(request, category):
+    products = Product.objects.filter(category=category)
+    return render(request, 'products.html', {
+        'products': products,
+        'selected_category': category
+    })
+
+def product_detail(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+    
+    # Increment view count
+    product.views = product.views + 1 if hasattr(product, 'views') else 1
+    product.save()
+    
+    related_products = Product.objects.filter(
+        category=product.category
+    ).exclude(id=product.id)[:4]
+    
+    return render(request, 'product_detail.html', {
+        'product': product,
+        'related_products': related_products
+    })
+
+def filter_products(request):
+    if not request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'error': 'Invalid request'}, status=400)
+    
+    category = request.GET.get('category')
+    min_price = request.GET.get('min_price')
+    max_price = request.GET.get('max_price')
+    sort = request.GET.get('sort')
+    
+    products = Product.objects.all()
+    
+    if category:
+        products = products.filter(category=category)
+    if min_price:
+        products = products.filter(price__gte=min_price)
+    if max_price:
+        products = products.filter(price__lte=max_price)
+    
+    if sort == 'price_low':
+        products = products.order_by('price')
+    elif sort == 'price_high':
+        products = products.order_by('-price')
+    elif sort == 'popular':
+        products = products.order_by('-views')
+    else:
+        products = products.order_by('-created_at')
+    
+    products_data = [{
+        'id': product.id,
+        'name': product.product_name,
+        'price': str(product.price),
+        'image': product.image.url if product.image else None,
+        'description': product.description[:100] + '...' if product.description else '',
+        'category': product.category
+    } for product in products[:12]]  # Limit to 12 products for performance
+    
+    return JsonResponse({
+        'products': products_data,
+        'total_count': products.count()
+    })
+
+def create_order(request):
+    if request.method == "POST":
+        try:
+            # Initialize Razorpay client
+            client = razorpay.Client(
+                auth=(settings.RAZORPAY_API_KEY, settings.RAZORPAY_API_SECRET)
+            )
+
+            # Get cart total
+            user = request.session.get('id')
+            cart = Cart.objects.get(user=user)
+            cart_items = CartItem.objects.filter(cart=cart)
+            total_amount = sum(item.product.price * item.quantity for item in cart_items)
+            total_amount += 50  # Add delivery charges
+            
+            try:
+                # Create Razorpay Order
+                payment = client.order.create({
+                    "amount": int(total_amount * 100),  # Amount in paise
+                    "currency": "INR",
+                    "payment_capture": "1"
+                })
+                
+                return JsonResponse({
+                    "success": True,
+                    "order_id": payment['id'],
+                    "amount": payment['amount']
+                })
+            except requests.exceptions.ConnectionError as e:
+                print(f"Connection Error: {str(e)}")
+                return JsonResponse({
+                    "success": False,
+                    "error": "Unable to connect to payment service. Please check your internet connection."
+                })
+            except razorpay.errors.BadRequestError as e:
+                print(f"Razorpay Error: {str(e)}")
+                return JsonResponse({
+                    "success": False,
+                    "error": "Invalid payment request. Please try again."
+                })
+            except Exception as e:
+                print(f"Order Creation Error: {str(e)}")
+                return JsonResponse({
+                    "success": False,
+                    "error": "Error creating order. Please try again later."
+                })
+                
+        except Exception as e:
+            print(f"General Error: {str(e)}")
+            return JsonResponse({
+                "success": False,
+                "error": str(e)
+            })
+    
+    return JsonResponse({
+        "success": False,
+        "error": "Invalid request method"
+    })
+
+@csrf_exempt
+def payment_success(request):
+    if request.method == "POST":
+        try:
+            # Get the payment data
+            payment_data = json.loads(request.body)
+            print("Payment Data:", payment_data)  # Debug print
+            
+            # Verify payment signature
+            params_dict = {
+                'razorpay_payment_id': payment_data.get('razorpay_payment_id'),
+                'razorpay_order_id': payment_data.get('razorpay_order_id'),
+                'razorpay_signature': payment_data.get('razorpay_signature')
+            }
+            
+            try:
+                # Verify the payment signature
+                razorpay_client.utility.verify_payment_signature(params_dict)
+            except Exception as e:
+                print("Signature verification failed:", str(e))  # Debug print
+                return JsonResponse({
+                    "success": False,
+                    "error": "Payment signature verification failed"
+                })
+            
+            # Get user and cart
+            user_id = request.session.get('id')
+            if not user_id:
+                return JsonResponse({"success": False, "error": "User not logged in"})
+            
+            cart = Cart.objects.get(user_id=user_id)
+            cart_items = CartItem.objects.filter(cart=cart)
+            
+            if not cart_items.exists():
+                return JsonResponse({"success": False, "error": "Cart is empty"})
+            
+            # Calculate total amount
+            total_amount = sum(item.quantity * item.product.price for item in cart_items)
+            total_amount += 50  # Add delivery charges
+            
+            try:
+                # Create order
+                order = Order.objects.create(
+                    user_id=user_id,
+                    payment_id=payment_data['razorpay_payment_id'],
+                    razorpay_order_id=payment_data['razorpay_order_id'],
+                    amount=total_amount,
+                    status='Completed'
+                )
+                
+                # Create order items
+                for cart_item in cart_items:
+                    OrderItem.objects.create(
+                        order=order,
+                        product=cart_item.product,
+                        quantity=cart_item.quantity,
+                        price=cart_item.product.price
+                    )
+                
+                # Clear the cart
+                cart_items.delete()
+                
+                return JsonResponse({
+                    "success": True,
+                    "message": "Payment successful and order created",
+                    "order_id": order.id
+                })
+                
+            except Exception as e:
+                print("Error creating order:", str(e))  # Debug print
+                return JsonResponse({
+                    "success": False,
+                    "error": "Error creating order: " + str(e)
+                })
+            
+        except Exception as e:
+            print("Payment processing error:", str(e))  # Debug print
+            return JsonResponse({
+                "success": False,
+                "error": str(e)
+            })
+    
+    return JsonResponse({"success": False, "error": "Invalid request method"})
+
+@login_required
+def payment_success_page(request):
+    try:
+        # Get user ID from session
+        user_id = request.session.get('id')
+        if not user_id:
+            messages.error(request, 'Please log in to view your orders')
+            return redirect('login')
+
+        # Get all orders for the current user
+        orders = Order.objects.filter(user_id=user_id).order_by('-created_at')
+        
+        # Debug print to help diagnose issues
+        print(f"User ID: {user_id}, Found orders: {orders.count()}")
+        
+        # Get order items for each order
+        orders_with_items = []
+        for order in orders:
+            try:
+                order_items = OrderItem.objects.filter(order=order)
+                subtotal = sum(item.price * item.quantity for item in order_items)
+                
+                order_data = {
+                    'order': order,
+                    'items': order_items,
+                    'subtotal': subtotal,
+                    'delivery_charge': 50,  # Fixed delivery charge
+                    'total': order.amount
+                }
+                orders_with_items.append(order_data)
+                print(f"Order {order.id}: {order_items.count()} items, total: {order.amount}")
+            except Exception as e:
+                print(f"Error processing order {order.id}: {str(e)}")
+                continue
+
+        return render(request, 'payment_success.html', {
+            'orders_with_items': orders_with_items,
+            'user_id': user_id
+        })
+        
+    except Exception as e:
+        print(f"Error in payment_success_page: {str(e)}")
+        messages.error(request, f'Error fetching orders: {str(e)}')
+        return redirect('products')
+
+@login_required
+def get_cart_count(request):
+    try:
+        cart = Cart.objects.get(user_id=request.session.get('id'))
+        cart_count = CartItem.objects.filter(cart=cart).count()
+    except Cart.DoesNotExist:
+        cart_count = 0
+    return JsonResponse({'cart_count': cart_count})
+
+@login_required
+def view_orders(request):
+    try:
+        # Get user ID from session
+        user_id = request.session.get('id')
+        if not user_id:
+            messages.error(request, 'Please log in to view your orders')
+            return redirect('login')
+
+        # Get all orders for the current user
+        orders = Order.objects.filter(user_id=user_id).order_by('-created_at')
+        
+        # Get order items for each order
+        orders_with_items = []
+        for order in orders:
+            order_items = OrderItem.objects.filter(order=order)
+            subtotal = sum(item.price * item.quantity for item in order_items)
+            
+            order_data = {
+                'order': order,
+                'items': order_items,
+                'subtotal': subtotal,
+                'delivery_charge': 50,  # Fixed delivery charge
+                'total': order.amount
+            }
+            orders_with_items.append(order_data)
+
+        context = {
+            'orders_with_items': orders_with_items
+        }
+        
+        return render(request, 'payment_success.html', context)
+        
+    except Exception as e:
+        print(f"Error in view_orders: {str(e)}")  # Debug print
+        messages.error(request, f'Error fetching orders: {str(e)}')
+        return redirect('products')
+
+def modeling_view(request):
+    return render(request, '3D_Modeling.html')

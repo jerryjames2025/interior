@@ -70,12 +70,17 @@
       background-color: #17202a;
     }
     .search-container {
-      display: flex;
-      gap: 10px;
+      position: relative;
+      margin-right: 20px;
     }
     .search-container input {
-      padding: 5px;
-      font-size: 16px;
+      padding: 8px 15px;
+      padding-right: 35px;
+      border: 1px solid #ddd;
+      border-radius: 20px;
+      width: 250px;
+      font-size: 0.9rem;
+      transition: all 0.3s ease;
     }
     .search-container button {
       padding: 5px 10px;
@@ -169,6 +174,148 @@
     .navbar ul li a i {
       margin-left: 5px; /* Add some space between the text and the icon */
     }
+    .favorite-btn {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: white;
+        border: none;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        transition: all 0.3s ease;
+        z-index: 10;
+    }
+
+    .favorite-btn i {
+        font-size: 1.2rem;
+        color: #ccc;
+        transition: all 0.3s ease;
+    }
+
+    .favorite-btn.active i {
+        color: #ff4d6d;
+    }
+
+    .favorite-btn:hover {
+        transform: scale(1.1);
+    }
+
+    .favorite-btn.active:hover {
+        transform: scale(1.1);
+    }
+
+    @keyframes heartPop {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.2); }
+        100% { transform: scale(1); }
+    }
+
+    .heart-pop {
+        animation: heartPop 0.3s ease;
+    }
+
+    .favorite-count {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 20px;
+        height: 20px;
+        padding: 0 6px;
+        background: #ff4d6d;
+        color: white;
+        border-radius: 10px;
+        font-size: 0.8rem;
+        margin-left: 5px;
+        transition: all 0.3s ease;
+    }
+
+    .search-loading {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        display: none;
+    }
+
+    .spinner {
+        width: 20px;
+        height: 20px;
+        border: 2px solid #f3f3f3;
+        border-top: 2px solid #4a90e2;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .search-results {
+        position: absolute;
+        top: calc(100% + 5px);
+        left: 0;
+        right: 0;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        max-height: 400px;
+        overflow-y: auto;
+        display: none;
+        z-index: 1000;
+    }
+
+    .search-result-item {
+        padding: 12px 15px;
+        border-bottom: 1px solid #eee;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        transition: background-color 0.2s ease;
+    }
+
+    .search-result-item:hover {
+        background-color: #f8f9fa;
+    }
+
+    .search-result-image {
+        width: 50px;
+        height: 50px;
+        object-fit: cover;
+        border-radius: 4px;
+    }
+
+    .search-result-info {
+        flex: 1;
+    }
+
+    .search-result-title {
+        font-weight: 500;
+        color: #333;
+        margin-bottom: 4px;
+    }
+
+    .search-result-category {
+        font-size: 0.8rem;
+        color: #666;
+    }
+
+    .search-result-description {
+        font-size: 0.85rem;
+        color: #777;
+        margin-top: 4px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
   </style>
 </head>
 <body>
@@ -179,6 +326,9 @@
       <img src="{% static 'images/logo.jpeg' %}" alt="Logo" style="height: 50px;" />
     </div>
     <ul>
+      <li>
+        <a href="{% url '3d_modeling' %}" class="products-link">3D View</a>
+      </li>
       <li>
         <a href="#">Designs <i class="fas fa-chevron-down"></i></a>
         <div class="dropdown">
@@ -193,22 +343,22 @@
         </div>
       </li>
       <li>
-        <a href="#">Products <i class="fas fa-chevron-down"></i></a>
-        <div class="dropdown">
-          <a href="{% url 'Lighting' %}">Lighting</a>
-          <a href="{% url 'Decor_Items' %}">Decor Items</a>
-          <a href="{% url 'Curtains' %}">Curtains</a>
-        </div>
+        <a href="{% url 'products' %}" class="products-link">Products</a>
       </li>
       <li><a href="{% url 'designers' %}">Designers</a></li>
     </ul>
     <div class="search-container">
-      <input type="text" placeholder="Search designs or products...">
-      <button>Search</button>
+      <input type="text" id="searchInput" placeholder="Search designs...">
+      <div id="searchResults" class="search-results"></div>
+      <div class="search-loading">
+        <div class="spinner"></div>
+      </div>
     </div>
     <div class="right-menu">
-     
-      <a href="#">Favourites</a>
+      <a href="{% url 'favorites' %}">
+        <i class="fas fa-heart"></i> Favorites
+        <span class="favorite-count">{{ user_favorites|length }}</span>
+      </a>
     </div>
   </nav>
 
@@ -218,10 +368,17 @@
     <div class="design-grid">
       {% for design in designs %}
         <div class="design-item">
+          <button 
+            class="favorite-btn {% if design.id in user_favorites %}active{% endif %}" 
+            onclick="toggleFavorite(this, {{ design.id }})"
+            data-design-id="{{ design.id }}"
+          >
+            <i class="{% if design.id in user_favorites %}fas{% else %}far{% endif %} fa-heart"></i>
+          </button>
           <img src="{{ design.image.url }}" alt="{{ design.design_name }}">
           <a href="#">{{ design.design_name }}</a>
           <p>{{ design.description }}</p>
-          <a href="{% url 'design_detail' design.id %}" style="display: inline-block; margin-top: 10px; padding: 10px; background-color: #007bff; color: white; border-radius: 5px; text-decoration: none;">View More</a>
+          <a href="{% url 'design_detail' design.id %}" class="btn btn-primary">View More</a>
         </div>
       {% empty %}
         <p>No designs available at the moment.</p>
@@ -273,6 +430,168 @@
       const searchValue = document.querySelector('input').value;
       alert(`Searching for: ${searchValue}`);
     });
+
+    // Live Search Implementation
+    const searchInput = document.getElementById('searchInput');
+    const searchResults = document.getElementById('searchResults');
+    const searchLoading = document.querySelector('.search-loading');
+    let searchTimeout;
+    let lastQuery = '';
+
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        const query = this.value.trim();
+        
+        if (query.length < 2) {
+            searchResults.style.display = 'none';
+            searchLoading.style.display = 'none';
+            return;
+        }
+
+        searchLoading.style.display = 'block';
+        
+        searchTimeout = setTimeout(() => {
+            fetch(`/search/?q=${encodeURIComponent(query)}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                searchLoading.style.display = 'none';
+                searchResults.innerHTML = '';
+                
+                if (data.success && data.results.length > 0) {
+                    data.results.forEach(item => {
+                        const resultItem = document.createElement('div');
+                        resultItem.className = 'search-result-item';
+                        resultItem.innerHTML = `
+                            <img src="${item.image || '/static/images/default-design.jpg'}" 
+                                 alt="${item.name}" 
+                                 class="search-result-image">
+                            <div class="search-result-info">
+                                <div class="search-result-title">${item.name}</div>
+                                <div class="search-result-category">${item.category}</div>
+                                <div class="search-result-description">${item.description || ''}</div>
+                            </div>
+                            <button class="favorite-btn ${item.is_favorite ? 'active' : ''}"
+                                    onclick="event.stopPropagation(); toggleFavorite(this, ${item.id})">
+                                <i class="fa${item.is_favorite ? 's' : 'r'} fa-heart"></i>
+                            </button>
+                        `;
+                        resultItem.addEventListener('click', () => {
+                            window.location.href = `/design/${item.id}/`;
+                        });
+                        searchResults.appendChild(resultItem);
+                    });
+                    searchResults.style.display = 'block';
+                } else {
+                    searchResults.innerHTML = `
+                        <div class="search-result-item">
+                            <div class="search-result-info">
+                                <div class="search-result-title">No results found</div>
+                            </div>
+                        </div>
+                    `;
+                    searchResults.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                console.error('Search error:', error);
+                searchLoading.style.display = 'none';
+                searchResults.innerHTML = `
+                    <div class="search-result-item">
+                        <div class="search-result-info">
+                            <div class="search-result-title">Error performing search</div>
+                        </div>
+                    </div>
+                `;
+                searchResults.style.display = 'block';
+            });
+        }, 300);
+    });
+
+    // Close search results when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+            searchResults.style.display = 'none';
+        }
+    });
+
+    // Prevent search results from closing when clicking inside
+    searchResults.addEventListener('click', function(e) {
+        e.stopPropagation();
+    });
+
+    // Update Favorites Count
+    function updateFavoritesCount() {
+        fetch('/get-favorites-count/', {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            const favCount = document.querySelector('.favorite-count');
+            if (favCount) {
+                favCount.textContent = data.count;
+                favCount.style.display = data.count > 0 ? 'inline-flex' : 'none';
+            }
+        });
+    }
+
+    // Toggle Favorite with Count Update
+    function toggleFavorite(button, designId) {
+        fetch(`/toggle-favorite/${designId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const icon = button.querySelector('i');
+                button.classList.toggle('active');
+                icon.classList.toggle('far');
+                icon.classList.toggle('fas');
+                
+                // Update favorites count
+                updateFavoritesCount();
+                
+                // Add pop animation
+                icon.classList.add('heart-pop');
+                setTimeout(() => {
+                    icon.classList.remove('heart-pop');
+                }, 300);
+            } else {
+                if (data.error === 'Please log in first') {
+                    window.location.href = '{% url "login" %}';
+                }
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    // Helper function to get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Initial favorites count update
+    updateFavoritesCount();
   </script>
 
 </body>

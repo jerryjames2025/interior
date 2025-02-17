@@ -59,7 +59,7 @@ urlpatterns = [
     path('dcart/update/<int:item_id>/', views.update_designer_cart, name='update_dcart'),
     path('dcart/remove/<int:item_id>/', views.remove_from_designer_cart, name='remove_from_dcart'),
     path('browse/', views.browse, name='browse'),  # URL for the browse page
-    path('designers/<int:designer_id>/', views.designer_detail, name='designer_detail'),
+    path('designer/<int:designer_id>/', views.designer_detail, name='designer_detail'),
     path('designers/remove/<int:designer_id>/', views.remove_designer, name='remove_designer'),
     path('designers/contact/<int:designer_id>/', views.contact_designer, name='contact_designer'),
     path('feedback/', views.feedback_view, name='feedback'),
@@ -73,6 +73,21 @@ urlpatterns = [
     path('dining-room-designs/', views.dining_room_designs, name='dining_room_designs'),
     path('business-office-designs/', views.business_office_designs, name='business_office_designs'),
     path('hallway-entry-designs/', views.hallway_entry_designs, name='hallway_entry_designs'),
+    path('favorites/', views.favorites_view, name='favorites'),
+    path('favorites/remove/<int:design_id>/', views.remove_from_favorites, name='remove_from_favorites'),
+    path('toggle-favorite/<int:design_id>/', views.toggle_favorite, name='toggle_favorite'),
+    path('search/', views.search_designs, name='search_designs'),
+    path('get-favorites-count/', views.get_favorites_count, name='get_favorites_count'),
+    path('products/', views.products_list, name='products'),
+    path('products/category/<str:category>/', views.products_by_category, name='products_by_category'),
+    path('products/filter/', views.filter_products, name='filter_products'),
+    path('product/<int:product_id>/', views.product_detail, name='product_detail'),
+    path('create-order/', views.create_order, name='create_order'),
+    path('payment-success/', views.payment_success, name='payment_success'),
+    path('payment-success-page/', views.payment_success_page, name='payment_success_page'),
+    path('payment/success/', views.payment_success, name='payment_success'),
+    path('get-cart-count/', views.get_cart_count, name='get_cart_count'),
+    path('3d_modeling/', views.modeling_view, name='3d_modeling'),
 ]
 
 

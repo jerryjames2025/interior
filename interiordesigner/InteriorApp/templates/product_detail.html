@@ -1,0 +1,203 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head %}
+<style>
+.action-buttons {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    display: flex;
+    gap: 15px;
+}
+
+.cart-button {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 25px;
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.cart-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    color: white;
+}
+
+.cart-button.remove {
+    background-color: #dc3545;
+}
+
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1050;
+}
+
+.custom-toast {
+    min-width: 200px;
+    padding: 15px 25px;
+    border-radius: 25px;
+    color: white;
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: all 0.3s ease;
+}
+
+.custom-toast.success {
+    background-color: #28a745;
+}
+
+.custom-toast.error {
+    background-color: #dc3545;
+}
+
+.custom-toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.cart-count {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background-color: #dc3545;
+    color: white;
+    border-radius: 50%;
+    padding: 2px 6px;
+    font-size: 12px;
+    min-width: 18px;
+    text-align: center;
+}
+</style>
+{% endblock %}
+
+{% block body %}
+<!-- Toast Container -->
+<div class="toast-container"></div>
+
+<!-- Action Buttons -->
+<div class="action-buttons">
+    <button class="cart-button {% if in_cart %}remove{% endif %}" 
+            onclick="toggleCart({{ product.id }}, this)">
+        <i class="fas {% if in_cart %}fa-trash{% else %}fa-cart-plus{% endif %}"></i>
+        {% if in_cart %}Remove from Cart{% else %}Add to Cart{% endif %}
+    </button>
+    <a href="{% url 'cart' %}" class="cart-button">
+        <i class="fas fa-shopping-cart"></i>
+        My Cart
+        <span class="cart-count" id="cart-count">{{ cart_count }}</span>
+    </a>
+</div>
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-6">
+            <img src="{{ product.image.url }}" class="img-fluid" alt="{{ product.product_name }}">
+        </div>
+        <div class="col-md-6">
+            <h2>{{ product.product_name }}</h2>
+            <p class="text-muted">Category: {{ product.category }}</p>
+            <p class="h4">₹{{ product.price }}</p>
+            <p>{{ product.description }}</p>
+        </div>
+    </div>
+    
+    {% if related_products %}
+    <div class="mt-5">
+        <h3>Related Products</h3>
+        <div class="row">
+            {% for related in related_products %}
+            <div class="col-md-3">
+                <div class="card">
+                    <img src="{{ related.image.url }}" class="card-img-top" alt="{{ related.product_name }}">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ related.product_name }}</h5>
+                        <p class="card-text">₹{{ related.price }}</p>
+                        <a href="{% url 'product_detail' related.id %}" class="btn btn-outline-primary">View Details</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function showToast(message, type) {
+    const toast = document.createElement('div');
+    toast.className = `custom-toast ${type}`;
+    toast.innerHTML = `
+        <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-times-circle'} me-2"></i>
+        ${message}
+    `;
+    document.querySelector('.toast-container').appendChild(toast);
+    
+    setTimeout(() => toast.classList.add('show'), 10);
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+function updateCartCount(count) {
+    const cartCounts = document.querySelectorAll('.cart-count');
+    cartCounts.forEach(badge => {
+        badge.textContent = count;
+    });
+}
+
+function toggleCart(productId, button) {
+    const isRemoving = button.classList.contains('remove');
+    const url = isRemoving ? `/remove-from-cart/${productId}/` : `/add-to-cart/${productId}/`;
+    
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast(
+                isRemoving ? 'Removed from Cart Successfully' : 'Added to Cart Successfully',
+                isRemoving ? 'error' : 'success'
+            );
+            
+            // Toggle button state
+            button.classList.toggle('remove');
+            button.innerHTML = isRemoving ? 
+                '<i class="fas fa-cart-plus"></i> Add to Cart' :
+                '<i class="fas fa-trash"></i> Remove from Cart';
+            
+            // Update cart count
+            updateCartCount(data.cart_count);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Error updating cart', 'error');
+    });
+}
+
+// Initialize cart count on page load
+document.addEventListener('DOMContentLoaded', () => {
+    fetch('/get-cart-count/')
+    .then(response => response.json())
+    .then(data => {
+        updateCartCount(data.cart_count);
+    });
+});
+</script>
+{% endblock %} 

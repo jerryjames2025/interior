@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block body %}
+<div class="container-fluid p-0">
+    <!-- Hero Section -->
+    <div class="modeling-hero">
+        <div class="hero-content">
+            <h1>3D Modeling & Visualization</h1>
+            <p>Transform your ideas into stunning 3D reality</p>
+        </div>
+    </div>
+
+    <!-- Services Grid -->
+    <div class="container my-5">
+        <div class="row g-4">
+            <!-- Room Visualization -->
+            <div class="col-md-4">
+                <div class="service-card">
+                    <div class="service-image">
+                        <img src="{% static 'images/room-3d.jpg' %}" alt="Room Visualization">
+                        <div class="service-badge">Popular</div>
+                    </div>
+                    <div class="service-content">
+                        <h3>Room Visualization</h3>
+                        <p>See your room design in photorealistic 3D rendering</p>
+                        <ul class="features-list">
+                            <li><i class="fas fa-check"></i> Photorealistic rendering</li>
+                            <li><i class="fas fa-check"></i> Multiple view angles</li>
+                            <li><i class="fas fa-check"></i> Day/Night lighting</li>
+                        </ul>
+                        <button class="btn btn-primary mt-3">Learn More</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Floor Plans -->
+            <div class="col-md-4">
+                <div class="service-card">
+                    <div class="service-image">
+                        <img src="{% static 'images/floor-3d.jpg' %}" alt="3D Floor Plans">
+                        <div class="service-badge">New</div>
+                    </div>
+                    <div class="service-content">
+                        <h3>3D Floor Plans</h3>
+                        <p>Interactive floor plans with realistic textures</p>
+                        <ul class="features-list">
+                            <li><i class="fas fa-check"></i> Interactive viewing</li>
+                            <li><i class="fas fa-check"></i> Accurate measurements</li>
+                            <li><i class="fas fa-check"></i> Furniture layout</li>
+                        </ul>
+                        <button class="btn btn-primary mt-3">Learn More</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Virtual Walkthrough -->
+            <div class="col-md-4">
+                <div class="service-card">
+                    <div class="service-image">
+                        <img src="{% static 'images/walkthrough-3d.jpg' %}" alt="Virtual Walkthrough">
+                        <div class="service-badge">Premium</div>
+                    </div>
+                    <div class="service-content">
+                        <h3>Virtual Walkthrough</h3>
+                        <p>Immersive 3D walkthroughs of your space</p>
+                        <ul class="features-list">
+                            <li><i class="fas fa-check"></i> VR compatible</li>
+                            <li><i class="fas fa-check"></i> 360° views</li>
+                            <li><i class="fas fa-check"></i> Real-time navigation</li>
+                        </ul>
+                        <button class="btn btn-primary mt-3">Learn More</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .modeling-hero {
+        height: 60vh;
+        background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), 
+                    url('{% static "images/3d-hero.jpg" %}') center/cover;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        color: white;
+    }
+
+    .hero-content h1 {
+        font-size: 3.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .hero-content p {
+        font-size: 1.2rem;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .service-card {
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease;
+        height: 100%;
+    }
+
+    .service-card:hover {
+        transform: translateY(-10px);
+    }
+
+    .service-image {
+        position: relative;
+        height: 200px;
+    }
+
+    .service-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .service-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: #ff4757;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+    }
+
+    .service-content {
+        padding: 1.5rem;
+    }
+
+    .features-list {
+        list-style: none;
+        padding: 0;
+        margin: 1rem 0;
+    }
+
+    .features-list li {
+        margin-bottom: 0.5rem;
+        color: #666;
+    }
+
+    .features-list i {
+        color: #2ecc71;
+        margin-right: 0.5rem;
+    }
+
+    @media (max-width: 768px) {
+        .modeling-hero {
+            height: 40vh;
+        }
+
+        .hero-content h1 {
+            font-size: 2.5rem;
+        }
+    }
+</style>
+{% endblock %}

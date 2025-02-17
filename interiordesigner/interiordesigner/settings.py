@@ -94,6 +94,9 @@ SOCIAL_AUTH_URL_NAMESPACE = 'social'
 
 SOCIALACCOUNT_ADAPTER = 'explore_app.adapters.CustomSocialAccountAdapter'
 
+RAZORPAY_API_KEY = 'rzp_test_VnpNv6gkEvVCsq'
+RAZORPAY_API_SECRET = 'WiIqhyRWdQdCfOiuaK7F4VVM'
+
 
 ROOT_URLCONF = 'interiordesigner.urls'
 
@@ -205,6 +208,12 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 LOGIN_URL = '/login/'
 SESSION_COOKIE_AGE = 86400
+
+# Add these if you're behind a proxy
+PROXY_SETTINGS = {
+    'http': os.environ.get('HTTP_PROXY'),
+    'https': os.environ.get('HTTPS_PROXY')
+}
 
 
 
