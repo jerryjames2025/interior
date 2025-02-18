@@ -75,6 +75,66 @@
             </div>
         </div>
     </div>
+
+    <!-- Add this new section after your services grid -->
+    <div class="container my-5">
+        <div class="upload-section">
+            <h2 class="text-center mb-4">Generate Your 3D Model</h2>
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="upload-card">
+                        <form id="modelForm" method="POST" enctype="multipart/form-data" class="upload-form">
+                            {% csrf_token %}
+                            <div class="drag-area" id="dragArea">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <h4>Drag & Drop your image</h4>
+                                <p>or</p>
+                                <button type="button" class="browse-btn">Browse Files</button>
+                                <input type="file" id="imageInput" name="image" accept="image/*" hidden>
+                            </div>
+                            <div id="preview" class="preview-area" style="display: none;">
+                                <img id="imagePreview" src="" alt="Preview">
+                                <button type="button" class="remove-btn"><i class="fas fa-times"></i></button>
+                            </div>
+                            <div class="options-area">
+                                <select name="quality" class="form-select mb-3">
+                                    <option value="standard">Standard Quality</option>
+                                    <option value="high">High Quality</option>
+                                    <option value="ultra">Ultra Quality</option>
+                                </select>
+                                <button type="submit" class="generate-btn" disabled>
+                                    <span class="btn-text">Generate 3D Model</span>
+                                    <div class="spinner-border spinner" role="status" style="display: none;">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3D Model Viewer -->
+        <div id="modelViewer" class="model-viewer" style="display: none;">
+            <div class="viewer-container">
+                <canvas id="modelCanvas"></canvas>
+                <div class="controls">
+                    <button class="control-btn" id="rotateLeft"><i class="fas fa-undo"></i></button>
+                    <button class="control-btn" id="rotateRight"><i class="fas fa-redo"></i></button>
+                    <button class="control-btn" id="zoomIn"><i class="fas fa-search-plus"></i></button>
+                    <button class="control-btn" id="zoomOut"><i class="fas fa-search-minus"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add color picker controls -->
+<div class="color-controls">
+    <div class="segment-colors">
+        <!-- Will be populated dynamically -->
+    </div>
 </div>
 
 <style>
@@ -163,5 +223,470 @@
             font-size: 2.5rem;
         }
     }
+
+    .upload-section {
+        padding: 2rem 0;
+    }
+
+    .upload-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        padding: 2rem;
+    }
+
+    .drag-area {
+        border: 2px dashed #3498db;
+        border-radius: 10px;
+        padding: 2rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .drag-area.active {
+        border-color: #2ecc71;
+        background: rgba(46, 204, 113, 0.1);
+    }
+
+    .drag-area i {
+        font-size: 3rem;
+        color: #3498db;
+        margin-bottom: 1rem;
+    }
+
+    .browse-btn {
+        background: #3498db;
+        color: white;
+        padding: 0.8rem 2rem;
+        border-radius: 25px;
+        border: none;
+        margin-top: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .browse-btn:hover {
+        background: #2980b9;
+        transform: translateY(-2px);
+    }
+
+    .preview-area {
+        margin-top: 1rem;
+        position: relative;
+    }
+
+    .preview-area img {
+        max-width: 100%;
+        border-radius: 10px;
+    }
+
+    .remove-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(255,255,255,0.9);
+        border: none;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+
+    .generate-btn {
+        width: 100%;
+        background: #2ecc71;
+        color: white;
+        padding: 1rem;
+        border: none;
+        border-radius: 25px;
+        margin-top: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .generate-btn:disabled {
+        background: #95a5a6;
+        cursor: not-allowed;
+    }
+
+    .generate-btn:not(:disabled):hover {
+        background: #27ae60;
+        transform: translateY(-2px);
+    }
+
+    .model-viewer {
+        margin-top: 2rem;
+        border-radius: 15px;
+        overflow: hidden;
+        background: #f8f9fa;
+    }
+
+    .viewer-container {
+        position: relative;
+        width: 100%;
+        height: 500px;
+    }
+
+    #modelCanvas {
+        width: 100%;
+        height: 100%;
+    }
+
+    .controls {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 1rem;
+        background: rgba(255,255,255,0.9);
+        padding: 0.5rem;
+        border-radius: 25px;
+    }
+
+    .control-btn {
+        background: white;
+        border: none;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .control-btn:hover {
+        background: #f1f1f1;
+        transform: scale(1.1);
+    }
+
+    .spinner {
+        width: 1.5rem;
+        height: 1.5rem;
+        margin-left: 0.5rem;
+    }
+
+    .color-controls {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: rgba(255, 255, 255, 0.9);
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .segment-colors {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .color-picker-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .color-picker-group label {
+        min-width: 100px;
+    }
+
+    .color-picker {
+        width: 50px;
+        height: 30px;
+        padding: 0;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
 </style>
+
+<!-- Add these scripts before your main script -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', async function() {
+    // Wait for OrbitControls to be available
+    if (typeof THREE.OrbitControls === 'undefined') {
+        await new Promise(resolve => {
+            const orbitControlsScript = document.createElement('script');
+            orbitControlsScript.src = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js';
+            orbitControlsScript.onload = resolve;
+            document.head.appendChild(orbitControlsScript);
+        });
+    }
+
+    const dragArea = document.getElementById('dragArea');
+    const imageInput = document.getElementById('imageInput');
+    const preview = document.getElementById('preview');
+    const imagePreview = document.getElementById('imagePreview');
+    const generateBtn = document.querySelector('.generate-btn');
+    const modelForm = document.getElementById('modelForm');
+    const spinner = document.querySelector('.spinner');
+    const btnText = document.querySelector('.btn-text');
+
+    // Drag and drop functionality
+    dragArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dragArea.classList.add('active');
+    });
+
+    dragArea.addEventListener('dragleave', () => {
+        dragArea.classList.remove('active');
+    });
+
+    dragArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const file = e.dataTransfer.files[0];
+        if (file && file.type.startsWith('image/')) {
+            handleFile(file);
+        }
+    });
+
+    document.querySelector('.browse-btn').addEventListener('click', () => {
+        imageInput.click();
+    });
+
+    imageInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) handleFile(file);
+    });
+
+    document.querySelector('.remove-btn').addEventListener('click', () => {
+        preview.style.display = 'none';
+        dragArea.style.display = 'block';
+        imageInput.value = '';
+        generateBtn.disabled = true;
+    });
+
+    function handleFile(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            imagePreview.src = e.target.result;
+            preview.style.display = 'block';
+            dragArea.style.display = 'none';
+            generateBtn.disabled = false;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    modelForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        spinner.style.display = 'inline-block';
+        btnText.textContent = 'Generating...';
+        generateBtn.disabled = true;
+
+        const formData = new FormData(modelForm);
+        
+        try {
+            console.log('Sending request...');
+            const response = await fetch('/generate-3d-model/', {
+                method: 'POST',
+                body: formData,
+            });
+
+            console.log('Received response:', response);
+            const data = await response.json();
+            console.log('Parsed data:', data);
+
+            if (data.success) {
+                document.getElementById('modelViewer').style.display = 'block';
+                console.log('Initializing viewer with data:', data.model_data);
+                initializeViewer(data.model_data);
+            } else {
+                console.error('Server error:', data.error);
+                alert('Error generating 3D model: ' + data.error);
+            }
+        } catch (error) {
+            console.error('Client error:', error);
+            alert('Error generating 3D model: ' + error.message);
+        } finally {
+            spinner.style.display = 'none';
+            btnText.textContent = 'Generate 3D Model';
+            generateBtn.disabled = false;
+        }
+    });
+
+    // Three.js initialization and model viewing
+    function initializeViewer(modelData) {
+        try {
+            const container = document.getElementById('modelViewer');
+            const canvas = document.getElementById('modelCanvas');
+            
+            // Scene setup
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x222222);
+            
+            // Camera setup
+            const camera = new THREE.PerspectiveCamera(
+                50,
+                container.clientWidth / container.clientHeight,
+                0.1,
+                1000
+            );
+            camera.position.set(0, 0, 2);
+            
+            // Renderer setup
+            const renderer = new THREE.WebGLRenderer({
+                canvas: canvas,
+                antialias: true,
+                preserveDrawingBuffer: true
+            });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+            directionalLight.position.set(1, 1, 1);
+            scene.add(directionalLight);
+            
+            // Create geometry and material
+            const geometry = new THREE.BufferGeometry();
+            
+            const vertices = new Float32Array(modelData.vertices.flat());
+            const faces = new Uint32Array(modelData.faces.flat());
+            const uvs = new Float32Array(modelData.uvs.flat());
+            
+            geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+            geometry.setIndex(new THREE.BufferAttribute(faces, 1));
+            geometry.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+            geometry.computeVertexNormals();
+
+            // Load texture
+            const textureLoader = new THREE.TextureLoader();
+            const texture = textureLoader.load(modelData.texture);
+            texture.encoding = THREE.sRGBEncoding;
+            texture.flipY = false;
+            texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+            
+            const material = new THREE.MeshPhysicalMaterial({
+                map: texture,
+                side: THREE.DoubleSide,
+                roughness: 0.5,
+                metalness: 0.1
+            });
+
+            const mesh = new THREE.Mesh(geometry, material);
+            scene.add(mesh);
+
+            // Add OrbitControls for full rotation
+            const controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.screenSpacePanning = true;
+            controls.minDistance = 1;
+            controls.maxDistance = 4;
+            controls.enableRotate = true;
+            controls.rotateSpeed = 0.5;
+            controls.enablePan = true;
+            controls.enableZoom = true;
+            
+            // Add rotation buttons
+            document.getElementById('rotateLeft').addEventListener('click', () => {
+                mesh.rotation.y += Math.PI / 4;
+            });
+            
+            document.getElementById('rotateRight').addEventListener('click', () => {
+                mesh.rotation.y -= Math.PI / 4;
+            });
+            
+            // Add up/down rotation buttons to the controls div
+            const controlsDiv = document.querySelector('.controls');
+            
+            const rotateUpBtn = document.createElement('button');
+            rotateUpBtn.className = 'control-btn';
+            rotateUpBtn.innerHTML = '<i class="fas fa-arrow-up"></i>';
+            rotateUpBtn.addEventListener('click', () => {
+                mesh.rotation.x -= Math.PI / 4;
+            });
+            
+            const rotateDownBtn = document.createElement('button');
+            rotateDownBtn.className = 'control-btn';
+            rotateDownBtn.innerHTML = '<i class="fas fa-arrow-down"></i>';
+            rotateDownBtn.addEventListener('click', () => {
+                mesh.rotation.x += Math.PI / 4;
+            });
+            
+            // Insert new buttons after the existing ones
+            controlsDiv.insertBefore(rotateUpBtn, document.getElementById('zoomIn'));
+            controlsDiv.insertBefore(rotateDownBtn, document.getElementById('zoomIn'));
+            
+            // Add mouse/touch rotation
+            let isDragging = false;
+            let previousMousePosition = {
+                x: 0,
+                y: 0
+            };
+            
+            container.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                previousMousePosition = {
+                    x: e.clientX,
+                    y: e.clientY
+                };
+            });
+            
+            container.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                
+                const deltaMove = {
+                    x: e.clientX - previousMousePosition.x,
+                    y: e.clientY - previousMousePosition.y
+                };
+                
+                mesh.rotation.y += deltaMove.x * 0.01;
+                mesh.rotation.x += deltaMove.y * 0.01;
+                
+                previousMousePosition = {
+                    x: e.clientX,
+                    y: e.clientY
+                };
+            });
+            
+            container.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
+            
+            // Animation loop
+            function animate() {
+                requestAnimationFrame(animate);
+                controls.update();
+                renderer.render(scene, camera);
+            }
+            
+            // Center and scale model
+            geometry.computeBoundingSphere();
+            const center = geometry.boundingSphere.center;
+            const radius = geometry.boundingSphere.radius;
+            
+            mesh.position.sub(center);
+            const scale = 1.5 / radius;
+            mesh.scale.multiplyScalar(scale);
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(container.clientWidth, container.clientHeight);
+            });
+            
+            animate();
+            
+            console.log('3D viewer initialized successfully');
+        } catch (error) {
+            console.error('Error initializing viewer:', error);
+            alert('Error initializing 3D viewer: ' + error.message);
+        }
+    }
+});
+</script>
 {% endblock %}

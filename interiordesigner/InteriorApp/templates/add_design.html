@@ -1,458 +1,131 @@
+{% extends 'base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Add a Design">
-    <title>Add a Design | AURA Designs</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        :root {
-            --primary-color: #2c3e50;
-            --accent-color: #e67e22;
-            --bg-light: #f8f9fa;
-            --text-dark: #2c3e50;
-            --text-light: #666;
-            --border-color: #e1e1e1;
-            --shadow: 0 5px 15px rgba(0,0,0,0.1);
-            --transition: all 0.3s ease;
-        }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(
-                rgba(44, 62, 80, 0.85), 
-                rgba(44, 62, 80, 0.90)
-            ), url('{% static "images/w6.png" %}');
-            background-size: cover;
-            background-attachment: fixed;
-            background-position: center;
-            color: var(--text-dark);
-            line-height: 1.6;
-            min-height: 100vh;
-        }
-
-        .header {
-            background: linear-gradient(
-                rgba(0, 0, 0, 0.6),
-                rgba(0, 0, 0, 0.7)
-            ), url('{% static "images/w3.png" %}');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            color: white;
-            padding: 6rem 2rem;
-            text-align: center;
-            position: relative;
-            margin-bottom: 4rem;
-        }
-
-        .header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(45deg, var(--accent-color) 0%, transparent 70%);
-            opacity: 0.3;
-        }
-
-        .header h1 {
-            font-family: 'Playfair Display', serif;
-            font-size: 3.2rem;
-            margin-bottom: 1rem;
-            position: relative;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-
-        .header p {
-            max-width: 600px;
-            margin: 0 auto;
-            font-size: 1.2rem;
-            opacity: 0.9;
-            position: relative;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: -100px auto 50px;
-            padding: 2.5rem;
-            background: rgba(255, 255, 255, 0.97);
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            position: relative;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2.5rem;
-        }
-
-        .form-group {
-            margin-bottom: 2rem;
-            position: relative;
-        }
-
-        .form-group.full-width {
-            grid-column: 1 / -1;
-        }
-
-        label {
-            display: block;
-            font-weight: 500;
-            margin-bottom: 0.5rem;
-            color: var(--text-dark);
-        }
-
-        input, textarea {
-            width: 100%;
-            padding: 1rem 1.2rem;
-            border: 2px solid rgba(225, 225, 225, 0.8);
-            border-radius: 12px;
-            font-size: 1rem;
-            transition: var(--transition);
-            background: rgba(255, 255, 255, 0.9);
-        }
-
-        input:focus, textarea:focus {
-            border-color: var(--accent-color);
-            outline: none;
-            box-shadow: 0 0 0 4px rgba(230, 126, 34, 0.1);
-            background: white;
-        }
-
-        .file-upload {
-            position: relative;
-            width: 100%;
-            margin-bottom: 1rem;
-        }
-
-        .file-upload-label {
-            background: linear-gradient(
-                rgba(255, 255, 255, 0.97),
-                rgba(255, 255, 255, 0.95)
-            );
-            border: 2px dashed rgba(230, 126, 34, 0.4);
-            padding: 3rem 2rem;
-            border-radius: 15px;
-            transition: all 0.3s ease;
-            text-align: center;
-            cursor: pointer;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-        }
-
-        .file-upload-label i {
-            font-size: 2.5rem;
-            color: var(--accent-color);
-            margin-bottom: 1rem;
-            display: block;
-        }
-
-        #fileName {
-            font-size: 1.1rem;
-            color: var(--text-dark);
-            margin-top: 0.5rem;
-            font-weight: 500;
-            text-align: center;
-        }
-
-        .file-upload input[type="file"] {
-            position: absolute;
-            width: 0;
-            height: 0;
-            opacity: 0;
-        }
-
-        #preview-container {
-            margin-top: 1.5rem;
-            text-align: center;
-            width: 100%;
-        }
-
-        #image-preview {
-            max-width: 300px;
-            height: auto;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            border: 3px solid white;
-        }
-
-        .drag-over {
-            border-color: var(--accent-color) !important;
-            background: rgba(230, 126, 34, 0.05) !important;
-            transform: scale(1.02);
-        }
-
-        .submit-btn {
-            background: linear-gradient(135deg, var(--accent-color), #d35400);
-            color: white;
-            padding: 1.2rem 2.5rem;
-            border-radius: 12px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            box-shadow: 0 4px 15px rgba(230, 126, 34, 0.3);
-        }
-
-        .submit-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(230, 126, 34, 0.4);
-        }
-
-        .error {
-            color: #e74c3c;
-            font-size: 0.85rem;
-            margin-top: 0.3rem;
-        }
-
-        /* Progress Animation */
-        .progress-bar {
-            height: 5px;
-            background: #f1f1f1;
-            border-radius: 5px;
-            margin-bottom: 2rem;
-            overflow: hidden;
-        }
-
-        .progress {
-            width: 0;
-            height: 100%;
-            background: var(--accent-color);
-            transition: width 0.3s ease;
-        }
-
-        /* Add animation for the upload icon */
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-            100% { transform: translateY(0px); }
-        }
-
-        .file-upload-label i {
-            animation: float 3s ease-in-out infinite;
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                margin: -50px 1rem 30px;
-                padding: 1.5rem;
-            }
-
-            .header h1 {
-                font-size: 2.5rem;
-            }
-
-            .form-grid {
-                grid-template-columns: 1fr;
-                gap: 1.5rem;
-            }
-        }
-    </style>
-</head>
-<body>
-
-<header class="header">
-    <h1>Add New Design</h1>
-    <p>Share your creative vision with our community</p>
-</header>
-
-<div class="container">
-    <div class="progress-bar">
-        <div class="progress" id="formProgress"></div>
-    </div>
-
-    <form id="designForm" method="POST" enctype="multipart/form-data" onsubmit="return validateForm()">
-        {% csrf_token %}
-
-        <div class="form-grid">
-            <div class="form-group">
-                <label for="design_name">Design Name</label>
-                <input type="text" id="design_name" name="design_name" placeholder="Enter design name" required>
-                <span class="error" id="nameError"></span>
-            </div>
-
-            <div class="form-group">
-                <label for="designer_name">Designer Name</label>
-                <input type="text" id="designer_name" name="designer_name" placeholder="Enter designer name" required>
-                <span class="error" id="designerNameError"></span>
-            </div>
-
-            <div class="form-group">
-                <label for="contact_number">Contact Number</label>
-                <input type="text" id="contact_number" name="contact_number" placeholder="Enter contact number" required>
-                <span class="error" id="contactError"></span>
-            </div>
-
-            <div class="form-group full-width">
-                <label for="email">Email Address</label>
-                <input type="email" id="email" name="email" placeholder="Enter email" required>
-                <span class="error" id="emailError"></span>
-            </div>
-
-            <div class="form-group full-width">
-                <label for="description">Description</label>
-                <textarea id="description" name="description" rows="4" placeholder="Describe your design" required></textarea>
-            </div>
-
-           
-
-            <div class="form-group full-width">
-                <label for="image" style="text-align: center; display: block; font-size: 1.2rem; margin-bottom: 1rem;">
-                    Upload Design Image
-                </label>
-                <div class="file-upload">
-                    <label for="image" class="file-upload-label">
-                        <i class="fas fa-cloud-upload-alt"></i>
-                        <span id="fileName">Choose a file or drag it here</span>
-                        <div id="preview-container" style="display: none;">
-                            <img id="image-preview" src="" alt="Preview">
-                        </div>
-                    </label>
-                    <input type="file" id="image" name="image" accept="image/*" required onchange="handleFileSelect(event)">
-                </div>
-                <span class="error" id="imageError"></span>
-            </div>
-
-            <div class="form-group full-width">
-                <label for="category">Category</label>
-                <select id="category" name="category" required>
-                    <option value="Kitchen">Kitchen</option>
-                    <option value="Living Room">Living Room</option>
-                    <option value="Bedroom">Bedroom</option>
-                    <option value="Bathroom">Bathroom</option>
-                    <option value="Dining Room">Dining Room</option>
-                    <option value="Hallway">Hallway</option>
-                    <option value="Business Office">Business Office</option>
-                    <!-- Add other categories as needed -->
-                </select>
-            </div>
+{% block body %}
+<div class="container my-5">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Add New Design</h4>
         </div>
+        <div class="card-body">
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
 
-        <button type="submit" class="submit-btn">
-            <i class="fas fa-plus-circle"></i> Add Design
-        </button>
-    </form>
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <div class="row">
+                    <!-- Design Name -->
+                    <div class="col-md-6 mb-3">
+                        <label for="design_name" class="form-label">Design Name</label>
+                        <input type="text" class="form-control" id="design_name" name="design_name" required>
+                    </div>
+
+                    <!-- Price -->
+                    <div class="col-md-6 mb-3">
+                        <label for="price" class="form-label">Price (₹)</label>
+                        <input type="number" class="form-control" id="price" name="price" min="0" step="0.01" required>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Room Type -->
+                    <div class="col-md-6 mb-3">
+                        <label for="room_type" class="form-label">Room Type</label>
+                        <select class="form-control" id="room_type" name="room_type" required>
+                            <option value="">Select Room Type</option>
+                            {% for room_type in room_types %}
+                                <option value="{{ room_type }}">{{ room_type }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Design Style -->
+                    <div class="col-md-6 mb-3">
+                        <label for="style" class="form-label">Design Style</label>
+                        <select class="form-control" id="style" name="style" required>
+                            <option value="">Select Style</option>
+                            {% for style in design_styles %}
+                                <option value="{{ style }}">{{ style }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Area Size -->
+                    <div class="col-md-6 mb-3">
+                        <label for="area_size" class="form-label">Area Size (sq ft)</label>
+                        <input type="number" class="form-control" id="area_size" name="area_size" min="0" step="0.01" required>
+                    </div>
+
+                    <!-- Image Upload -->
+                    <div class="col-md-6 mb-3">
+                        <label for="image" class="form-label">Design Image</label>
+                        <input type="file" class="form-control" id="image" name="image" accept="image/*" required>
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div class="mb-3">
+                    <label for="description" class="form-label">Description</label>
+                    <textarea class="form-control" id="description" name="description" rows="4" required></textarea>
+                </div>
+
+                <div class="text-end">
+                    <button type="submit" class="btn btn-primary">Add Design</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
-<script>
-    // Your existing validation script
-    // ... (keep the validateForm function)
+<style>
+.card {
+    border: none;
+    border-radius: 15px;
+}
 
-    // Add this new function for file handling
-    function handleFileSelect(event) {
-        const file = event.target.files[0];
-        const fileName = document.getElementById('fileName');
-        const previewContainer = document.getElementById('preview-container');
-        const imagePreview = document.getElementById('image-preview');
+.card-header {
+    border-radius: 15px 15px 0 0 !important;
+}
+
+.form-control {
+    border-radius: 8px;
+}
+
+.form-control:focus {
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+
+.btn-primary {
+    border-radius: 8px;
+    padding: 10px 30px;
+}
+</style>
+
+<script>
+document.getElementById('image').onchange = function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            alert('File size must be less than 5MB');
+            this.value = '';
+        }
         
-        if (file) {
-            // Update filename display
-            fileName.textContent = file.name;
-            
-            // Show image preview
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                imagePreview.src = e.target.result;
-                previewContainer.style.display = 'block';
-            };
-            reader.readAsDataURL(file);
-            
-            // Validate file type and size
-            if (!file.type.match('image.*')) {
-                document.getElementById('imageError').textContent = 'Please select an image file';
-                return;
-            }
-            
-            // Check file size (max 5MB)
-            if (file.size > 5 * 1024 * 1024) {
-                document.getElementById('imageError').textContent = 'File size should be less than 5MB';
-                return;
-            }
-            
-            document.getElementById('imageError').textContent = '';
-        } else {
-            fileName.textContent = 'Choose a file or drag it here';
-            previewContainer.style.display = 'none';
-            imagePreview.src = '';
+        // Validate file type
+        if (!file.type.match('image.*')) {
+            alert('Please upload an image file');
+            this.value = '';
         }
     }
-
-    // Add drag and drop functionality
-    const dropZone = document.querySelector('.file-upload-label');
-
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        dropZone.addEventListener(eventName, preventDefaults, false);
-    });
-
-    function preventDefaults(e) {
-        e.preventDefault();
-        e.stopPropagation();
-    }
-
-    ['dragenter', 'dragover'].forEach(eventName => {
-        dropZone.addEventListener(eventName, highlight, false);
-    });
-
-    ['dragleave', 'drop'].forEach(eventName => {
-        dropZone.addEventListener(eventName, unhighlight, false);
-    });
-
-    function highlight(e) {
-        dropZone.classList.add('drag-over');
-    }
-
-    function unhighlight(e) {
-        dropZone.classList.remove('drag-over');
-    }
-
-    dropZone.addEventListener('drop', handleDrop, false);
-
-    function handleDrop(e) {
-        const dt = e.dataTransfer;
-        const files = dt.files;
-        const fileInput = document.getElementById('image');
-        
-        fileInput.files = files;
-        handleFileSelect({target: fileInput});
-    }
-
-    // Progress bar update on form input
-    const formInputs = document.querySelectorAll('input, textarea');
-    const progressBar = document.getElementById('formProgress');
-    
-    function updateProgress() {
-        const totalFields = formInputs.length;
-        let filledFields = 0;
-        
-        formInputs.forEach(input => {
-            if (input.value.trim() !== '') filledFields++;
-        });
-        
-        const progress = (filledFields / totalFields) * 100;
-        progressBar.style.width = `${progress}%`;
-    }
-
-    formInputs.forEach(input => {
-        input.addEventListener('input', updateProgress);
-    });
+};
 </script>
-
-</body>
-</html>
+{% endblock %}
 

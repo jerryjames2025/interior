@@ -29,6 +29,11 @@ import razorpay
 from django.views.decorators.csrf import csrf_exempt
 import json
 import requests.exceptions
+import numpy as np
+from PIL import Image
+import cv2
+from scipy.spatial import Delaunay
+import base64
 
 # Initialize Razorpay client
 razorpay_client = razorpay.Client(
@@ -431,14 +436,22 @@ def add_design(request):
             
             designer = Designer.objects.get(id=designer_id)
 
-            # Create the design
+            # Create the design with all required fields
             design = Design(
                 designer=designer,
                 design_name=request.POST.get('design_name'),
                 description=request.POST.get('description'),
-                category=request.POST.get('category'),
-                image=request.FILES.get('image')
+                price=request.POST.get('price'),
+                room_type=request.POST.get('room_type'),
+                style=request.POST.get('style'),
+                area_size=request.POST.get('area_size'),
+                features=request.POST.getlist('features')  # If you have multiple features
             )
+
+            # Handle image upload
+            if 'image' in request.FILES:
+                design.image = request.FILES['image']
+
             design.save()
 
             messages.success(request, 'Design added successfully!')
@@ -451,7 +464,12 @@ def add_design(request):
             messages.error(request, f'Error adding design: {str(e)}')
             return render(request, 'add_design.html')
 
-    return render(request, 'add_design.html')
+    # For GET request, provide room types and styles for the form
+    context = {
+        'room_types': [choice[0] for choice in Design._meta.get_field('room_type').choices],
+        'design_styles': [choice[0] for choice in Design._meta.get_field('style').choices]
+    }
+    return render(request, 'add_design.html', context)
 
 def designp(request):
     # Fetch all designs from the database
@@ -793,21 +811,60 @@ def design_detail(request, design_id):
     return render(request, 'design_detail.html', {'design': design})
 
 def kitchen_designs(request):
-    kitchen_designs = Design.objects.filter(category='Kitchen')
-    print(f"Number of kitchen designs fetched: {kitchen_designs.count()}")  # Debugging line
-    return render(request, 'kitchen_designs.html', {'kitchen_designs': kitchen_designs})
+    try:
+        # Change category filter to room_type
+        designs = Design.objects.filter(room_type='Kitchen')
+        
+        context = {
+            'designs': designs,
+            'room_type': 'Kitchen'
+        }
+        return render(request, 'kitchen_designs.html', context)
+    except Exception as e:
+        messages.error(request, f'Error loading kitchen designs: {str(e)}')
+        return redirect('home')
 
 def living_room_designs(request):
-    living_room_designs = Design.objects.filter(category='Living Room')
-    return render(request, 'living_room_designs.html', {'living_room_designs': living_room_designs})
+    try:
+        # Change category filter to room_type
+        designs = Design.objects.filter(room_type='Living Room')
+        
+        context = {
+            'designs': designs,
+            'room_type': 'Living Room'
+        }
+        return render(request, 'living_room_designs.html', context)
+    except Exception as e:
+        messages.error(request, f'Error loading living room designs: {str(e)}')
+        return redirect('home')
 
 def bedroom_designs(request):
-    bedroom_designs = Design.objects.filter(category='Bedroom')
-    return render(request, 'bedroom_designs.html', {'bedroom_designs': bedroom_designs})
+    try:
+        # Change category filter to room_type
+        designs = Design.objects.filter(room_type='Bedroom')
+        
+        context = {
+            'designs': designs,
+            'room_type': 'Bedroom'
+        }
+        return render(request, 'bedroom_designs.html', context)
+    except Exception as e:
+        messages.error(request, f'Error loading bedroom designs: {str(e)}')
+        return redirect('home')
 
 def bathroom_designs(request):
-    bathroom_designs = Design.objects.filter(category='Bathroom')
-    return render(request, 'bathroom_designs.html', {'bathroom_designs': bathroom_designs})
+    try:
+        # Change category filter to room_type
+        designs = Design.objects.filter(room_type='Bathroom')
+        
+        context = {
+            'designs': designs,
+            'room_type': 'Bathroom'
+        }
+        return render(request, 'bathroom_designs.html', context)
+    except Exception as e:
+        messages.error(request, f'Error loading bathroom designs: {str(e)}')
+        return redirect('home')
 
 def product_1(request):
     products = Product.objects.filter(category='Lighting')
@@ -822,16 +879,46 @@ def product_3(request):
     return render(request, 'curtains.html', {'products': products})
 
 def dining_room_designs(request):
-    dining_room_designs = Design.objects.filter(category='Dining Room')
-    return render(request, 'dining_room_designs.html', {'dining_room_designs': dining_room_designs})
+    try:
+        # Change category filter to room_type
+        designs = Design.objects.filter(room_type='Dining Room')
+        
+        context = {
+            'designs': designs,
+            'room_type': 'Dining Room'
+        }
+        return render(request, 'dining_room_designs.html', context)
+    except Exception as e:
+        messages.error(request, f'Error loading dining room designs: {str(e)}')
+        return redirect('home')
 
 def business_office_designs(request):
-    business_office_designs = Design.objects.filter(category='Business Office')
-    return render(request, 'business_office_designs.html', {'business_office_designs': business_office_designs})
+    try:
+        # Change category filter to room_type
+        designs = Design.objects.filter(room_type='Office')  # Using 'Office' from room_type choices
+        
+        context = {
+            'designs': designs,
+            'room_type': 'Office'
+        }
+        return render(request, 'business_office_designs.html', context)
+    except Exception as e:
+        messages.error(request, f'Error loading office designs: {str(e)}')
+        return redirect('home')
 
 def hallway_entry_designs(request):
-    hallway_entry_designs = Design.objects.filter(category='Hallway/Entry')
-    return render(request, 'hallway_entry_designs.html', {'hallway_entry_designs': hallway_entry_designs})
+    try:
+        # Change category filter to room_type
+        designs = Design.objects.filter(room_type='Hallway')  # Make sure this matches your room_type choices
+        
+        context = {
+            'designs': designs,
+            'room_type': 'Hallway'
+        }
+        return render(request, 'hallway_entry_designs.html', context)
+    except Exception as e:
+        messages.error(request, f'Error loading hallway designs: {str(e)}')
+        return redirect('home')
 
 @require_POST
 def toggle_favorite(request, design_id):
@@ -1132,88 +1219,22 @@ def create_order(request):
     })
 
 @csrf_exempt
-def payment_success(request):
-    if request.method == "POST":
-        try:
-            # Get the payment data
-            payment_data = json.loads(request.body)
-            print("Payment Data:", payment_data)  # Debug print
-            
-            # Verify payment signature
-            params_dict = {
-                'razorpay_payment_id': payment_data.get('razorpay_payment_id'),
-                'razorpay_order_id': payment_data.get('razorpay_order_id'),
-                'razorpay_signature': payment_data.get('razorpay_signature')
-            }
-            
-            try:
-                # Verify the payment signature
-                razorpay_client.utility.verify_payment_signature(params_dict)
-            except Exception as e:
-                print("Signature verification failed:", str(e))  # Debug print
-                return JsonResponse({
-                    "success": False,
-                    "error": "Payment signature verification failed"
-                })
-            
-            # Get user and cart
-            user_id = request.session.get('id')
-            if not user_id:
-                return JsonResponse({"success": False, "error": "User not logged in"})
-            
-            cart = Cart.objects.get(user_id=user_id)
-            cart_items = CartItem.objects.filter(cart=cart)
-            
-            if not cart_items.exists():
-                return JsonResponse({"success": False, "error": "Cart is empty"})
-            
-            # Calculate total amount
-            total_amount = sum(item.quantity * item.product.price for item in cart_items)
-            total_amount += 50  # Add delivery charges
-            
-            try:
-                # Create order
-                order = Order.objects.create(
-                    user_id=user_id,
-                    payment_id=payment_data['razorpay_payment_id'],
-                    razorpay_order_id=payment_data['razorpay_order_id'],
-                    amount=total_amount,
-                    status='Completed'
-                )
-                
-                # Create order items
-                for cart_item in cart_items:
-                    OrderItem.objects.create(
-                        order=order,
-                        product=cart_item.product,
-                        quantity=cart_item.quantity,
-                        price=cart_item.product.price
-                    )
-                
-                # Clear the cart
-                cart_items.delete()
-                
-                return JsonResponse({
-                    "success": True,
-                    "message": "Payment successful and order created",
-                    "order_id": order.id
-                })
-                
-            except Exception as e:
-                print("Error creating order:", str(e))  # Debug print
-                return JsonResponse({
-                    "success": False,
-                    "error": "Error creating order: " + str(e)
-                })
-            
-        except Exception as e:
-            print("Payment processing error:", str(e))  # Debug print
-            return JsonResponse({
-                "success": False,
-                "error": str(e)
-            })
-    
-    return JsonResponse({"success": False, "error": "Invalid request method"})
+def payment_success(request, order_id):
+    try:
+        order = Order.objects.get(id=order_id)
+        # Calculate totals in the view
+        order_items = order.orderitem_set.all()
+        for item in order_items:
+            item.total = item.price * item.quantity
+        
+        context = {
+            'order': order,
+            'order_items': order_items,
+        }
+        return render(request, 'payment_success.html', context)
+    except Order.DoesNotExist:
+        messages.error(request, 'Order not found')
+        return redirect('home')
 
 @login_required
 def payment_success_page(request):
@@ -1309,3 +1330,265 @@ def view_orders(request):
 
 def modeling_view(request):
     return render(request, '3D_Modeling.html')
+
+@csrf_exempt
+def generate_3d_model(request):
+    if request.method == 'POST' and request.FILES.get('image'):
+        try:
+            image = request.FILES['image']
+            print(f"Processing image: {image.name}")
+            
+            # Read and decode image
+            image_data = image.read()
+            nparr = np.frombuffer(image_data, np.uint8)
+            img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+            
+            if img is None:
+                raise ValueError("Failed to decode image")
+            
+            # Convert to RGB and get dimensions
+            img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            height, width = img_rgb.shape[:2]
+            
+            # Enhanced depth estimation pipeline
+            gray = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2GRAY)
+            
+            # Stronger noise reduction
+            filtered = cv2.bilateralFilter(gray, 15, 80, 80)
+            
+            # Enhance contrast
+            clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8,8))
+            enhanced = clahe.apply(filtered)
+            
+            # Smoother edge detection
+            edges = cv2.Canny(enhanced, 30, 90)
+            kernel = np.ones((3,3), np.uint8)
+            edges = cv2.dilate(edges, kernel, iterations=1)
+            edges = cv2.GaussianBlur(edges, (5,5), 0)
+            
+            # Create smoother depth map
+            depth_map = cv2.distanceTransform(~edges, cv2.DIST_L2, 5)
+            depth_map = cv2.GaussianBlur(depth_map, (7,7), 0)
+            depth_map = cv2.normalize(depth_map, None, 0, 1, cv2.NORM_MINMAX)
+            
+            # Lower resolution for smoother mesh
+            segments = min(100, min(width, height) // 4)
+            rows = segments + 1
+            cols = segments + 1
+            
+            vertices = []
+            uvs = []
+            
+            # Create smoother vertex distribution
+            for i in range(rows):
+                for j in range(cols):
+                    u = j / (cols - 1)
+                    v = 1 - (i / (rows - 1))
+                    
+                    # Smoother position calculation
+                    x = (u * 2 - 1)
+                    y = (v * 2 - 1)
+                    
+                    # Bilinear interpolation for depth
+                    img_y = int(v * (height - 1))
+                    img_x = int(u * (width - 1))
+                    
+                    # Get smoother depth value
+                    z = depth_map[img_y, img_x]
+                    
+                    # Reduce depth intensity
+                    z = np.power(z, 1.2) * 0.3  # Reduced depth scaling
+                    
+                    vertices.append([x, y, z])
+                    uvs.append([u, v])
+            
+            # Generate faces with proper orientation
+            faces = []
+            for i in range(rows - 1):
+                for j in range(cols - 1):
+                    v0 = i * cols + j
+                    v1 = v0 + 1
+                    v2 = (i + 1) * cols + j
+                    v3 = v2 + 1
+                    
+                    faces.append([v0, v1, v2])
+                    faces.append([v1, v3, v2])
+            
+            # Convert to numpy arrays
+            vertices = np.array(vertices, dtype=np.float32)
+            faces = np.array(faces, dtype=np.uint32)
+            uvs = np.array(uvs, dtype=np.float32)
+            
+            # Smooth the mesh
+            vertices = smooth_mesh(vertices, faces, iterations=2)
+            
+            # Convert image to base64 for texture
+            _, buffer = cv2.imencode('.png', img_rgb)
+            texture_data = base64.b64encode(buffer).decode('utf-8')
+            
+            return JsonResponse({
+                'success': True,
+                'model_data': {
+                    'vertices': vertices.tolist(),
+                    'faces': faces.tolist(),
+                    'uvs': uvs.tolist(),
+                    'texture': f'data:image/png;base64,{texture_data}'
+                }
+            })
+            
+        except Exception as e:
+            print(f"Error: {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            })
+
+def smooth_mesh(vertices, faces, iterations=2):
+    """Smooth the mesh using Laplacian smoothing"""
+    for _ in range(iterations):
+        new_vertices = vertices.copy()
+        
+        # Create vertex neighbors dictionary
+        neighbors = {}
+        for face in faces:
+            for i in range(3):
+                v1, v2 = face[i], face[(i+1)%3]
+                if v1 not in neighbors:
+                    neighbors[v1] = []
+                if v2 not in neighbors[v1]:
+                    neighbors[v1].append(v2)
+        
+        # Apply smoothing
+        for i in range(len(vertices)):
+            if i in neighbors:
+                neighbor_vertices = vertices[neighbors[i]]
+                if len(neighbor_vertices) > 0:
+                    # Weight center vertex more heavily
+                    new_vertices[i] = 0.8 * vertices[i] + 0.2 * np.mean(neighbor_vertices, axis=0)
+        
+        vertices = new_vertices
+    
+    return vertices
+
+@login_required
+def budget_planner(request):
+    if request.method == 'POST':
+        try:
+            min_budget = float(request.POST.get('min_budget'))
+            max_budget = float(request.POST.get('max_budget'))
+            room_type = request.POST.get('room_type')
+            design_style = request.POST.get('style')
+            area_size = float(request.POST.get('area_size'))
+            
+            # Create budget plan
+            budget_plan = BudgetPlan.objects.create(
+                user=request.user,
+                min_budget=min_budget,
+                max_budget=max_budget,
+                room_type=room_type,
+                design_style=design_style,
+                area_size=area_size,
+                priority_features=request.POST.getlist('priorities')
+            )
+            
+            # Get products within budget range
+            products = Product.objects.filter(
+                price__gte=min_budget,
+                price__lte=max_budget,
+                category__icontains=room_type
+            )
+            
+            if design_style:
+                products = products.filter(style__icontains=design_style)
+            
+            context = {
+                'budget_plan': budget_plan,
+                'products': products,
+                'room_types': ['Living Room', 'Bedroom', 'Dining Room', 'Kitchen'],
+                'design_styles': ['Modern', 'Traditional', 'Contemporary', 'Minimalist']
+            }
+            
+            return render(request, 'budget_planner.html', context)
+            
+        except Exception as e:
+            messages.error(request, f'Error creating budget plan: {str(e)}')
+            return redirect('budget_planner')
+    
+    # For GET request
+    context = {
+        'room_types': ['Living Room', 'Bedroom', 'Dining Room', 'Kitchen'],
+        'design_styles': ['Modern', 'Traditional', 'Contemporary', 'Minimalist']
+    }
+    return render(request, 'budget_planner.html', context)
+
+@login_required
+def create_budget_plan(request):
+    if request.method == 'POST':
+        try:
+            min_budget = float(request.POST.get('min_budget'))
+            max_budget = float(request.POST.get('max_budget'))
+            room_type = request.POST.get('room_type')
+            design_style = request.POST.get('style')
+            area_size = float(request.POST.get('area_size'))
+            
+            # Create budget plan
+            budget_plan = BudgetPlan.objects.create(
+                user=request.user,
+                min_budget=min_budget,
+                max_budget=max_budget,
+                room_type=room_type,
+                design_style=design_style,
+                area_size=area_size,
+                priority_features=request.POST.getlist('priorities')
+            )
+            
+            # Get products within budget range
+            products = Product.objects.filter(
+                price__gte=min_budget,
+                price__lte=max_budget
+            )
+            
+            # Get designs within budget range
+            designs = Design.objects.filter(
+                price__gte=min_budget,
+                price__lte=max_budget
+            )
+            
+            if room_type:
+                designs = designs.filter(room_type=room_type)
+            
+            if design_style:
+                products = products.filter(style=design_style)
+                designs = designs.filter(style=design_style)
+            
+            return JsonResponse({
+                'success': True,
+                'budget_plan_id': budget_plan.id,
+                'products': [{
+                    'id': p.id,
+                    'name': p.product_name,
+                    'price': float(p.price),
+                    'image_url': p.image.url if p.image else None,
+                    'category': p.category,
+                    'style': p.style
+                } for p in products],
+                'designs': [{
+                    'id': d.id,
+                    'name': d.design_name,
+                    'price': float(d.price),
+                    'image_url': d.image.url if d.image else None,
+                    'designer': d.designer.full_name,
+                    'style': d.style
+                } for d in designs]
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            })
+    
+    return JsonResponse({
+        'success': False,
+        'error': 'Invalid request method'
+    })

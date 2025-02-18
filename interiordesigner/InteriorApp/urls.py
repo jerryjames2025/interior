@@ -88,6 +88,9 @@ urlpatterns = [
     path('payment/success/', views.payment_success, name='payment_success'),
     path('get-cart-count/', views.get_cart_count, name='get_cart_count'),
     path('3d_modeling/', views.modeling_view, name='3d_modeling'),
+    path('generate-3d-model/', views.generate_3d_model, name='generate_3d_model'),
+    path('budget-planner/', views.budget_planner, name='budget_planner'),
+    path('create-budget-plan/', views.create_budget_plan, name='create_budget_plan'),
 ]
 
 

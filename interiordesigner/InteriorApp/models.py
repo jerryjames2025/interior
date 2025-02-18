@@ -75,6 +75,18 @@ class Product(models.Model):
             ('Other', 'Other')
         ]
     )
+    style = models.CharField(
+        max_length=50,
+        choices=[
+            ('Modern', 'Modern'),
+            ('Traditional', 'Traditional'),
+            ('Contemporary', 'Contemporary'),
+            ('Minimalist', 'Minimalist'),
+            ('Industrial', 'Industrial'),
+            ('Rustic', 'Rustic')
+        ],
+        default='Modern'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -94,21 +106,59 @@ class Designer(models.Model):
     username = models.CharField(max_length=50, unique=True)
     password = models.CharField(max_length=128)
 
+    @property
+    def name(self):
+        return self.full_name
+
     def __str__(self):
         return self.full_name
 
 # Then define Design model
 class Design(models.Model):
-    designer = models.ForeignKey(Designer, on_delete=models.CASCADE)
-    design_name = models.CharField(max_length=200)
+    designer = models.ForeignKey(Designer, on_delete=models.CASCADE, related_name='designs')
+    design_name = models.CharField(max_length=255)
     description = models.TextField()
-    image = models.ImageField(upload_to='designs/')
-    category = models.CharField(max_length=100)
-    created_at = models.DateTimeField(default=timezone.now)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    area_size = models.DecimalField(max_digits=8, decimal_places=2, default=0.0)
+    room_type = models.CharField(
+        max_length=50,
+        choices=[
+            ('Living Room', 'Living Room'),
+            ('Bedroom', 'Bedroom'),
+            ('Kitchen', 'Kitchen'),
+            ('Bathroom', 'Bathroom'),
+            ('Dining Room', 'Dining Room'),
+            ('Office', 'Office'),
+            ('Kids Room', 'Kids Room'),
+            ('Master Bedroom', 'Master Bedroom'),
+            ('Guest Room', 'Guest Room'),
+            ('Study Room', 'Study Room'),
+            ('Balcony', 'Balcony'),
+            ('Outdoor Space', 'Outdoor Space')
+        ]
+    )
+    style = models.CharField(
+        max_length=50,
+        choices=[
+            ('Modern', 'Modern'),
+            ('Traditional', 'Traditional'),
+            ('Contemporary', 'Contemporary'),
+            ('Minimalist', 'Minimalist'),
+            ('Industrial', 'Industrial'),
+            ('Rustic', 'Rustic')
+        ],
+        default='Modern'
+    )
+    features = models.JSONField(default=list)
+    image = models.ImageField(upload_to='design_images/', blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    favorited_by = models.ManyToManyField(User, through='Favorite', related_name='favorite_designs_set')
 
     def __str__(self):
         return self.design_name
-    
+
+    class Meta:
+        ordering = ['-created_at']
 
 # Model to represent an entire shopping cart for a user
 class Cart(models.Model):
@@ -145,13 +195,12 @@ class Feedback(models.Model):
         return f'Feedback from {self.user.username} - {self.subject}'
 
 class Favorite(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='favorites')
-    design = models.ForeignKey(Design, on_delete=models.CASCADE, related_name='favorited_by')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    design = models.ForeignKey(Design, on_delete=models.CASCADE, related_name='favorites')
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ['user', 'design']
-        ordering = ['-created_at']
+        unique_together = ('user', 'design')
 
     def __str__(self):
         return f"{self.user.username} - {self.design.design_name}"
@@ -184,3 +233,33 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f"{self.quantity} x {self.product.product_name} in Order {self.order.id}"
+
+class BudgetPlan(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    min_budget = models.DecimalField(max_digits=10, decimal_places=2)
+    max_budget = models.DecimalField(max_digits=10, decimal_places=2)
+    room_type = models.CharField(max_length=50)
+    design_style = models.CharField(max_length=50, blank=True, null=True)
+    area_size = models.DecimalField(max_digits=8, decimal_places=2)
+    priority_features = models.JSONField(default=list)
+    created_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=20, default='active')
+    
+    class Meta:
+        ordering = ['-created_at']
+
+class BundleDeal(models.Model):
+    name = models.CharField(max_length=100)
+    products = models.ManyToManyField('Product')
+    discount_percentage = models.DecimalField(max_digits=5, decimal_places=2)
+    valid_until = models.DateTimeField()
+
+class BudgetAllocation(models.Model):
+    budget_plan = models.ForeignKey(BudgetPlan, on_delete=models.CASCADE)
+    category = models.CharField(max_length=50)  # e.g., Furniture, Decor, Lighting
+    allocation_percentage = models.DecimalField(max_digits=5, decimal_places=2)
+    allocated_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    def save(self, *args, **kwargs):
+        self.allocated_amount = (self.allocation_percentage / 100) * self.budget_plan.total_budget
+        super().save(*args, **kwargs)

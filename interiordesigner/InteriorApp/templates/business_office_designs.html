@@ -1,80 +1,58 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block body %}
-<section>
-    <h2 class="section-title center-align">Our Business/Office Designs</h2>
-    <div class="business-office-gallery">
-        {% if business_office_designs %}
-            {% for design in business_office_designs %}
-            <div class="business-office-item">
-                <img src="{{ design.image.url }}" alt="{{ design.design_name }}">
-                <div class="card-content">
-                    <span class="card-title">{{ design.design_name }}</span>
-                    <p class="card-description">{{ design.description }}</p>
-                    
+<div class="container my-5">
+    <h2 class="text-center mb-4">Business/Office Designs</h2>
+    
+    <div class="row">
+        {% if designs %}
+            {% for design in designs %}
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    {% if design.image %}
+                        <img src="{{ design.image.url }}" class="card-img-top" alt="{{ design.design_name }}">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ design.design_name }}</h5>
+                        <p class="card-text">
+                            <small class="text-muted">By {{ design.designer.full_name }}</small><br>
+                            Style: {{ design.style }}<br>
+                            Area: {{ design.area_size }} sq ft<br>
+                            Price: ₹{{ design.price }}
+                        </p>
+                        <a href="{% url 'design_detail' design.id %}" class="btn btn-primary">View Details</a>
+                    </div>
                 </div>
             </div>
             {% endfor %}
         {% else %}
-            <p class="center-align">No business office designs available.</p>
+            <div class="col-12 text-center">
+                <p>No office designs available at the moment.</p>
+            </div>
         {% endif %}
     </div>
-</section>
+</div>
 
 <style>
-    body {
-        font-family: 'Poppins', sans-serif;
-        background: url('/static/images/business-office-background.jpg') no-repeat center center fixed;
-        background-size: cover;
-        color: #2c3e50; /* Default text color */
-        line-height: 1.6;
-    }
-    .section-title {
-        font-size: 3rem;
-        margin: 50px 0;
-        color: #f7dc6f; /* Yellow color for the title */
-        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-    }
-    .business-office-gallery {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 20px;
-        padding: 20px;
-        max-width: 1200px;
-        margin: 0 auto;
-    }
-    .business-office-item {
-        border-radius: 10px;
-        overflow: hidden;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        transition: transform 0.3s, box-shadow 0.3s;
-        background-color: #fff; /* White background for cards */
-    }
-    .business-office-item:hover {
-        transform: scale(1.05);
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
-    }
-    .business-office-item img {
-        width: 100%;
-        height: auto;
-        border-bottom: 5px solid #FFD700; /* Yellow border for images */
-    }
-    .card-content {
-        padding: 15px;
-    }
-    .card-title {
-        font-size: 1.5rem;
-        font-weight: 600;
-        color: #FFD700; /* Yellow color for the title */
-    }
-    .card-description {
-        font-size: 1rem;
-        color: #34495e; /* Slightly lighter color for description */
-    }
-    .price {
-        font-size: 1.2rem;
-        font-weight: bold;
-        color: #e74c3c; /* Price color */
-    }
+.card {
+    transition: transform 0.3s;
+    border: none;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.card-img-top {
+    height: 200px;
+    object-fit: cover;
+}
+
+.btn-primary {
+    width: 100%;
+    border-radius: 20px;
+}
 </style>
 {% endblock %}

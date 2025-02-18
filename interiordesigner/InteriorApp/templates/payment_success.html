@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load custom_filters %}
 
 {% block body %}
 <div class="container mt-5 mb-5">
@@ -57,7 +58,7 @@
                                             </td>
                                             <td>{{ item.quantity }}</td>
                                             <td class="text-end">₹{{ item.price }}</td>
-                                            <td class="text-end">₹{{ item.price|multiply:item.quantity }}</td>
+                                            <td class="text-end">₹{{ item.total }}</td>
                                         </tr>
                                         {% endfor %}
                                     </tbody>
