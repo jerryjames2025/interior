@@ -1,0 +1,326 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head %}
+<style>
+    .decoration-page-container {
+        padding: 20px;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .section-title {
+        font-size: 2.5rem;
+        color: #2c3e50;
+        margin-bottom: 30px;
+        text-align: center;
+        font-weight: 600;
+    }
+
+    .products-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 30px;
+        padding: 20px;
+    }
+
+    .product-card {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .product-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+
+    .product-image {
+        position: relative;
+        height: 250px;
+        overflow: hidden;
+    }
+
+    .product-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+
+    .product-card:hover .product-image img {
+        transform: scale(1.05);
+    }
+
+    .product-info {
+        padding: 25px;
+    }
+
+    .product-name {
+        font-size: 1.2rem;
+        color: #2c3e50;
+        margin-bottom: 15px;
+        font-weight: 600;
+    }
+
+    .product-price {
+        font-size: 1.4rem;
+        color: #e74c3c;
+        font-weight: 700;
+        margin-bottom: 20px;
+    }
+
+    .add-to-cart-btn {
+        width: 100%;
+        padding: 12px;
+        background: linear-gradient(145deg, #3498db, #2980b9);
+        color: white;
+        border: none;
+        border-radius: 25px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .add-to-cart-btn:hover {
+        background: linear-gradient(145deg, #2980b9, #3498db);
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<nav class="navbar">
+    <div class="navbar-left">
+        <div class="navbar-logo">
+            <img src="{% static 'images/logo.jpeg' %}" alt="Logo" style="height: 50px;" />
+        </div>
+        <div class="dropdown-container">
+            <button class="dropdown-trigger">
+                <div class="back-button-container" style="text-align: center; margin-top: 3px;">
+                    <a href="{% url 'products' %}" class="back-button">Back to Products</a>
+                </div>
+            </button>
+            
+        </div>
+    </div>
+
+    <div class="search-container">
+        <div class="search-bar">
+            <input type="text" placeholder="Search products..." id="searchInput">
+            <button type="submit" id="searchButton"><i class="fas fa-search"></i></button>
+        </div>
+    </div>
+
+    <div class="navbar-right">
+        <a href="{% url 'cart' %}" class="cart-button">
+            <i class="fas fa-shopping-cart"></i>
+            <span class="cart-count" id="cart-count">0</span>
+            Cart
+        </a>
+        {% if request.session.id %}
+            
+        {% endif %}
+    </div>
+</nav>
+
+<style>
+    .navbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: linear-gradient(145deg, #000000, #333333);
+        padding: 15px 30px;
+        box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+    }
+
+    .navbar-left, .navbar-right {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .dropdown-container {
+        position: relative;
+    }
+
+    .dropdown-trigger {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        padding: 12px 24px;
+        border-radius: 25px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .dropdown-trigger:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    .dropdown-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        background: white;
+        min-width: 250px;
+        border-radius: 12px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+        margin-top: 10px;
+        display: none;
+        z-index: 1000;
+    }
+
+    .dropdown-container:hover .dropdown-menu {
+        display: block;
+        animation: fadeInUp 0.3s ease;
+    }
+
+    .dropdown-menu a {
+        display: block;
+        padding: 12px 20px;
+        color: #2c3e50;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .dropdown-menu a:hover {
+        background: #f8f9fa;
+        color: #3498db;
+    }
+
+    .search-container {
+        flex: 0 1 500px;
+    }
+
+    .search-bar {
+        display: flex;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 25px;
+        padding: 5px 15px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .search-bar input {
+        border: none;
+        outline: none;
+        padding: 8px;
+        width: 100%;
+        background: transparent;
+    }
+
+    .search-bar button {
+        background: none;
+        border: none;
+        color: #3498db;
+        cursor: pointer;
+        padding: 8px;
+    }
+
+    .cart-button {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        padding: 12px 24px;
+        border-radius: 25px;
+        text-decoration: none;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s ease;
+    }
+
+    .cart-button:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-2px);
+    }
+
+    .cart-count {
+        background: #e74c3c;
+        color: white;
+        padding: 2px 6px;
+        border-radius: 50%;
+        font-size: 0.8em;
+    }
+
+    .nav-button {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        padding: 12px 24px;
+        border-radius: 25px;
+        text-decoration: none;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s ease;
+    }
+
+    .nav-button:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-2px);
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+
+<div class="product-page-container">
+    <!-- Main Content -->
+    <main class="products-main">
+        <!-- Top Bar with Sort -->
+       
+
+        <!-- Products Grid -->
+        <div class="products-grid">
+            {% for product in products %}
+            <div class="product-card" data-category="{{ product.category }}" data-price="{{ product.price }}">
+                <div class="product-image">
+                    <img src="{{ product.image.url }}" alt="{{ product.product_name }}">
+                    <button class="quick-view-btn" onclick="showQuickView({{ product.id }})">
+                        Quick View
+                    </button>
+                </div>
+                <div class="product-info">
+                    <h3 class="product-name">{{ product.product_name }}</h3>
+                    <p class="product-description">{{ product.description|truncatechars:100 }}</p>
+                    <div class="product-price">₹{{ product.price }}</div>
+                    <button class="add-to-cart-btn" onclick="addToCart({{ product.id }})">
+                        <i class="fas fa-shopping-cart"></i> Add to Cart
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+    </div>
+</div>
+
+<script>
+    document.getElementById('searchButton').addEventListener('click', function() {
+        const query = document.getElementById('searchInput').value;
+        if (query) {
+            window.location.href = "{% url 'products' %}?search=" + encodeURIComponent(query);
+        }
+    });
+
+    document.getElementById('searchInput').addEventListener('keypress', function(event) {
+        if (event.key === 'Enter') {
+            document.getElementById('searchButton').click();
+        }
+    });
+</script>
+{% endblock %}

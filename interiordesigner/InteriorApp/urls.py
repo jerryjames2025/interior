@@ -48,7 +48,7 @@ urlpatterns = [
     # path('search/', views.search_products, name='search_products'),
     # path('remove/<int:item_id>/', views.remove_from_cart, name='remove_from_cart'),
     path('cart/add/<int:product_id>/', views.add_to_cart, name='add_to_cart'),
-    path('cart/remove/<int:item_id>/', views.remove_from_cart, name='remove_from_cart'),
+    path('cart/remove/<int:product_id>/', views.remove_from_cart, name='remove_from_cart'),
     path('cart/update/<int:item_id>/', views.update_cart, name='update_cart'),
     path('realhome', views.realhome, name='realhome'),  # Home Page
     path('designers/', views.designers_view, name='designers'),  # Designers Page
@@ -83,7 +83,7 @@ urlpatterns = [
     path('products/filter/', views.filter_products, name='filter_products'),
     path('product/<int:product_id>/', views.product_detail, name='product_detail'),
     path('create-order/', views.create_order, name='create_order'),
-    path('payment-success/', views.payment_success, name='payment_success'),
+    path('payment-success/<str:order_id>/', views.payment_success, name='payment_success'),
     path('payment-success-page/', views.payment_success_page, name='payment_success_page'),
     path('payment/success/', views.payment_success, name='payment_success'),
     path('get-cart-count/', views.get_cart_count, name='get_cart_count'),
@@ -91,6 +91,12 @@ urlpatterns = [
     path('generate-3d-model/', views.generate_3d_model, name='generate_3d_model'),
     path('budget-planner/', views.budget_planner, name='budget_planner'),
     path('create-budget-plan/', views.create_budget_plan, name='create_budget_plan'),
+    path('lighting-bulbs/', views.lighting_bulbs, name='lighting_bulbs'),
+    path('decoration-items/', views.decoration_items, name='decoration_items'),  # Correct URL pattern
+    path('carpets-and-rugs/', views.carpets_and_rugs, name='carpets_and_rugs'),  # New URL for carpets and rugs
+    path('wallpapers/', views.wallpapers, name='wallpapers'),  # New URL for wallpapers
+    path('indoor-plants/', views.indoor_plants, name='indoor_plants'),  # New URL for indoor plants
+    path('storage-solutions/', views.storage_solutions, name='storage_solutions'),  # New URL for storage solutions
 ]
 
 

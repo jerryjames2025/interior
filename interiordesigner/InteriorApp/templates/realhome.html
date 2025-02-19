@@ -71,16 +71,14 @@
     }
     .search-container {
       position: relative;
-      margin-right: 20px;
+      margin: 0 20px;
     }
-    .search-container input {
+    #searchInput {
       padding: 8px 15px;
-      padding-right: 35px;
+      width: 300px;
       border: 1px solid #ddd;
       border-radius: 20px;
-      width: 250px;
-      font-size: 0.9rem;
-      transition: all 0.3s ease;
+      outline: none;
     }
     .search-container button {
       padding: 5px 10px;
@@ -236,18 +234,18 @@
     }
 
     .search-loading {
+        display: none;
         position: absolute;
         right: 10px;
         top: 50%;
         transform: translateY(-50%);
-        display: none;
     }
 
     .spinner {
         width: 20px;
         height: 20px;
         border: 2px solid #f3f3f3;
-        border-top: 2px solid #4a90e2;
+        border-top: 2px solid #3498db;
         border-radius: 50%;
         animation: spin 1s linear infinite;
     }
@@ -258,38 +256,58 @@
     }
 
     .search-results {
+        display: none;
         position: absolute;
-        top: calc(100% + 5px);
+        top: 100%;
         left: 0;
         right: 0;
         background: white;
-        border-radius: 8px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         max-height: 400px;
         overflow-y: auto;
-        display: none;
         z-index: 1000;
     }
 
     .search-result-item {
-        padding: 12px 15px;
+        padding: 10px;
         border-bottom: 1px solid #eee;
         cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        transition: background-color 0.2s ease;
     }
 
     .search-result-item:hover {
         background-color: #f8f9fa;
     }
 
+    .search-result-link {
+        display: flex;
+        text-decoration: none;
+        color: inherit;
+    }
+
     .search-result-image {
-        width: 50px;
-        height: 50px;
+        width: 60px;
+        height: 60px;
+        margin-right: 10px;
+    }
+
+    .search-result-image img {
+        width: 100%;
+        height: 100%;
         object-fit: cover;
         border-radius: 4px;
+    }
+
+    .search-result-info h4 {
+        margin: 0 0 5px 0;
+        color: #333;
+    }
+
+    .search-result-info p {
+        margin: 0;
+        font-size: 0.9em;
+        color: #666;
     }
 
     .search-result-info {
@@ -315,6 +333,126 @@
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
+    }
+
+    .nav-button {
+        background: linear-gradient(145deg, #2c3e50, #3498db);
+        color: white;
+        padding: 12px 24px;
+        border-radius: 25px;
+        border: none;
+        font-weight: 500;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .nav-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        background: linear-gradient(145deg, #3498db, #2c3e50);
+    }
+
+    .dropdown-container {
+        position: relative;
+    }
+
+    .dropdown-trigger {
+        padding-right: 30px;
+    }
+
+    .dropdown-trigger .fa-chevron-down {
+        font-size: 0.8em;
+        margin-left: 5px;
+        transition: transform 0.3s ease;
+    }
+
+    .dropdown-container:hover .fa-chevron-down {
+        transform: rotate(180deg);
+    }
+
+    .dropdown-menu {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        background: white;
+        min-width: 250px;
+        border-radius: 12px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+        padding: 10px;
+        z-index: 1000;
+        transform: translateY(10px);
+        opacity: 0;
+        transition: all 0.3s ease;
+    }
+
+    .dropdown-container:hover .dropdown-menu {
+        display: block;
+        transform: translateY(0);
+        opacity: 1;
+    }
+
+    .dropdown-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 20px;
+        color: #2c3e50;
+        text-decoration: none;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+    }
+
+    .dropdown-item:hover {
+        background: #f8f9fa;
+        color: #3498db;
+        transform: translateX(5px);
+    }
+
+    .dropdown-item i {
+        font-size: 1.2em;
+        width: 24px;
+        text-align: center;
+        color: #3498db;
+    }
+
+    /* Animation for dropdown */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .dropdown-menu {
+        animation: fadeInUp 0.3s ease;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .nav-button {
+            padding: 8px 16px;
+            font-size: 0.9em;
+        }
+
+        .dropdown-menu {
+            position: fixed;
+            top: auto;
+            left: 0;
+            right: 0;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
     }
   </style>
 </head>
@@ -439,20 +577,29 @@
     const searchResults = document.getElementById('searchResults');
     const searchLoading = document.querySelector('.search-loading');
     let searchTimeout;
-    let lastQuery = '';
+
+    if (!searchInput || !searchResults || !searchLoading) {
+        console.error('Search elements not found');
+        return;
+    }
 
     searchInput.addEventListener('input', function() {
-        clearTimeout(searchTimeout);
         const query = this.value.trim();
         
+        // Clear previous timeout
+        clearTimeout(searchTimeout);
+        
+        // Hide results if query is empty
         if (query.length < 2) {
             searchResults.style.display = 'none';
             searchLoading.style.display = 'none';
             return;
         }
-
+        
+        // Show loading spinner
         searchLoading.style.display = 'block';
         
+        // Set a timeout to prevent too many requests
         searchTimeout = setTimeout(() => {
             fetch(`/search/?q=${encodeURIComponent(query)}`, {
                 headers: {
@@ -462,53 +609,40 @@
             .then(response => response.json())
             .then(data => {
                 searchLoading.style.display = 'none';
-                searchResults.innerHTML = '';
                 
-                if (data.success && data.results.length > 0) {
-                    data.results.forEach(item => {
-                        const resultItem = document.createElement('div');
-                        resultItem.className = 'search-result-item';
-                        resultItem.innerHTML = `
-                            <img src="${item.image || '/static/images/default-design.jpg'}" 
-                                 alt="${item.name}" 
-                                 class="search-result-image">
-                            <div class="search-result-info">
-                                <div class="search-result-title">${item.name}</div>
-                                <div class="search-result-category">${item.category}</div>
-                                <div class="search-result-description">${item.description || ''}</div>
-                            </div>
-                            <button class="favorite-btn ${item.is_favorite ? 'active' : ''}"
-                                    onclick="event.stopPropagation(); toggleFavorite(this, ${item.id})">
-                                <i class="fa${item.is_favorite ? 's' : 'r'} fa-heart"></i>
-                            </button>
-                        `;
-                        resultItem.addEventListener('click', () => {
-                            window.location.href = `/design/${item.id}/`;
+                if (data.success) {
+                    // Clear previous results
+                    searchResults.innerHTML = '';
+                    
+                    if (data.results.length > 0) {
+                        data.results.forEach(result => {
+                            const resultItem = document.createElement('div');
+                            resultItem.className = 'search-result-item';
+                            resultItem.innerHTML = `
+                                <a href="/design-detail/${result.id}/" class="search-result-link">
+                                    <div class="search-result-image">
+                                        ${result.image ? `<img src="${result.image}" alt="${result.name}">` : ''}
+                                    </div>
+                                    <div class="search-result-info">
+                                        <h4>${result.name}</h4>
+                                        <p>${result.description}</p>
+                                        <span class="category-tag">${result.category}</span>
+                                    </div>
+                                </a>
+                            `;
+                            searchResults.appendChild(resultItem);
                         });
-                        searchResults.appendChild(resultItem);
-                    });
-                    searchResults.style.display = 'block';
-                } else {
-                    searchResults.innerHTML = `
-                        <div class="search-result-item">
-                            <div class="search-result-info">
-                                <div class="search-result-title">No results found</div>
-                            </div>
-                        </div>
-                    `;
-                    searchResults.style.display = 'block';
+                        searchResults.style.display = 'block';
+                    } else {
+                        searchResults.innerHTML = '<div class="no-results">No results found</div>';
+                        searchResults.style.display = 'block';
+                    }
                 }
             })
             .catch(error => {
                 console.error('Search error:', error);
                 searchLoading.style.display = 'none';
-                searchResults.innerHTML = `
-                    <div class="search-result-item">
-                        <div class="search-result-info">
-                            <div class="search-result-title">Error performing search</div>
-                        </div>
-                    </div>
-                `;
+                searchResults.innerHTML = '<div class="error-message">Error performing search</div>';
                 searchResults.style.display = 'block';
             });
         }, 300);
@@ -516,14 +650,9 @@
 
     // Close search results when clicking outside
     document.addEventListener('click', function(e) {
-        if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+        if (!searchResults.contains(e.target) && e.target !== searchInput) {
             searchResults.style.display = 'none';
         }
-    });
-
-    // Prevent search results from closing when clicking inside
-    searchResults.addEventListener('click', function(e) {
-        e.stopPropagation();
     });
 
     // Update Favorites Count

@@ -593,12 +593,40 @@ def cart_view(request):
 
 # View to remove product from cart
 @login_required
-def remove_from_cart(request, item_id):
-    user = request.session['id']
-    cart_item = get_object_or_404(CartItem, id=item_id, user=user)
-    cart_item.delete()
-    messages.success(request, "Product removed from cart.")
-    return redirect('cart')
+def remove_from_cart(request, product_id):
+    try:
+        # Get the user's cart
+        cart = Cart.objects.get(user=request.session.get('id'))
+        
+        # Find and delete the cart item
+        cart_item = CartItem.objects.get(cart=cart, product_id=product_id)
+        cart_item.delete()
+        
+        # Recalculate cart total
+        cart_items = CartItem.objects.filter(cart=cart)
+        cart_count = cart_items.aggregate(total_items=Sum('quantity'))['total_items'] or 0
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Item removed from cart',
+            'cartCount': cart_count
+        })
+        
+    except Cart.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': 'Cart not found'
+        })
+    except CartItem.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': 'Item not found in cart'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        })
 
 # Update the cart (increase/decrease quantity)
 @login_required
@@ -1001,7 +1029,7 @@ def search_designs(request):
                 designs = Design.objects.filter(
                     Q(design_name__icontains=query) |
                     Q(description__icontains=query) |
-                    Q(category__icontains=query)
+                    Q(room_type__icontains=query)  # Changed from category to room_type
                 ).distinct()[:10]
                 
                 # Get user favorites if logged in
@@ -1014,7 +1042,7 @@ def search_designs(request):
                 results = [{
                     'id': design.id,
                     'name': design.design_name,
-                    'category': design.category,
+                    'category': design.room_type,  # Changed from category to room_type
                     'description': design.description[:100] + '...' if design.description else '',
                     'image': design.image.url if design.image else None,
                     'is_favorite': design.id in user_favorites
@@ -1129,7 +1157,7 @@ def filter_products(request):
     
     products = Product.objects.all()
     
-    if category:
+    if category and category != 'all':
         products = products.filter(category=category)
     if min_price:
         products = products.filter(price__gte=min_price)
@@ -1152,7 +1180,7 @@ def filter_products(request):
         'image': product.image.url if product.image else None,
         'description': product.description[:100] + '...' if product.description else '',
         'category': product.category
-    } for product in products[:12]]  # Limit to 12 products for performance
+    } for product in products[:12]]
     
     return JsonResponse({
         'products': products_data,
@@ -1218,23 +1246,62 @@ def create_order(request):
         "error": "Invalid request method"
     })
 
-@csrf_exempt
+@login_required
 def payment_success(request, order_id):
-    try:
-        order = Order.objects.get(id=order_id)
-        # Calculate totals in the view
-        order_items = order.orderitem_set.all()
-        for item in order_items:
-            item.total = item.price * item.quantity
-        
-        context = {
-            'order': order,
-            'order_items': order_items,
-        }
-        return render(request, 'payment_success.html', context)
-    except Order.DoesNotExist:
-        messages.error(request, 'Order not found')
-        return redirect('home')
+    if request.method == "POST":
+        try:
+            # Get the data from request
+            data = json.loads(request.body)
+            razorpay_payment_id = data.get('razorpay_payment_id')
+            razorpay_order_id = data.get('razorpay_order_id')
+            razorpay_signature = data.get('razorpay_signature')
+
+            # Get the user's cart
+            user = request.session.get('id')
+            cart = Cart.objects.get(user=user)
+            cart_items = CartItem.objects.filter(cart=cart)
+            
+            # Calculate total amount
+            total_amount = sum(item.product.price * item.quantity for item in cart_items)
+            total_amount += 50  # Add delivery charges
+
+            # Create Order record
+            order = Order.objects.create(
+                user_id=user,
+                payment_id=razorpay_payment_id,
+                razorpay_order_id=razorpay_order_id,
+                amount=total_amount,
+                status='Completed'
+            )
+
+            # Create OrderItems
+            for item in cart_items:
+                OrderItem.objects.create(
+                    order=order,
+                    product=item.product,
+                    quantity=item.quantity,
+                    price=item.product.price
+                )
+
+            # Clear the cart
+            cart_items.delete()
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Payment processed successfully'
+            })
+
+        except Exception as e:
+            print(f"Payment Error: {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'message': str(e)
+            })
+    
+    return JsonResponse({
+        'success': False,
+        'message': 'Invalid request method'
+    })
 
 @login_required
 def payment_success_page(request):
@@ -1592,3 +1659,63 @@ def create_budget_plan(request):
         'success': False,
         'error': 'Invalid request method'
     })
+
+def lighting_bulbs(request):
+    # Fetch products that belong to the 'Lighting' category
+    products = Product.objects.filter(category='Lighting')
+    
+    context = {
+        'products': products,
+    }
+    
+    return render(request, 'lighting_bulbs.html', context)
+
+def decoration_items(request):
+    # Fetch products that belong to the 'Decor_Items' category
+    products = Product.objects.filter(category='Decor_Items')
+    
+    context = {
+        'products': products,
+    }
+    
+    return render(request, 'Decoration_items.html', context)
+
+def carpets_and_rugs(request):
+    # Fetch products that belong to the 'Carpets' category
+    products = Product.objects.filter(category='Carpets')
+    
+    context = {
+        'products': products,
+    }
+    
+    return render(request, 'Carpets_and_Rugs.html', context)
+
+def wallpapers(request):
+    # Fetch products that belong to the 'Wallpapers' category
+    products = Product.objects.filter(category='Wallpapers')
+    
+    context = {
+        'products': products,
+    }
+    
+    return render(request, 'Walpapers.html', context)
+
+def indoor_plants(request):
+    # Fetch products that belong to the 'Indoor Plants' category
+    products = Product.objects.filter(category='Indoor Plants')
+    
+    context = {
+        'products': products,
+    }
+    
+    return render(request, 'Indoor_plants.html', context)
+
+def storage_solutions(request):
+    # Fetch products that belong to the 'Storage Solutions' category
+    products = Product.objects.filter(category='Storage Solutions')
+    
+    context = {
+        'products': products,
+    }
+    
+    return render(request, 'Storage_solution.html', context)

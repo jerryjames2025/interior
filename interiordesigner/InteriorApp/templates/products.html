@@ -42,83 +42,499 @@
     .cart-icon {
         position: fixed;
     }
+
+    /* Enhanced Product Page Styles */
+    .product-page-container {
+        padding: 20px;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .section-title {
+        font-size: 2.5rem;
+        color: #2c3e50;
+        margin-bottom: 30px;
+        text-align: center;
+        font-weight: 600;
+    }
+
+    .products-top-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 40px;
+        padding: 0 20px;
+    }
+
+    .custom-select {
+        padding: 10px 20px;
+        border: 2px solid #3498db;
+        border-radius: 25px;
+        background: white;
+        color: #2c3e50;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .custom-select:hover {
+        background: #f8f9fa;
+        border-color: #2980b9;
+    }
+
+    .products-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 30px;
+        padding: 20px;
+    }
+
+    .product-card {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .product-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+
+    .product-image {
+        position: relative;
+        height: 250px;
+        overflow: hidden;
+    }
+
+    .product-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+
+    .product-card:hover .product-image img {
+        transform: scale(1.05);
+    }
+
+    .quick-view-btn {
+        position: absolute;
+        bottom: -50px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(52, 152, 219, 0.9);
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .product-card:hover .quick-view-btn {
+        bottom: 20px;
+    }
+
+    .product-info {
+        padding: 25px;
+    }
+
+    .product-name {
+        font-size: 1.2rem;
+        color: #2c3e50;
+        margin-bottom: 15px;
+        font-weight: 600;
+    }
+
+    .product-description {
+        color: #7f8c8d;
+        margin-bottom: 15px;
+        line-height: 1.5;
+    }
+
+    .product-price {
+        font-size: 1.4rem;
+        color: #e74c3c;
+        font-weight: 700;
+        margin-bottom: 20px;
+    }
+
+    .add-to-cart-btn {
+        width: 100%;
+        padding: 12px;
+        background: linear-gradient(145deg, #3498db, #2980b9);
+        color: white;
+        border: none;
+        border-radius: 25px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .add-to-cart-btn:hover {
+        background: linear-gradient(145deg, #2980b9, #3498db);
+        transform: translateY(-2px);
+    }
+
+    /* Quick View Modal */
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 1000;
+    }
+
+    .modal-content {
+        position: relative;
+        background: white;
+        width: 90%;
+        max-width: 800px;
+        margin: 50px auto;
+        padding: 20px;
+        border-radius: 12px;
+    }
+
+    .category-dropdown {
+        margin-bottom: 20px;
+    }
+
+    .form-select {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background-color: white;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .form-select:hover {
+        border-color: #007bff;
+    }
+
+    .form-select:focus {
+        outline: none;
+        border-color: #007bff;
+        box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+    }
+
+    .dropdown-container {
+        position: relative;
+        display: inline-block;
+    }
+
+    .dropdown-trigger {
+        background: linear-gradient(145deg, #2c3e50, #3498db);
+        color: white;
+        padding: 12px 24px;
+        border-radius: 25px;
+        border: none;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .dropdown-trigger:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        background: linear-gradient(145deg, #3498db, #2c3e50);
+    }
+
+    .dropdown-trigger .fa-chevron-down {
+        font-size: 0.8em;
+        margin-left: 5px;
+        transition: transform 0.3s ease;
+    }
+
+    .dropdown-container:hover .fa-chevron-down {
+        transform: rotate(180deg);
+    }
+
+    .dropdown-menu {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        background: white;
+        min-width: 250px;
+        border-radius: 12px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+        margin-top: 10px;
+        z-index: 1000;
+        overflow: hidden;
+    }
+
+    .dropdown-container:hover .dropdown-menu {
+        display: block;
+        animation: fadeIn 0.3s ease;
+    }
+
+    .dropdown-menu a {
+        display: block;
+        padding: 12px 20px;
+        color: #2c3e50;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+
+    .dropdown-menu a:hover {
+        background: #f8f9fa;
+        color: #3498db;
+        padding-left: 25px;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Add this to make the dropdown menu appear with a nice arrow */
+    .dropdown-menu::before {
+        content: '';
+        position: absolute;
+        top: -8px;
+        left: 20px;
+        width: 16px;
+        height: 16px;
+        background: white;
+        transform: rotate(45deg);
+        box-shadow: -3px -3px 5px rgba(0,0,0,0.04);
+    }
 </style>
 {% endblock %}
 
 {% block body %}
-<!-- Add the cart icon -->
-<div class="cart-icon">
-    <a href="{% url 'cart' %}">
-        <i class="fas fa-shopping-cart"></i>
-        <span class="cart-count" id="cart-count">0</span>
-        My Cart
-    </a>
-</div>
+<!-- Update the navbar section -->
+<nav class="navbar">
+    <div class="navbar-left">
+        <div class="navbar-logo">
+            <img src="{% static 'images/logo.jpeg' %}" alt="Logo" style="height: 50px;" />
+        </div>
+        <div class="dropdown-container">
+            <button class="dropdown-trigger">
+                Categories <i class="fas fa-chevron-down"></i>
+            </button>
+            <div class="dropdown-menu">
+                <a href="#" onclick="filterByCategory('')">All Products</a>
+                <a href="{% url 'lighting_bulbs' %}" onclick="filterByCategory('Lighting')">Lighting & Bulbs</a>
+                <a href="{% url 'decoration_items' %}" onclick="filterByCategory('Decor')">Decoration Items</a>
+                <a href="{% url 'carpets_and_rugs' %}" onclick="filterByCategory('Carpets')">Carpets & Rugs</a>
+                <a href="{% url 'wallpapers' %}" onclick="filterByCategory('Wallpaper')">Wallpapers</a>
+                <a href="{% url 'indoor_plants' %}" onclick="filterByCategory('Plants')">Indoor Plants</a>
+                <a href="{% url 'storage_solutions' %}" onclick="filterByCategory('Storage')">Storage Solutions</a>
+        </div>
+    </div>
 
-<div class="position-fixed" style="top: 20px; right: 180px; z-index: 9999;">
-    {% if request.session.id %}
-        <a href="{% url 'payment_success_page' %}" class="btn btn-info text-white" id="viewOrdersBtn">
-            <i class="fas fa-clipboard-list me-2"></i>
-            My Orders
+    <div class="search-container">
+        <div class="search-bar">
+            <input type="text" placeholder="Search products..." id="searchInput">
+            <button type="submit"><i class="fas fa-search"></i></button>
+        </div>
+    </div>
+
+    <div class="navbar-right">
+        <a href="{% url 'cart' %}" class="cart-button">
+            <i class="fas fa-shopping-cart"></i>
+            <span class="cart-count" id="cart-count">0</span>
+            Cart
         </a>
-    {% else %}
-        <a href="{% url 'login' %}" class="btn btn-info text-white">
-            <i class="fas fa-sign-in-alt me-2"></i>
-            Login to View Orders
-        </a>
-    {% endif %}
-</div> 
+        {% if request.session.id %}
+            <a href="{% url 'payment_success_page' %}" class="nav-button">
+                <i class="fas fa-clipboard-list"></i>
+                Orders
+            </a>
+        {% else %}
+            <a href="{% url 'login' %}" class="nav-button">
+                <i class="fas fa-sign-in-alt"></i>
+                Login
+            </a>
+        {% endif %}
+    </div>
+</nav>
+
+<style>
+    .navbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: linear-gradient(145deg, #000000, #333333);
+        padding: 15px 30px;
+        box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+    }
+
+    .navbar-left, .navbar-right {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .dropdown-container {
+        position: relative;
+    }
+
+    .dropdown-trigger {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        padding: 12px 24px;
+        border-radius: 25px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .dropdown-trigger:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    .dropdown-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        background: white;
+        min-width: 250px;
+        border-radius: 12px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+        margin-top: 10px;
+        display: none;
+        z-index: 1000;
+    }
+
+    .dropdown-container:hover .dropdown-menu {
+        display: block;
+        animation: fadeInUp 0.3s ease;
+    }
+
+    .dropdown-menu a {
+        display: block;
+        padding: 12px 20px;
+        color: #2c3e50;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .dropdown-menu a:hover {
+        background: #f8f9fa;
+        color: #3498db;
+    }
+
+    .search-container {
+        flex: 0 1 500px;
+    }
+
+    .search-bar {
+        display: flex;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 25px;
+        padding: 5px 15px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .search-bar input {
+        border: none;
+        outline: none;
+        padding: 8px;
+        width: 100%;
+        background: transparent;
+    }
+
+    .search-bar button {
+        background: none;
+        border: none;
+        color: #3498db;
+        cursor: pointer;
+        padding: 8px;
+    }
+
+    .cart-button {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        padding: 12px 24px;
+        border-radius: 25px;
+        text-decoration: none;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s ease;
+    }
+
+    .cart-button:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-2px);
+    }
+
+    .cart-count {
+        background: #e74c3c;
+        color: white;
+        padding: 2px 6px;
+        border-radius: 50%;
+        font-size: 0.8em;
+    }
+
+    .nav-button {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        padding: 12px 24px;
+        border-radius: 25px;
+        text-decoration: none;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s ease;
+    }
+
+    .nav-button:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-2px);
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
 
 <div class="product-page-container">
-    <!-- Filter Sidebar -->
-    <aside class="filter-sidebar">
-        <div class="filter-section">
-            <h3>Categories</h3>
-            <div class="filter-options">
-                <label class="filter-option">
-                    <input type="checkbox" name="category" value="Lighting" {% if 'Lighting' in selected_categories %}checked{% endif %}>
-                    Lighting
-                </label>
-                <label class="filter-option">
-                    <input type="checkbox" name="category" value="Home_Decor" {% if 'Home_Decor' in selected_categories %}checked{% endif %}>
-                    Home Decor
-                </label>
-                <label class="filter-option">
-                    <input type="checkbox" name="category" value="Curtains" {% if 'Curtains' in selected_categories %}checked{% endif %}>
-                    Curtains
-                </label>
-            </div>
-        </div>
-
-        <div class="filter-section">
-            <h3>Price Range</h3>
-            <div class="price-range">
-                <input type="range" id="priceRange" min="0" max="1000" step="10">
-                <div class="price-inputs">
-                    <input type="number" id="minPrice" placeholder="Min">
-                    <span>-</span>
-                    <input type="number" id="maxPrice" placeholder="Max">
-                </div>
-            </div>
-        </div>
-
-        <button class="apply-filters-btn">Apply Filters</button>
-    </aside>
-
     <!-- Main Content -->
     <main class="products-main">
-        <!-- Top Bar -->
+        <!-- Top Bar with Sort -->
         <div class="products-top-bar">
-            <div class="category-dropdown">
-                <select id="categorySelect">
-                    <option value="">All Categories</option>
-                    <option value="Lighting">Lighting</option>
-                    <option value="Home_Decor">Home Decor</option>
-                    <option value="Curtains">Curtains</option>
-                </select>
-            </div>
+            <h2 class="section-title">Our Products</h2>
             <div class="sort-dropdown">
-                <select id="sortSelect">
+                <select id="sortSelect" onchange="sortProducts(this.value)" class="custom-select">
                     <option value="newest">Newest First</option>
                     <option value="price_low">Price: Low to High</option>
                     <option value="price_high">Price: High to Low</option>
@@ -139,7 +555,7 @@
                 <div class="product-info">
                     <h3 class="product-name">{{ product.product_name }}</h3>
                     <p class="product-description">{{ product.description|truncatechars:100 }}</p>
-                    <div class="product-price">${{ product.price }}</div>
+                    <div class="product-price">₹{{ product.price }}</div>
                     <button class="add-to-cart-btn" onclick="addToCart({{ product.id }})">
                         <i class="fas fa-shopping-cart"></i> Add to Cart
                     </button>
@@ -160,81 +576,66 @@
 
 <style>
     .product-page-container {
-        display: flex;
-        gap: 30px;
         padding: 20px;
         max-width: 1400px;
         margin: 0 auto;
     }
 
-    /* Filter Sidebar */
-    .filter-sidebar {
-        width: 250px;
-        background: white;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        height: fit-content;
-        position: sticky;
-        top: 20px;
-    }
-
-    .filter-section {
-        margin-bottom: 25px;
-    }
-
-    .filter-section h3 {
-        margin-bottom: 15px;
-        color: #333;
-        font-size: 1.1rem;
-    }
-
-    .filter-options {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-    }
-
-    .filter-option {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        cursor: pointer;
-    }
-
-    /* Products Main Section */
-    .products-main {
-        flex: 1;
+    .section-title {
+        font-size: 2.5rem;
+        color: #2c3e50;
+        margin-bottom: 30px;
+        text-align: center;
+        font-weight: 600;
     }
 
     .products-top-bar {
         display: flex;
         justify-content: space-between;
-        margin-bottom: 20px;
+        align-items: center;
+        margin-bottom: 40px;
+        padding: 0 20px;
+    }
+
+    .custom-select {
+        padding: 10px 20px;
+        border: 2px solid #3498db;
+        border-radius: 25px;
+        background: white;
+        color: #2c3e50;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .custom-select:hover {
+        background: #f8f9fa;
+        border-color: #2980b9;
     }
 
     .products-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 25px;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 30px;
+        padding: 20px;
     }
 
-    /* Product Card */
     .product-card {
         background: white;
-        border-radius: 8px;
+        border-radius: 15px;
         overflow: hidden;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        transition: transform 0.3s ease;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
 
     .product-card:hover {
-        transform: translateY(-5px);
+        transform: translateY(-10px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
     }
 
     .product-image {
         position: relative;
-        height: 200px;
+        height: 250px;
         overflow: hidden;
     }
 
@@ -251,57 +652,65 @@
 
     .quick-view-btn {
         position: absolute;
-        bottom: -40px;
+        bottom: -50px;
         left: 50%;
         transform: translateX(-50%);
-        background: rgba(0,0,0,0.8);
+        background: rgba(52, 152, 219, 0.9);
         color: white;
-        padding: 8px 15px;
+        padding: 10px 20px;
         border: none;
-        border-radius: 20px;
+        border-radius: 25px;
         cursor: pointer;
-        transition: bottom 0.3s ease;
+        transition: all 0.3s ease;
     }
 
     .product-card:hover .quick-view-btn {
-        bottom: 15px;
+        bottom: 20px;
     }
 
     .product-info {
-        padding: 15px;
+        padding: 25px;
     }
 
     .product-name {
-        margin-bottom: 8px;
-        color: #333;
+        font-size: 1.2rem;
+        color: #2c3e50;
+        margin-bottom: 15px;
+        font-weight: 600;
     }
 
     .product-description {
-        color: #666;
-        font-size: 0.9rem;
-        margin-bottom: 12px;
+        color: #7f8c8d;
+        margin-bottom: 15px;
+        line-height: 1.5;
     }
 
     .product-price {
-        font-size: 1.2rem;
-        font-weight: bold;
-        color: #2c3e50;
-        margin-bottom: 12px;
+        font-size: 1.4rem;
+        color: #e74c3c;
+        font-weight: 700;
+        margin-bottom: 20px;
     }
 
     .add-to-cart-btn {
         width: 100%;
-        padding: 10px;
-        background: #4a90e2;
+        padding: 12px;
+        background: linear-gradient(145deg, #3498db, #2980b9);
         color: white;
         border: none;
-        border-radius: 5px;
+        border-radius: 25px;
+        font-weight: 500;
         cursor: pointer;
-        transition: background 0.3s ease;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
     }
 
     .add-to-cart-btn:hover {
-        background: #357abd;
+        background: linear-gradient(145deg, #2980b9, #3498db);
+        transform: translateY(-2px);
     }
 
     /* Modal Styles */
@@ -340,11 +749,6 @@
             flex-direction: column;
         }
 
-        .filter-sidebar {
-            width: 100%;
-            position: static;
-        }
-
         .products-grid {
             grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
         }
@@ -380,7 +784,7 @@
         }
     }
 
-    .cart-icon {
+    .cart-icon, .position-fixed {
         position: fixed;
         top: 20px;
         right: 20px;
@@ -456,118 +860,154 @@
             font-size: 16px;
         }
     }
+
+    .loading {
+        text-align: center;
+        padding: 20px;
+        font-size: 1.2em;
+        color: #666;
+    }
+
+    .price-input {
+        width: 100px;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        margin: 0 5px;
+    }
+
+    .no-products, .error-message {
+        text-align: center;
+        padding: 20px;
+        color: #666;
+        width: 100%;
+    }
+
+    .error-message {
+        color: #dc3545;
+    }
 </style>
 
 <script>
-// Filter and Sort Functionality
-document.addEventListener('DOMContentLoaded', function() {
-    const filterCheckboxes = document.querySelectorAll('input[name="category"]');
-    const categorySelect = document.getElementById('categorySelect');
-    const sortSelect = document.getElementById('sortSelect');
+function applyFilters() {
+    const category = document.getElementById('categorySelect').value;
+    const minPrice = document.getElementById('minPrice').value;
+    const maxPrice = document.getElementById('maxPrice').value;
+    const sort = document.getElementById('sortSelect').value;
+    
     const productsGrid = document.querySelector('.products-grid');
-    const priceRange = document.getElementById('priceRange');
-    const minPrice = document.getElementById('minPrice');
-    const maxPrice = document.getElementById('maxPrice');
+    productsGrid.innerHTML = '<div class="loading">Loading...</div>';
 
-    function filterProducts() {
-        const selectedCategories = Array.from(filterCheckboxes)
-            .filter(cb => cb.checked)
-            .map(cb => cb.value);
-        
-        const selectedSort = sortSelect.value;
-        const min = parseFloat(minPrice.value) || 0;
-        const max = parseFloat(maxPrice.value) || Infinity;
+    // Construct the query parameters
+    const params = new URLSearchParams();
+    if (category) params.append('category', category);
+    if (minPrice) params.append('min_price', minPrice);
+    if (maxPrice) params.append('max_price', maxPrice);
+    if (sort) params.append('sort', sort);
 
-        const products = Array.from(productsGrid.children);
-        
-        products.forEach(product => {
-            const category = product.dataset.category;
-            const price = parseFloat(product.dataset.price);
-            const shouldShow = (
-                (selectedCategories.length === 0 || selectedCategories.includes(category)) &&
-                (price >= min && price <= max)
-            );
-            product.style.display = shouldShow ? 'block' : 'none';
-        });
-
-        // Sort products
-        const sortedProducts = Array.from(products).sort((a, b) => {
-            const priceA = parseFloat(a.dataset.price);
-            const priceB = parseFloat(b.dataset.price);
-            
-            if (selectedSort === 'price_low') return priceA - priceB;
-            if (selectedSort === 'price_high') return priceB - priceA;
-            return 0; // Default to original order
-        });
-
+    // Make the AJAX request
+    fetch(`/filter-products/?${params.toString()}`, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
         productsGrid.innerHTML = '';
-        sortedProducts.forEach(product => productsGrid.appendChild(product));
-    }
-
-    // Event Listeners
-    filterCheckboxes.forEach(cb => cb.addEventListener('change', filterProducts));
-    categorySelect.addEventListener('change', filterProducts);
-    sortSelect.addEventListener('change', filterProducts);
-    priceRange.addEventListener('input', filterProducts);
-    minPrice.addEventListener('input', filterProducts);
-    maxPrice.addEventListener('input', filterProducts);
-
-    // Quick View Functionality
-    window.showQuickView = function(productId) {
-        const modal = document.getElementById('quickViewModal');
-        const content = document.getElementById('quickViewContent');
-        
-        // Fetch product details
-        fetch(`/product/${productId}/`)
-            .then(response => response.json())
-            .then(data => {
-                content.innerHTML = `
-                    <div class="quick-view-layout">
-                        <img src="${data.image}" alt="${data.name}">
-                        <div class="quick-view-details">
-                            <h2>${data.name}</h2>
-                            <p class="price">$${data.price}</p>
-                            <p>${data.description}</p>
-                            <button onclick="addToCart(${productId})" class="add-to-cart-btn">
-                                Add to Cart
+        if (data.products && data.products.length > 0) {
+            data.products.forEach(product => {
+                const productCard = `
+                    <div class="product-card">
+                        <div class="product-image">
+                            ${product.image ? `<img src="${product.image}" alt="${product.name}">` : ''}
+                            <button class="quick-view-btn" onclick="showQuickView(${product.id})">
+                                Quick View
+                            </button>
+                        </div>
+                        <div class="product-info">
+                            <h3 class="product-name">${product.name}</h3>
+                            <p class="product-description">${product.description}</p>
+                            <div class="product-price">₹${product.price}</div>
+                            <button class="add-to-cart-btn" onclick="addToCart(${product.id})">
+                                <i class="fas fa-shopping-cart"></i> Add to Cart
                             </button>
                         </div>
                     </div>
                 `;
-                modal.style.display = 'block';
+                productsGrid.insertAdjacentHTML('beforeend', productCard);
             });
-    };
+        } else {
+            productsGrid.innerHTML = '<div class="no-products">No products found matching your criteria</div>';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        productsGrid.innerHTML = '<div class="error-message">Error loading products</div>';
+    });
+}
 
-    // Cart Functionality
-    window.addToCart = function(productId) {
-        fetch(`/cart/add/${productId}/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken')
-            },
-            body: JSON.stringify({ productId })
-        })
+function sortProducts(sortValue) {
+    document.getElementById('sortSelect').value = sortValue;
+    applyFilters();
+}
+
+// Quick view functionality
+window.showQuickView = function(productId) {
+    const modal = document.getElementById('quickViewModal');
+    const content = document.getElementById('quickViewContent');
+    
+    fetch(`/product/${productId}/`)
         .then(response => response.json())
         .then(data => {
-            if (data.success) {
-                updateCartCount(data.cartCount);
-                showNotification('Product added to cart');
-            } else {
-                showNotification(data.message || 'Error adding to cart', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showNotification('Error adding to cart', 'error');
+            content.innerHTML = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <img src="${data.image}" class="img-fluid" alt="${data.name}">
+                    </div>
+                    <div class="col-md-6">
+                        <h2>${data.name}</h2>
+                        <p>${data.description}</p>
+                        <h3 class="text-danger">₹${data.price}</h3>
+                        <button class="btn btn-primary" onclick="addToCart(${data.id})">
+                            Add to Cart
+                        </button>
+                    </div>
+                </div>
+            `;
+            modal.style.display = 'block';
         });
-    };
+};
 
-    // Close modal
-    document.querySelector('.close-modal').onclick = function() {
-        document.getElementById('quickViewModal').style.display = 'none';
-    };
-});
+// Close modal
+const closeModal = document.querySelector('.close-modal');
+closeModal.onclick = function() {
+    document.getElementById('quickViewModal').style.display = 'none';
+};
+
+// Cart Functionality
+window.addToCart = function(productId) {
+    fetch(`/cart/add/${productId}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ productId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            updateCartCount(data.cartCount);
+            showNotification('Product added to cart');
+        } else {
+            showNotification(data.message || 'Error adding to cart', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error adding to cart', 'error');
+    });
+};
 
 // Helper function to get CSRF token
 function getCookie(name) {
@@ -603,6 +1043,12 @@ function updateCartCount(count) {
     if (cartCountElement) {
         cartCountElement.textContent = count;
     }
+}
+
+// Add this JavaScript function
+function filterByCategory(category) {
+    document.getElementById('categorySelect').value = category;
+    applyFilters();
 }
 </script>
 {% endblock %} 

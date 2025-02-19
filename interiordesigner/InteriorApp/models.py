@@ -56,25 +56,24 @@ class Seller(models.Model):
         return True
 
 class Product(models.Model):
+    CATEGORY_CHOICES = [
+        ('Lighting', 'Lighting & Bulbs'),
+        ('Decor', 'Decoration Items'),
+        ('Carpets', 'Carpets & Rugs'),
+        ('Curtains', 'Curtains & Drapes'),
+        ('Furniture', 'Furniture'),
+        ('Wallpaper', 'Wallpapers'),
+        ('Plants', 'Indoor Plants'),
+        ('Storage', 'Storage Solutions'),
+    ]
+    
+    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
     seller = models.ForeignKey(Seller, on_delete=models.CASCADE, related_name='products')
     product_name = models.CharField(max_length=255)
     description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
     stock = models.PositiveIntegerField()
     image = models.ImageField(upload_to='product_images/', blank=True, null=True)
-    category = models.CharField(
-        max_length=50,
-        choices=[
-            ('Furniture', 'Furniture'),
-            ('Lighting', 'Lighting'),
-            ('Home Decor', 'Home Decor'),
-            ('Kitchen & Dining', 'Kitchen & Dining'),
-            ('Outdoor & Garden', 'Outdoor & Garden'),
-            ('Storage Solutions', 'Storage Solutions'),
-            ('Bathroom Accessories', 'Bathroom Accessories'),
-            ('Other', 'Other')
-        ]
-    )
     style = models.CharField(
         max_length=50,
         choices=[
