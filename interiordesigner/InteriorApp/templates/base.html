@@ -1,13 +1,13 @@
 {% load static %}
+{% load custom_filters %}
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-    <meta charset="utf-8">
-    <title>iDESIGN - Interior Design HTML Template</title>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport">
-    <meta content="Free HTML Templates" name="keywords">
-    <meta content="Free HTML Templates" name="description">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interior Designer</title>
+    {% block head %}{% endblock %}
 
     <!-- Favicon -->
     <link href="{% static 'landing/img/favicon.ico' %}" rel="icon">
@@ -65,15 +65,15 @@
                 </button>
                 <div class="collapse navbar-collapse justify-content-between px-3" id="navbarCollapse">
                     <div class="navbar-nav ml-auto py-0">
-                       
-                        
-                        <a href="{% url 'logout' %}" class="btn btn-light ml-3">Logout</a>
-               
-                            </div>
-                        </div>
-                       
-
-
+                        {% if user.is_authenticated %}
+                            {% if user|has_worker %}
+                                <a href="{% url 'worker_dashboard' %}" class="nav-item nav-link">Dashboard</a>
+                            {% endif %}
+                            <a href="{% url 'logout' %}" class="btn btn-light ml-3">Logout</a>
+                        {% else %}
+                            <a href="{% url 'worker_login' %}" class="nav-item nav-link">Worker Login</a>
+                            <a href="{% url 'worker_register' %}" class="nav-item nav-link">Worker Register</a>
+                        {% endif %}
                     </div>
                 </div>
             </nav>
@@ -117,6 +117,19 @@
         </div>
     </div>
     <!-- Under Nav End -->
+
+    {% block body %}{% endblock %}
+
+    <!-- JavaScript Libraries -->
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'landing/lib/easing/easing.min.js' %}"></script>
+    <script src="{% static 'landing/lib/waypoints/waypoints.min.js' %}"></script>
+    <script src="{% static 'landing/lib/owlcarousel/owl.carousel.min.js' %}"></script>
+    <script src="{% static 'landing/lib/isotope/isotope.pkgd.min.js' %}"></script>
+    <script src="{% static 'landing/lib/lightbox/js/lightbox.min.js' %}"></script>
+
+    <!-- Template Javascript -->
+    <script src="{% static 'landing/js/main.js' %}"></script>
 </body>
-</html>{% block body %}
-{% endblock %}
+</html>

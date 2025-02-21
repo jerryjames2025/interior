@@ -57,11 +57,11 @@ class Seller(models.Model):
 
 class Product(models.Model):
     CATEGORY_CHOICES = [
+        ('Furniture', 'Furniture'),
         ('Lighting', 'Lighting & Bulbs'),
         ('Decor', 'Decoration Items'),
         ('Carpets', 'Carpets & Rugs'),
         ('Curtains', 'Curtains & Drapes'),
-        ('Furniture', 'Furniture'),
         ('Wallpaper', 'Wallpapers'),
         ('Plants', 'Indoor Plants'),
         ('Storage', 'Storage Solutions'),
@@ -262,3 +262,84 @@ class BudgetAllocation(models.Model):
     def save(self, *args, **kwargs):
         self.allocated_amount = (self.allocation_percentage / 100) * self.budget_plan.total_budget
         super().save(*args, **kwargs)
+
+class Project(models.Model):
+    name = models.CharField(max_length=200)
+    designer = models.ForeignKey(Designer, on_delete=models.CASCADE)
+    description = models.TextField()
+    budget = models.DecimalField(max_digits=10, decimal_places=2)
+    start_date = models.DateField()
+    end_date = models.DateField(null=True, blank=True)
+    room_type = models.CharField(max_length=50)
+    area_size = models.DecimalField(max_digits=8, decimal_places=2)
+    location = models.CharField(max_length=200)
+    status = models.CharField(max_length=20, default='pending', choices=[
+        ('pending', 'Pending'),
+        ('in_progress', 'In Progress'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled')
+    ])
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        ordering = ['-created_at']
+
+class ProjectImage(models.Model):
+    project = models.ForeignKey(Project, related_name='images', on_delete=models.CASCADE)
+    image = models.ImageField(upload_to='project_images/')
+    caption = models.CharField(max_length=200, blank=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Image for {self.project.name}"
+
+class Worker(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    full_name = models.CharField(max_length=100)
+    phone = models.CharField(max_length=15)
+    email = models.EmailField(unique=True)
+    experience_years = models.IntegerField()
+    skills = models.JSONField()  # Store skills as a list
+    hourly_rate = models.DecimalField(max_digits=10, decimal_places=2)
+    availability = models.BooleanField(default=True)
+    rating = models.DecimalField(max_digits=3, decimal_places=2, default=0.0)
+    completed_projects = models.IntegerField(default=0)
+    profile_picture = models.ImageField(upload_to='worker_profiles/', null=True, blank=True)
+    
+    SPECIALIZATION_CHOICES = [
+        ('carpentry', 'Carpentry'),
+        ('electrical', 'Electrical'),
+        ('plumbing', 'Plumbing'),
+        ('painting', 'Painting'),
+        ('flooring', 'Flooring'),
+        ('general', 'General Construction'),
+    ]
+    specialization = models.CharField(max_length=20, choices=SPECIALIZATION_CHOICES)
+    
+    def __str__(self):
+        return self.full_name
+
+class WorkerAssignment(models.Model):
+    worker = models.ForeignKey(Worker, on_delete=models.CASCADE)
+    designer = models.ForeignKey(Designer, on_delete=models.CASCADE)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    assigned_date = models.DateTimeField(auto_now_add=True)
+    completion_date = models.DateTimeField(null=True, blank=True)
+    status = models.CharField(max_length=20, default='pending', choices=[
+        ('pending', 'Pending'),
+        ('in_progress', 'In Progress'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled')
+    ])
+    payment_status = models.CharField(max_length=20, default='pending', choices=[
+        ('pending', 'Pending'),
+        ('paid', 'Paid'),
+        ('cancelled', 'Cancelled')
+    ])
+    
+    def __str__(self):
+        return f"{self.worker.full_name} - {self.project.name}"

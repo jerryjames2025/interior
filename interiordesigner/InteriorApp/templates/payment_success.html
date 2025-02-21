@@ -3,120 +3,85 @@
 {% load custom_filters %}
 
 {% block body %}
-<div class="container mt-5 mb-5">
-    <div class="card shadow-lg">
-        <div class="card-body">
-            <div class="text-center mb-4">
-                <h2>My Orders</h2>
+<div class="container mt-5">
+    <!-- Success Toast -->
+    <div class="toast-container position-fixed top-0 end-0 p-3">
+        <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header bg-success text-white">
+                <i class="fas fa-check-circle me-2"></i>
+                <strong class="me-auto">Payment Successful!</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
-
-            {% if orders_with_items %}
-                {% for order_data in orders_with_items %}
-                <div class="order-container mb-4 animate-fade-in">
-                    <div class="card border-0 bg-light">
-                        <!-- Order Header -->
-                        <div class="card-header bg-white border-0">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h5 class="mb-0">Order #{{ order_data.order.id }}</h5>
-                                    <small class="text-muted">Placed on: {{ order_data.order.created_at|date:"F d, Y, g:i A" }}</small>
-                                </div>
-                                <div class="order-status">
-                                    <span class="badge {% if order_data.order.status == 'Completed' %}bg-success
-                                          {% elif order_data.order.status == 'Processing' %}bg-info
-                                          {% elif order_data.order.status == 'Pending' %}bg-warning
-                                          {% else %}bg-danger{% endif %}">
-                                        {{ order_data.order.status }}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Order Items -->
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th>Product</th>
-                                            <th>Quantity</th>
-                                            <th class="text-end">Price</th>
-                                            <th class="text-end">Total</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for item in order_data.items %}
-                                        <tr>
-                                            <td>
-                                                <div class="d-flex align-items-center">
-                                                    <img src="{{ item.product.image.url }}" alt="{{ item.product.product_name }}" 
-                                                         class="img-thumbnail me-3" style="width: 50px; height: 50px; object-fit: cover;">
-                                                    <div>
-                                                        <h6 class="mb-0">{{ item.product.product_name }}</h6>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>{{ item.quantity }}</td>
-                                            <td class="text-end">₹{{ item.price }}</td>
-                                            <td class="text-end">₹{{ item.total }}</td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                    <tfoot class="table-light">
-                                        <tr>
-                                            <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
-                                            <td class="text-end">₹{{ order_data.subtotal }}</td>
-                                        </tr>
-                                        <tr>
-                                            <td colspan="3" class="text-end"><strong>Delivery Charges:</strong></td>
-                                            <td class="text-end">₹{{ order_data.delivery_charge }}</td>
-                                        </tr>
-                                        <tr>
-                                            <td colspan="3" class="text-end"><strong>Total:</strong></td>
-                                            <td class="text-end"><strong>₹{{ order_data.total }}</strong></td>
-                                        </tr>
-                                    </tfoot>
-                                </table>
-                            </div>
-
-                            <!-- Payment Details -->
-                            <div class="mt-4">
-                                <h6>Payment Information</h6>
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <p class="mb-1"><small>Payment ID: <span class="text-monospace">{{ order_data.order.payment_id }}</span></small></p>
-                                        {% if order_data.order.razorpay_order_id %}
-                                        <p class="mb-1"><small>Razorpay Order ID: <span class="text-monospace">{{ order_data.order.razorpay_order_id }}</span></small></p>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Shipping Details -->
-                            {% if order_data.order.shipping_address %}
-                            <div class="mt-4">
-                                <h6>Shipping Details</h6>
-                                <p class="mb-1">{{ order_data.order.shipping_address }}</p>
-                                {% if order_data.order.contact_number %}
-                                <p class="mb-0">Contact: {{ order_data.order.contact_number }}</p>
-                                {% endif %}
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            {% else %}
-                <div class="text-center py-5">
-                    <i class="fas fa-shopping-bag fa-3x text-muted mb-3"></i>
-                    <h4>No Orders Found</h4>
-                    <p class="text-muted">Looks like you haven't placed any orders yet.</p>
-                    <a href="{% url 'products' %}" class="btn btn-primary mt-3">Start Shopping</a>
-                </div>
-            {% endif %}
+            <div class="toast-body">
+                Your order has been placed successfully!
+            </div>
         </div>
     </div>
+
+    <!-- Order History -->
+    <h2 class="mb-4">Your Orders</h2>
+    {% if orders_with_items %}
+        {% for order_data in orders_with_items %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Order #{{ order_data.order.razorpay_order_id }}</h5>
+                <small>Ordered on: {{ order_data.order.created_at|date:"F d, Y" }}</small>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Quantity</th>
+                                <th>Price</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in order_data.items %}
+                            <tr>
+                                <td>{{ item.product.product_name }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>₹{{ item.price }}</td>
+                                <td>₹{{ item.price|multiply:item.quantity }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
+                                <td>₹{{ order_data.subtotal }}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" class="text-end"><strong>Delivery Charge:</strong></td>
+                                <td>₹{{ order_data.delivery_charge }}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                                <td><strong>₹{{ order_data.total }}</strong></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="alert alert-info">No orders found.</div>
+    {% endif %}
+
+    <a href="{% url 'products' %}" class="btn btn-primary">
+        <i class="fas fa-shopping-cart me-2"></i>Continue Shopping
+    </a>
 </div>
+
+<script>
+// Auto-hide toast after 5 seconds
+setTimeout(function() {
+    document.querySelector('.toast').classList.remove('show');
+}, 5000);
+</script>
 
 <style>
     .animate-fade-in {

@@ -34,6 +34,10 @@ from PIL import Image
 import cv2
 from scipy.spatial import Delaunay
 import base64
+from functools import wraps
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+from django.utils import timezone
 
 # Initialize Razorpay client
 razorpay_client = razorpay.Client(
@@ -195,34 +199,66 @@ def seller_dashboard(request):
     products = Product.objects.filter(seller=request.user)  # Assuming a user is associated with seller
     return render(request, 'seller.html', {'products': products})
 
-# Add a new product (without form)
+# Custom decorator for seller login required
+def seller_login_required(view_func):
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if 'id' not in request.session:
+            messages.error(request, 'Please login as a seller first')
+            return redirect('slogin')
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
+
+@login_required
 def add_product(request):
     if request.method == 'POST':
-        product_name = request.POST.get('product_name')
-        description = request.POST.get('description')
-        price = request.POST.get('price')
-        stock = request.POST.get('stock')
-        category = request.POST.get('category')
-        image = request.FILES.get('image')
-        seller_id = request.session['id']
-        seller = Seller.objects.get(id = seller_id)
+        try:
+            product_name = request.POST.get('product_name')
+            description = request.POST.get('description')
+            price = request.POST.get('price')
+            stock = request.POST.get('stock')
+            category = request.POST.get('category')
+            image = request.FILES.get('image')
+            seller_id = request.session['id']
+            seller = Seller.objects.get(id=seller_id)
 
-        if product_name and price and stock:  # Simple validation
-            product = Product(
-                seller=seller,
-                product_name=product_name,
-                description=description,
-                price=price,
-                stock=stock,
-                image=image,
-            )
-            product.save()
-            messages.success(request, 'Product added successfully.')
-            return redirect('shome')
-        else:
-            messages.error(request, 'All fields are required.')
+            if product_name and price and stock:  # Simple validation
+                product = Product(
+                    seller=seller,
+                    product_name=product_name,
+                    description=description,
+                    price=price,
+                    stock=stock,
+                    category=category,
+                    image=image
+                )
+                product.save()
+                messages.success(request, 'Product added successfully.')
+                
+                # Redirect based on category
+                category_redirects = {
+                    'Furniture': 'furniture',
+                    'Lighting': 'lighting_bulbs',
+                    'Decor_Items': 'decoration_items',
+                    'Carpets': 'carpets_and_rugs',
+                    'Curtains': 'curtains_and_drapes',
+                    'Wallpaper': 'wallpapers',
+                    'Plants': 'indoor_plants',
+                    'Storage': 'storage_solutions'
+                }
+                
+                redirect_url = category_redirects.get(category)
+                if redirect_url:
+                    return redirect(redirect_url)
+                
+                return redirect('products')  # Fallback to main products page
+            else:
+                messages.error(request, 'All fields are required.')
+        except Exception as e:
+            messages.error(request, f'Error adding product: {str(e)}')
+            return redirect('add_product')
     
-    return render(request, 'addnewproduct.html')
+    return render(request, 'add_product.html')
 
 # Edit an existing product (without form)
 def edit_product(request, product_id):
@@ -366,39 +402,37 @@ def dportfolio_view(request):
 
 def dregister(request):
     if request.method == 'POST':
-        full_name = request.POST['full_name']
-        email = request.POST['email']
-        phone = request.POST['phone']
-        username = request.POST['username']
-        password = request.POST['password']
+        try:
+            # First create the User instance
+            user = User.objects.create_user(
+                username=request.POST['username'],
+                password=request.POST['password'],
+                email=request.POST['email'],
+                first_name=request.POST['full_name']
+            )
 
-        # Validate first name
-        if not full_name[0].isupper():
-            return render(request, 'dregister.html', {'error': 'First name must start with a capital letter.'})
+            # Then create the Designer instance
+            designer = Designer.objects.create(
+                user=user,
+                full_name=request.POST['full_name'],
+                email=request.POST['email'],
+                phone=request.POST['phone'],
+                username=request.POST['username']
+            )
 
-        # Validate phone number
-        if len(phone) != 10 or not phone.isdigit():
-            return render(request, 'dregister.html', {'error': 'Phone number must be 10 digits.'})
+            # Finally create the UserProfile and mark as designer
+            user_profile = UserProfile.objects.create(
+                user=user,  # Link to User instance, not Designer
+                phone=request.POST['phone'],
+                is_designer=True
+            )
 
-        # Check if profile_picture is in request.FILES
-        if 'profile_picture' in request.FILES:
-            profile_picture = request.FILES['profile_picture']  # Get the uploaded file
-        else:
-            return render(request, 'dregister.html', {'error': 'Profile picture is required.'})
+            messages.success(request, 'Registration successful! Please login.')
+            return redirect('login')
 
-        # Create User instance
-        user = Designer.objects.create(username=username, email=email, password=password)
-        first_name, last_name = full_name.split(' ', 1) if ' ' in full_name else (full_name, '')
-        user.first_name = first_name
-        user.last_name = last_name
-        user.save()
-
-        # Create UserProfile instance and set is_designer to True
-        user_profile = UserProfile.objects.create(user=user, phone=phone, is_designer=True)
-        user_profile.profile_picture = profile_picture  # Save the profile picture
-        user_profile.save()
-
-        return redirect('dlogin')  # Redirect to login or another page after registration
+        except Exception as e:
+            messages.error(request, f'Registration failed: {str(e)}')
+            return redirect('dregister')
 
     return render(request, 'dregister.html')
 
@@ -409,67 +443,63 @@ def dlogin_view(request):
         password = request.POST.get('password')
         
         try:
-            # Check if designer exists in the custom Designer table
             designer = Designer.objects.get(username=username)
-            
-            # Validate the password directly (note: this is not secure)
-            if designer.password == password:  # Direct comparison
-                # Log the user in (manual login)
-                request.session['designer_id'] = designer.id  # Save designer's ID in session
+            if designer.password == password:  # Note: Use proper password hashing in production
+                # Set the designer session
+                request.session['designer_id'] = designer.id
                 messages.success(request, 'Login successful!')
-                return redirect('dhome')  # Redirect to designer's home/dashboard page
+                return redirect('dhome')
             else:
-                messages.error(request, 'Invalid username or password')
+                messages.error(request, 'Invalid password')
         except Designer.DoesNotExist:
-            messages.error(request, 'Invalid username or password')
-
+            messages.error(request, 'Designer not found')
+        
     return render(request, 'dlogin.html')
 
+# Create a custom decorator for designer login
+def designer_login_required(view_func):
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if not request.session.get('designer_id'):
+            messages.error(request, 'Please login as a designer first')
+            return redirect('dlogin')  # Redirect to designer login
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
+
+@designer_login_required  # Change from @login_required
 def add_design(request):
     if request.method == 'POST':
         try:
-            # Get the designer from the session
-            designer_id = request.session.get('designer_id')
-            if not designer_id:
-                messages.error(request, 'Please login as a designer first')
-                return redirect('dlogin')
+            # Get the currently logged-in designer using session
+            designer = Designer.objects.get(id=request.session['designer_id'])
             
-            designer = Designer.objects.get(id=designer_id)
-
-            # Create the design with all required fields
-            design = Design(
+            # Create new design
+            design = Design.objects.create(
                 designer=designer,
-                design_name=request.POST.get('design_name'),
-                description=request.POST.get('description'),
-                price=request.POST.get('price'),
-                room_type=request.POST.get('room_type'),
-                style=request.POST.get('style'),
-                area_size=request.POST.get('area_size'),
-                features=request.POST.getlist('features')  # If you have multiple features
+                design_name=request.POST['design_name'],
+                description=request.POST['description'],
+                price=request.POST['price'],
+                area_size=request.POST['area_size'],
+                room_type=request.POST['room_type'],
+                style=request.POST['style']
             )
 
             # Handle image upload
             if 'image' in request.FILES:
                 design.image = request.FILES['image']
-
-            design.save()
+                design.save()
 
             messages.success(request, 'Design added successfully!')
-            return redirect('dhome')  # Redirect to designs page
+            return redirect('dhome')
 
         except Designer.DoesNotExist:
-            messages.error(request, 'Designer not found')
-            return redirect('dlogin')
+            messages.error(request, 'You must be registered as a designer to add designs.')
+            return redirect('dregister')
         except Exception as e:
             messages.error(request, f'Error adding design: {str(e)}')
-            return render(request, 'add_design.html')
+            return redirect('add_design')
 
-    # For GET request, provide room types and styles for the form
-    context = {
-        'room_types': [choice[0] for choice in Design._meta.get_field('room_type').choices],
-        'design_styles': [choice[0] for choice in Design._meta.get_field('style').choices]
-    }
-    return render(request, 'add_design.html', context)
+    return render(request, 'add_design.html')
 
 def designp(request):
     # Fetch all designs from the database
@@ -503,40 +533,45 @@ def uphome(request):
 #     return render(request, 'product_detail.html', {'product': product})
 
 #  Add to cart view
+@login_required
 def add_to_cart(request, product_id):
-    if not request.user.is_authenticated:
-        return JsonResponse({
-            'success': False,
-            'message': "Please login to add items to cart"
-        })
+    if request.method == 'POST':
+        try:
+            product = get_object_or_404(Product, id=product_id)
+            cart, created = Cart.objects.get_or_create(user=request.user)
+            
+            cart_item, created = CartItem.objects.get_or_create(
+                cart=cart,
+                product=product,
+                defaults={'quantity': 1}
+            )
+            
+            if not created:
+                cart_item.quantity += 1
+                cart_item.save()
 
-    try:
-        product = get_object_or_404(Product, id=product_id)
-        cart, _ = Cart.objects.get_or_create(user_id=request.user.id)
-        cart_item, created = CartItem.objects.get_or_create(
-            cart=cart,
-            product=product,
-            defaults={'quantity': 1}
-        )
-        
-        if not created:
-            cart_item.quantity += 1
-            cart_item.save()
-
-        cart_count = CartItem.objects.filter(cart=cart).aggregate(
-            total_items=Sum('quantity'))['total_items'] or 0
-
-        return JsonResponse({
-            'success': True,
-            'message': f"{product.product_name} has been added to your cart",
-            'cartCount': cart_count
-        })
-        
-    except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'message': str(e)
-        })
+            # Get updated cart count
+            cart_count = CartItem.objects.filter(cart=cart).aggregate(
+                total_items=Sum('quantity'))['total_items'] or 0
+            
+            
+            
+            return JsonResponse({
+                'success': True,
+                'message': f"{product.product_name} added to cart",
+                'cartCount': cart_count
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'message': str(e)
+            }, status=400)
+    
+    return JsonResponse({
+        'success': False,
+        'message': 'Invalid request method'
+    }, status=400)
 
 # Cart view - display items in cart
 #  def cart_view(request):
@@ -575,58 +610,65 @@ def add_to_cart(request, product_id):
 #     item.delete()
 #     return redirect('cart')
 
+@login_required
 def cart_view(request):
-    user = request.session['id']
     try:
-        cart = Cart.objects.get(user=user)
-        cart_items = CartItem.objects.filter(cart=cart)
-        total_price = sum(item.product.price * item.quantity for item in cart_items)
+        cart = Cart.objects.get(user=request.user)
+        cart_items = CartItem.objects.filter(cart=cart).select_related('product')
+        
+        # Calculate subtotal
+        subtotal = sum(item.product.price * item.quantity for item in cart_items)
+        delivery_charges = 50 if subtotal > 0 else 0
+        total = subtotal + delivery_charges
+        
         context = {
             'cart_items': cart_items,
-            'total_price': total_price,
-            'delivery_charges': 50,
-            'razorpay_key': settings.RAZORPAY_API_KEY
+            'subtotal': subtotal,
+            'delivery_charges': delivery_charges,
+            'total': total,
+            'razorpay_key': settings.RAZORPAY_API_KEY,
         }
         return render(request, 'cart.html', context)
     except Cart.DoesNotExist:
-        return render(request, 'cart.html', {'razorpay_key': settings.RAZORPAY_API_KEY})
+        context = {
+            'cart_items': [],
+            'subtotal': 0,
+            'delivery_charges': 0,
+            'total': 0,
+            'razorpay_key': settings.RAZORPAY_API_KEY,
+        }
+        return render(request, 'cart.html', context)
+    except Exception as e:
+        messages.error(request, f"Error loading cart: {str(e)}")
+        return redirect('home')
 
-# View to remove product from cart
 @login_required
 def remove_from_cart(request, product_id):
-    try:
-        # Get the user's cart
-        cart = Cart.objects.get(user=request.session.get('id'))
-        
-        # Find and delete the cart item
-        cart_item = CartItem.objects.get(cart=cart, product_id=product_id)
-        cart_item.delete()
-        
-        # Recalculate cart total
-        cart_items = CartItem.objects.filter(cart=cart)
-        cart_count = cart_items.aggregate(total_items=Sum('quantity'))['total_items'] or 0
-        
-        return JsonResponse({
-            'success': True,
-            'message': 'Item removed from cart',
-            'cartCount': cart_count
-        })
-        
-    except Cart.DoesNotExist:
-        return JsonResponse({
-            'success': False,
-            'message': 'Cart not found'
-        })
-    except CartItem.DoesNotExist:
-        return JsonResponse({
-            'success': False,
-            'message': 'Item not found in cart'
-        })
-    except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'message': str(e)
-        })
+    if request.method == 'POST':
+        try:
+            cart = Cart.objects.get(user=request.user)
+            cart_item = CartItem.objects.get(cart=cart, product_id=product_id)
+            cart_item.delete()
+            
+            # Recalculate cart count
+            cart_count = CartItem.objects.filter(cart=cart).aggregate(
+                total_items=Sum('quantity'))['total_items'] or 0
+            
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Item removed from cart',
+                'cartCount': cart_count
+            })
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'message': str(e)
+            }, status=400)
+    return JsonResponse({
+        'success': False,
+        'message': 'Invalid request'
+    }, status=400)
 
 # Update the cart (increase/decrease quantity)
 @login_required
@@ -1056,7 +1098,7 @@ def search_designs(request):
                 return JsonResponse({
                     'success': False,
                     'error': str(e)
-                }, status=500)
+                })
     
     return JsonResponse({
         'success': False,
@@ -1187,93 +1229,64 @@ def filter_products(request):
         'total_count': products.count()
     })
 
+@login_required
 def create_order(request):
-    if request.method == "POST":
-        try:
-            # Initialize Razorpay client
-            client = razorpay.Client(
-                auth=(settings.RAZORPAY_API_KEY, settings.RAZORPAY_API_SECRET)
-            )
-
-            # Get cart total
-            user = request.session.get('id')
-            cart = Cart.objects.get(user=user)
-            cart_items = CartItem.objects.filter(cart=cart)
-            total_amount = sum(item.product.price * item.quantity for item in cart_items)
-            total_amount += 50  # Add delivery charges
-            
-            try:
-                # Create Razorpay Order
-                payment = client.order.create({
-                    "amount": int(total_amount * 100),  # Amount in paise
-                    "currency": "INR",
-                    "payment_capture": "1"
-                })
-                
-                return JsonResponse({
-                    "success": True,
-                    "order_id": payment['id'],
-                    "amount": payment['amount']
-                })
-            except requests.exceptions.ConnectionError as e:
-                print(f"Connection Error: {str(e)}")
-                return JsonResponse({
-                    "success": False,
-                    "error": "Unable to connect to payment service. Please check your internet connection."
-                })
-            except razorpay.errors.BadRequestError as e:
-                print(f"Razorpay Error: {str(e)}")
-                return JsonResponse({
-                    "success": False,
-                    "error": "Invalid payment request. Please try again."
-                })
-            except Exception as e:
-                print(f"Order Creation Error: {str(e)}")
-                return JsonResponse({
-                    "success": False,
-                    "error": "Error creating order. Please try again later."
-                })
-                
-        except Exception as e:
-            print(f"General Error: {str(e)}")
+    try:
+        cart = Cart.objects.get(user=request.user)
+        cart_items = CartItem.objects.filter(cart=cart)
+        
+        if not cart_items.exists():
             return JsonResponse({
-                "success": False,
-                "error": str(e)
+                'success': False,
+                'message': 'Cart is empty'
             })
-    
-    return JsonResponse({
-        "success": False,
-        "error": "Invalid request method"
-    })
+        
+        # Calculate total amount including delivery charges
+        subtotal = sum(item.product.price * item.quantity for item in cart_items)
+        delivery_charges = 50 if subtotal > 0 else 0
+        total_amount = subtotal + delivery_charges
+        
+        # Create Razorpay order
+        order_amount = int(total_amount * 100)  # Convert to paise
+        order_currency = 'INR'
+        
+        razorpay_order = razorpay_client.order.create({
+            'amount': order_amount,
+            'currency': order_currency,
+        })
+        
+        # Create order in database
+        order = Order.objects.create(
+            user=request.user,
+            razorpay_order_id=razorpay_order['id'],
+            amount=total_amount,
+            status='Pending'
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'order_id': razorpay_order['id'],
+            'amount': order_amount,
+            'currency': order_currency
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        }, status=400)
 
 @login_required
 def payment_success(request, order_id):
-    if request.method == "POST":
-        try:
-            # Get the data from request
-            data = json.loads(request.body)
-            razorpay_payment_id = data.get('razorpay_payment_id')
-            razorpay_order_id = data.get('razorpay_order_id')
-            razorpay_signature = data.get('razorpay_signature')
-
+    try:
+        # Get the order
+        order = Order.objects.get(razorpay_order_id=order_id)
+        
+        if order.status != 'Completed':
             # Get the user's cart
-            user = request.session.get('id')
-            cart = Cart.objects.get(user=user)
+            cart = Cart.objects.get(user=request.user)
             cart_items = CartItem.objects.filter(cart=cart)
             
-            # Calculate total amount
-            total_amount = sum(item.product.price * item.quantity for item in cart_items)
-            total_amount += 50  # Add delivery charges
-
-            # Create Order record
-            order = Order.objects.create(
-                user_id=user,
-                payment_id=razorpay_payment_id,
-                razorpay_order_id=razorpay_order_id,
-                amount=total_amount,
-                status='Completed'
-            )
-
             # Create OrderItems
             for item in cart_items:
                 OrderItem.objects.create(
@@ -1282,71 +1295,21 @@ def payment_success(request, order_id):
                     quantity=item.quantity,
                     price=item.product.price
                 )
-
+            
+            # Update order status
+            order.status = 'Completed'
+            order.save()
+            
             # Clear the cart
             cart_items.delete()
-
-            return JsonResponse({
-                'success': True,
-                'message': 'Payment processed successfully'
-            })
-
-        except Exception as e:
-            print(f"Payment Error: {str(e)}")
-            return JsonResponse({
-                'success': False,
-                'message': str(e)
-            })
-    
-    return JsonResponse({
-        'success': False,
-        'message': 'Invalid request method'
-    })
-
-@login_required
-def payment_success_page(request):
-    try:
-        # Get user ID from session
-        user_id = request.session.get('id')
-        if not user_id:
-            messages.error(request, 'Please log in to view your orders')
-            return redirect('login')
-
-        # Get all orders for the current user
-        orders = Order.objects.filter(user_id=user_id).order_by('-created_at')
+            
+            messages.success(request, "Payment successful! Your order has been placed.")
         
-        # Debug print to help diagnose issues
-        print(f"User ID: {user_id}, Found orders: {orders.count()}")
-        
-        # Get order items for each order
-        orders_with_items = []
-        for order in orders:
-            try:
-                order_items = OrderItem.objects.filter(order=order)
-                subtotal = sum(item.price * item.quantity for item in order_items)
-                
-                order_data = {
-                    'order': order,
-                    'items': order_items,
-                    'subtotal': subtotal,
-                    'delivery_charge': 50,  # Fixed delivery charge
-                    'total': order.amount
-                }
-                orders_with_items.append(order_data)
-                print(f"Order {order.id}: {order_items.count()} items, total: {order.amount}")
-            except Exception as e:
-                print(f"Error processing order {order.id}: {str(e)}")
-                continue
-
-        return render(request, 'payment_success.html', {
-            'orders_with_items': orders_with_items,
-            'user_id': user_id
-        })
+        return render(request, 'payment_success.html', {'order': order})
         
     except Exception as e:
-        print(f"Error in payment_success_page: {str(e)}")
-        messages.error(request, f'Error fetching orders: {str(e)}')
-        return redirect('products')
+        messages.error(request, f"Error processing payment: {str(e)}")
+        return redirect('cart')
 
 @login_required
 def get_cart_count(request):
@@ -1588,6 +1551,45 @@ def budget_planner(request):
     }
     return render(request, 'budget_planner.html', context)
 
+def get_recommended_products(room_type, style, budget):
+    """Get product recommendations based on room type, style and budget"""
+    
+    # Get all products
+    products = Product.objects.all()
+    products_list = list(products)  # Convert QuerySet to list
+    
+    # Create feature text for each product
+    product_features = []
+    for product in products:
+        features = f"{product.category} {product.style} {room_type}"
+        product_features.append(features.lower())
+    
+    # Create TF-IDF vectors
+    vectorizer = TfidfVectorizer(stop_words='english')
+    tfidf_matrix = vectorizer.fit_transform(product_features)
+    
+    # Create query vector based on room type and style
+    query = f"{room_type} {style}".lower()
+    query_vector = vectorizer.transform([query])
+    
+    # Calculate similarity scores
+    similarity_scores = cosine_similarity(query_vector, tfidf_matrix)
+    
+    # Get product indices sorted by similarity
+    product_indices = similarity_scores[0].argsort()[::-1]
+    
+    # Filter by budget and get recommended products
+    recommended_products = []
+    total_cost = 0
+    
+    for idx in product_indices:
+        product = products_list[int(idx)]  # Convert numpy.int64 to Python int
+        if total_cost + float(product.price) <= float(budget):
+            recommended_products.append(product)
+            total_cost += float(product.price)
+    
+    return recommended_products
+
 @login_required
 def create_budget_plan(request):
     if request.method == 'POST':
@@ -1595,58 +1597,50 @@ def create_budget_plan(request):
             min_budget = float(request.POST.get('min_budget'))
             max_budget = float(request.POST.get('max_budget'))
             room_type = request.POST.get('room_type')
-            design_style = request.POST.get('style')
+            style = request.POST.get('style')
             area_size = float(request.POST.get('area_size'))
             
-            # Create budget plan
-            budget_plan = BudgetPlan.objects.create(
-                user=request.user,
-                min_budget=min_budget,
-                max_budget=max_budget,
-                room_type=room_type,
-                design_style=design_style,
-                area_size=area_size,
-                priority_features=request.POST.getlist('priorities')
-            )
-            
-            # Get products within budget range
-            products = Product.objects.filter(
-                price__gte=min_budget,
-                price__lte=max_budget
-            )
-            
-            # Get designs within budget range
+            # Get matching designs
             designs = Design.objects.filter(
-                price__gte=min_budget,
-                price__lte=max_budget
+                room_type=room_type,
+                style=style,
+                price__range=(min_budget, max_budget)
             )
             
-            if room_type:
-                designs = designs.filter(room_type=room_type)
-            
-            if design_style:
-                products = products.filter(style=design_style)
-                designs = designs.filter(style=design_style)
+            # Get recommended products for each design
+            design_recommendations = []
+            for design in designs:
+                recommended_products = get_recommended_products(
+                    room_type=design.room_type,
+                    style=design.style,
+                    budget=max_budget - float(design.price)  # Remaining budget after design
+                )
+                
+                design_recommendations.append({
+                    'design': design,
+                    'recommended_products': recommended_products
+                })
             
             return JsonResponse({
                 'success': True,
-                'budget_plan_id': budget_plan.id,
-                'products': [{
-                    'id': p.id,
-                    'name': p.product_name,
-                    'price': float(p.price),
-                    'image_url': p.image.url if p.image else None,
-                    'category': p.category,
-                    'style': p.style
-                } for p in products],
-                'designs': [{
-                    'id': d.id,
-                    'name': d.design_name,
-                    'price': float(d.price),
-                    'image_url': d.image.url if d.image else None,
-                    'designer': d.designer.full_name,
-                    'style': d.style
-                } for d in designs]
+                'recommendations': [{
+                    'design': {
+                        'id': rec['design'].id,
+                        'name': rec['design'].design_name,
+                        'image_url': rec['design'].image.url if rec['design'].image else None,
+                        'price': float(rec['design'].price),
+                        'description': rec['design'].description,
+                        'style': rec['design'].style,
+                    },
+                    'products': [{
+                        'id': p.id,
+                        'name': p.product_name,
+                        'image_url': p.image.url if p.image else None,
+                        'price': float(p.price),
+                        'category': p.category,
+                        'style': p.style,
+                    } for p in rec['recommended_products']]
+                } for rec in design_recommendations]
             })
             
         except Exception as e:
@@ -1655,10 +1649,7 @@ def create_budget_plan(request):
                 'error': str(e)
             })
     
-    return JsonResponse({
-        'success': False,
-        'error': 'Invalid request method'
-    })
+    return render(request, 'budget_planner.html')
 
 def lighting_bulbs(request):
     # Fetch products that belong to the 'Lighting' category
@@ -1719,3 +1710,130 @@ def storage_solutions(request):
     }
     
     return render(request, 'Storage_solution.html', context)
+
+def furniture(request):
+    # Fetch products that belong to the 'Furniture' category
+    products = Product.objects.filter(category='Furniture')
+    
+    context = {
+        'products': products,
+    }
+    
+    return render(request, 'furniture.html', context)
+
+def curtains_and_drapes(request):
+    # Fetch products that belong to the 'Curtains' category
+    products = Product.objects.filter(category='Curtains')
+    
+    context = {
+        'products': products,
+    }
+    
+    return render(request, 'Curtains_and_Drapes.html', context)
+
+@login_required
+def payment_success_page(request):
+    try:
+        # Get all orders for the current user
+        orders = Order.objects.filter(user=request.user).order_by('-created_at')
+        
+        # Get order items for each order
+        orders_with_items = []
+        for order in orders:
+            order_items = OrderItem.objects.filter(order=order)
+            subtotal = sum(item.price * item.quantity for item in order_items)
+            
+            order_data = {
+                'order': order,
+                'items': order_items,
+                'subtotal': subtotal,
+                'delivery_charge': 50,  # Fixed delivery charge
+                'total': order.amount
+            }
+            orders_with_items.append(order_data)
+
+        return render(request, 'payment_success.html', {
+            'orders_with_items': orders_with_items
+        })
+        
+    except Exception as e:
+        messages.error(request, f'Error fetching orders: {str(e)}')
+        return redirect('cart')
+
+def worker_register(request):
+    if request.method == 'POST':
+        try:
+            # Create User instance
+            user = User.objects.create_user(
+                username=request.POST['username'],
+                password=request.POST['password'],
+                email=request.POST['email'],
+                first_name=request.POST['full_name']
+            )
+
+            # Create Worker instance
+            skills = request.POST.getlist('skills[]')  # Get skills as list
+            worker = Worker.objects.create(
+                user=user,
+                full_name=request.POST['full_name'],
+                phone=request.POST['phone'],
+                email=request.POST['email'],
+                experience_years=request.POST['experience'],
+                skills=skills,
+                hourly_rate=request.POST['hourly_rate'],
+                specialization=request.POST['specialization']
+            )
+
+            # Handle profile picture
+            if 'profile_picture' in request.FILES:
+                worker.profile_picture = request.FILES['profile_picture']
+                worker.save()
+
+            messages.success(request, 'Registration successful! Please login.')
+            return redirect('worker_login')
+
+        except Exception as e:
+            messages.error(request, f'Registration failed: {str(e)}')
+            return redirect('worker_register')
+
+    return render(request, 'worker_register.html')
+
+def worker_login(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        
+        user = authenticate(username=username, password=password)
+        
+        if user is not None and hasattr(user, 'worker'):
+            auth_login(request, user)
+            messages.success(request, 'Login successful!')
+            return redirect('worker_dashboard')
+        else:
+            messages.error(request, 'Invalid credentials')
+    
+    return render(request, 'worker_login.html')
+
+@login_required
+def worker_dashboard(request):
+    try:
+        worker = request.user.worker
+        assignments = WorkerAssignment.objects.filter(worker=worker).select_related('project', 'project__designer')
+        
+        context = {
+            'worker': worker,
+            'assignments': assignments,
+            'completed_projects': assignments.filter(status='completed').count(),
+            'pending_projects': assignments.filter(status='pending').count(),
+            'total_earnings': sum(a.project.budget for a in assignments.filter(status='completed')),
+            'current_month_earnings': sum(
+                a.project.budget for a in assignments.filter(
+                    status='completed',
+                    completion_date__month=timezone.now().month
+                )
+            ),
+        }
+        return render(request, 'worker_dashboard.html', context)
+    except Worker.DoesNotExist:
+        messages.error(request, 'Worker profile not found')
+        return redirect('worker_login')

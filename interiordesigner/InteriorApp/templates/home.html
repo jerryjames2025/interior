@@ -224,6 +224,61 @@
             padding: 50px 0;
             text-align: center;
         }
+
+        /* Add these styles if not already present */
+        .corner-card {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease;
+        }
+
+        .corner-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .corner-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #6c5ce7, #a363d9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+        }
+
+        .corner-icon i {
+            font-size: 32px;
+            color: white;
+        }
+
+        .corner-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #e67e22, #e67e22);
+            border: none;
+            padding: 0.8rem 1.5rem;
+        }
+
+        .btn-outline-primary {
+            border: 2px solid #6c5ce7;
+            color: #6c5ce7;
+            padding: 0.8rem 1.5rem;
+        }
+
+        .btn-outline-primary:hover {
+            background: linear-gradient(135deg, #6c5ce7, #a363d9);
+            border-color: transparent;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -234,6 +289,7 @@
             <nav class="nav-links">
                 <a href="{% url 'slogin' %}">Seller's Corner</a>
                 <a href="{% url 'dlogin' %}">Designer's Corner</a>
+                <a href="{% url 'worker_login' %}" class="btn btn-primary">Workers Corner</a>
             </nav>
         </div>
     </header>

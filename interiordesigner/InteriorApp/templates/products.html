@@ -2,6 +2,10 @@
 {% load static %}
 
 {% block head %}
+<!-- Add Toastify CSS and JS -->
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
 <style>
     .cart-icon {
         position: fixed;
@@ -340,11 +344,17 @@
                 <a href="{% url 'lighting_bulbs' %}" onclick="filterByCategory('Lighting')">Lighting & Bulbs</a>
                 <a href="{% url 'decoration_items' %}" onclick="filterByCategory('Decor')">Decoration Items</a>
                 <a href="{% url 'carpets_and_rugs' %}" onclick="filterByCategory('Carpets')">Carpets & Rugs</a>
+                <a href="{% url 'curtains_and_drapes' %}" onclick="filterByCategory('Wallpaper')">Curtains & Drapes</a>
                 <a href="{% url 'wallpapers' %}" onclick="filterByCategory('Wallpaper')">Wallpapers</a>
                 <a href="{% url 'indoor_plants' %}" onclick="filterByCategory('Plants')">Indoor Plants</a>
                 <a href="{% url 'storage_solutions' %}" onclick="filterByCategory('Storage')">Storage Solutions</a>
         </div>
     </div>
+    
+        <a href="{% url 'furniture' %}" class="cart-button">
+            Furniture
+        </a>
+      
 
     <div class="search-container">
         <div class="search-bar">
@@ -986,64 +996,65 @@ closeModal.onclick = function() {
 
 // Cart Functionality
 window.addToCart = function(productId) {
-    fetch(`/cart/add/${productId}/`, {
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    fetch(`/add-to-cart/${productId}/`, {
         method: 'POST',
         headers: {
+            'X-CSRFToken': csrftoken,
             'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken')
         },
-        body: JSON.stringify({ productId })
+        credentials: 'same-origin'
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            updateCartCount(data.cartCount);
-            showNotification('Product added to cart');
+            Toastify({
+                text: "✅ Item added to cart successfully!",
+                className: "toast-message",
+                duration: 3000,
+                gravity: "top",
+                position: "center",
+                style: {
+                    background: "linear-gradient(to right, #00b09b, #96c93d)",
+                },
+                stopOnFocus: true
+            }).showToast();
+
+            // Update cart count
+            const cartCount = document.getElementById('cart-count');
+            if (cartCount) {
+                cartCount.textContent = data.cartCount;
+            }
         } else {
-            showNotification(data.message || 'Error adding to cart', 'error');
+            Toastify({
+                text: data.message || "Error adding item to cart",
+                className: "toast-message",
+                duration: 3000,
+                gravity: "top",
+                position: "center",
+                style: {
+                    background: "linear-gradient(to right, #ff5f6d, #ffc371)",
+                },
+                stopOnFocus: true
+            }).showToast();
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        showNotification('Error adding to cart', 'error');
+        Toastify({
+            text: "Error adding item to cart",
+            className: "toast-message",
+            duration: 3000,
+            gravity: "top",
+            position: "center",
+            style: {
+                background: "linear-gradient(to right, #ff5f6d, #ffc371)",
+            },
+            stopOnFocus: true
+        }).showToast();
     });
 };
-
-// Helper function to get CSRF token
-function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
-    }
-    return cookieValue;
-}
-
-// Add this function if it doesn't exist
-function showNotification(message, type = 'success') {
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
-    notification.textContent = message;
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        notification.remove();
-    }, 3000);
-}
-
-// Add this function if it doesn't exist
-function updateCartCount(count) {
-    const cartCountElement = document.getElementById('cart-count');
-    if (cartCountElement) {
-        cartCountElement.textContent = count;
-    }
-}
 
 // Add this JavaScript function
 function filterByCategory(category) {

@@ -1,6 +1,76 @@
 {% extends 'base.html' %}
 {% load static %}
 
+{% block head %}
+<!-- Add existing head content -->
+<style>
+/* Add to existing styles */
+.recommendation-container {
+    margin-top: 2rem;
+    padding: 2rem;
+    background: #f8f9fa;
+    border-radius: 15px;
+}
+
+.design-recommendation {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+
+.recommended-products {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.product-card {
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+}
+
+.product-image {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+}
+
+.product-info {
+    padding: 1rem;
+}
+
+.product-name {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.product-price {
+    color: #e74c3c;
+    font-weight: 500;
+}
+
+.category-tag {
+    display: inline-block;
+    padding: 0.3rem 0.8rem;
+    background: #e3f2fd;
+    color: #1976d2;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+}
+</style>
+{% endblock %}
+
 {% block body %}
 <div class="container my-5">
     <div class="row">
@@ -85,93 +155,63 @@
     </div>
 </div>
 
+<!-- Add this section for recommendations -->
+<div id="recommendationsContainer" class="recommendation-container" style="display: none;">
+    <h2>Recommended Designs & Products</h2>
+    <div id="recommendationsList"></div>
+</div>
+
 <script>
 document.getElementById('budgetPlanForm').addEventListener('submit', function(e) {
     e.preventDefault();
     
     const formData = new FormData(this);
     
-    fetch('{% url "create_budget_plan" %}', {
+    fetch('/create-budget-plan/', {
         method: 'POST',
         body: formData,
         headers: {
-            'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+            'X-CSRFToken': '{{ csrf_token }}'
         }
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            const designsContainer = document.getElementById('designsContainer');
-            const designsList = document.getElementById('designsList');
-            const productsContainer = document.getElementById('productsContainer');
-            const productsList = document.getElementById('productsList');
+            const container = document.getElementById('recommendationsContainer');
+            const list = document.getElementById('recommendationsList');
+            list.innerHTML = '';
             
-            // Clear previous results
-            designsList.innerHTML = '';
-            productsList.innerHTML = '';
-            
-            // Initialize display to none
-            designsContainer.style.display = 'none';
-            productsContainer.style.display = 'none';
-            
-            // Handle designs
-            if (data.designs && data.designs.length > 0) {
-                data.designs.forEach(design => {
-                    const designCard = `
-                        <div class="col-md-6 mb-4">
-                            <div class="card">
-                                ${design.image_url ? 
-                                    `<img src="${design.image_url}" class="card-img-top" alt="${design.name}">` : 
-                                    ''
-                                }
-                                <div class="card-body">
-                                    <h5 class="card-title">${design.name}</h5>
-                                    <p class="card-text">
-                                        <small class="text-muted">By ${design.designer}</small><br>
-                                        Style: ${design.style}<br>
-                                        ₹${design.price}
-                                    </p>
-                                    <a href="/design/${design.id}" class="btn btn-outline-primary btn-sm">View Design</a>
-                                </div>
-                            </div>
+            data.recommendations.forEach(rec => {
+                const designHtml = `
+                    <div class="design-recommendation">
+                        <div class="design-info">
+                            <h3>${rec.design.name}</h3>
+                            <img src="${rec.design.image_url}" alt="${rec.design.name}" style="max-width: 100%; border-radius: 10px;">
+                            <p>${rec.design.description}</p>
+                            <p class="design-price">Design Price: ₹${rec.design.price}</p>
+                            <p>Style: ${rec.design.style}</p>
                         </div>
-                    `;
-                    designsList.innerHTML += designCard;
-                });
-                designsContainer.style.display = 'block';
-            }
-            
-            // Handle products
-            if (data.products && data.products.length > 0) {
-                data.products.forEach(product => {
-                    const productCard = `
-                        <div class="col-md-4 mb-4">
-                            <div class="card">
-                                ${product.image_url ? 
-                                    `<img src="${product.image_url}" class="card-img-top" alt="${product.name}">` : 
-                                    ''
-                                }
-                                <div class="card-body">
-                                    <h5 class="card-title">${product.name}</h5>
-                                    <p class="card-text">
-                                        Category: ${product.category}<br>
-                                        Style: ${product.style}<br>
-                                        ₹${product.price}
-                                    </p>
-                                    <a href="/product/${product.id}" class="btn btn-primary btn-sm">View Details</a>
+                        
+                        <h4>Recommended Products</h4>
+                        <div class="recommended-products">
+                            ${rec.products.map(product => `
+                                <div class="product-card">
+                                    <img src="${product.image_url}" alt="${product.name}" class="product-image">
+                                    <div class="product-info">
+                                        <div class="product-name">${product.name}</div>
+                                        <div class="product-price">₹${product.price}</div>
+                                        <div class="category-tag">${product.category}</div>
+                                    </div>
                                 </div>
-                            </div>
+                            `).join('')}
                         </div>
-                    `;
-                    productsList.innerHTML += productCard;
-                });
-                productsContainer.style.display = 'block';
-            }
+                    </div>
+                `;
+                
+                list.innerHTML += designHtml;
+            });
             
-            if ((!data.designs || data.designs.length === 0) && 
-                (!data.products || data.products.length === 0)) {
-                alert('No matching designs or products found for your criteria.');
-            }
+            container.style.display = 'block';
         } else {
             alert('Error: ' + (data.error || 'Unknown error occurred'));
         }

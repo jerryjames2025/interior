@@ -454,6 +454,171 @@
             overflow-y: auto;
         }
     }
+
+    /* Modern Design Cards Layout */
+    .designs-container {
+        padding: 2rem;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .designs-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 2rem;
+        padding: 1rem;
+    }
+
+    .design-card {
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .design-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+    }
+
+    .design-image {
+        width: 100%;
+        height: 250px;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+
+    .design-card:hover .design-image {
+        transform: scale(1.05);
+    }
+
+    .design-info {
+        padding: 1.5rem;
+    }
+
+    .design-title {
+        font-size: 1.4rem;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        font-family: 'Playfair Display', serif;
+    }
+
+    .design-price {
+        color: #e74c3c;
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+
+    .design-description {
+        color: #7f8c8d;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        margin-bottom: 1.5rem;
+    }
+
+    .view-more-btn {
+        background: linear-gradient(135deg, #6c5ce7, #a363d9);
+        color: white;
+        padding: 0.8rem 1.5rem;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 500;
+        width: 100%;
+    }
+
+    .view-more-btn:hover {
+        background: linear-gradient(135deg, #5b4dc4, #8e50c4);
+        transform: translateY(-2px);
+    }
+
+    /* Modal Styles */
+    .design-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.8);
+        z-index: 1000;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .modal-content {
+        position: relative;
+        width: 90%;
+        max-width: 800px;
+        margin: 2rem auto;
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        transform: translateY(-50px);
+        transition: transform 0.3s ease;
+    }
+
+    .modal-close {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        font-size: 1.5rem;
+        color: #2c3e50;
+        cursor: pointer;
+        transition: transform 0.3s ease;
+    }
+
+    .modal-close:hover {
+        transform: rotate(90deg);
+    }
+
+    .modal-image {
+        width: 100%;
+        max-height: 400px;
+        object-fit: cover;
+        border-radius: 10px;
+        margin-bottom: 1.5rem;
+    }
+
+    .modal-title {
+        font-size: 2rem;
+        color: #2c3e50;
+        margin-bottom: 1rem;
+        font-family: 'Playfair Display', serif;
+    }
+
+    .modal-details {
+        color: #7f8c8d;
+        line-height: 1.6;
+    }
+
+    /* Animation Classes */
+    .fade-in {
+        opacity: 1;
+    }
+
+    .slide-up {
+        transform: translateY(0);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .designs-grid {
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .modal-content {
+            width: 95%;
+            margin: 1rem auto;
+            padding: 1.5rem;
+        }
+    }
   </style>
 </head>
 <body>
@@ -508,7 +673,7 @@
     <h2>Explore Designs</h2>
     <div class="design-grid">
       {% for design in designs %}
-        <div class="design-item">
+        <div class="design-card">
           <button 
             class="favorite-btn {% if design.id in user_favorites %}active{% endif %}" 
             onclick="toggleFavorite(this, {{ design.id }})"
@@ -516,10 +681,15 @@
           >
             <i class="{% if design.id in user_favorites %}fas{% else %}far{% endif %} fa-heart"></i>
           </button>
-          <img src="{{ design.image.url }}" alt="{{ design.design_name }}">
-          <a href="#">{{ design.design_name }}</a>
-          <p>{{ design.description }}</p>
-          <a href="{% url 'design_detail' design.id %}" class="btn btn-primary">View More</a>
+          <img src="{{ design.image.url }}" alt="{{ design.design_name }}" class="design-image">
+          <div class="design-info">
+            <h3 class="design-title">{{ design.design_name }}</h3>
+            <p class="design-price">₹{{ design.price }}</p>
+            <p class="design-description">{{ design.description|truncatechars:100 }}</p>
+            <button class="view-more-btn" onclick="openModal('{{ design.id }}')">
+              View More
+            </button>
+          </div>
         </div>
       {% empty %}
         <p>No designs available at the moment.</p>
@@ -546,6 +716,16 @@
   </div>
 
   <a href="{% url 'feedback' %}" style="display: inline-block; margin: 20px; padding: 15px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 18px; text-decoration: none; text-align: center;">Give Feedback</a>
+
+  <!-- Modal Template -->
+  <div id="designModal" class="design-modal">
+    <div class="modal-content">
+      <span class="modal-close" onclick="closeModal()">&times;</span>
+      <img id="modalImage" src="" alt="" class="modal-image">
+      <h2 id="modalTitle" class="modal-title"></h2>
+      <div id="modalDetails" class="modal-details"></div>
+    </div>
+  </div>
 
   <script>
     // Open the feedback popup
@@ -724,6 +904,53 @@
 
     // Initial favorites count update
     updateFavoritesCount();
+
+    function openModal(designId) {
+        const modal = document.getElementById('designModal');
+        const modalContent = modal.querySelector('.modal-content');
+        
+        // Get design details from the card
+        const card = document.querySelector(`[data-design-id="${designId}"]`);
+        const image = card.querySelector('.design-image').src;
+        const title = card.querySelector('.design-title').textContent;
+        const description = card.getAttribute('data-description');
+        const price = card.querySelector('.design-price').textContent;
+        
+        // Update modal content
+        document.getElementById('modalImage').src = image;
+        document.getElementById('modalTitle').textContent = title;
+        document.getElementById('modalDetails').innerHTML = `
+            <p class="modal-price">${price}</p>
+            <p class="modal-description">${description}</p>
+        `;
+        
+        // Show modal with animation
+        modal.style.display = 'block';
+        setTimeout(() => {
+            modal.classList.add('fade-in');
+            modalContent.classList.add('slide-up');
+        }, 10);
+    }
+
+    function closeModal() {
+        const modal = document.getElementById('designModal');
+        const modalContent = modal.querySelector('.modal-content');
+        
+        modal.classList.remove('fade-in');
+        modalContent.classList.remove('slide-up');
+        
+        setTimeout(() => {
+            modal.style.display = 'none';
+        }, 300);
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        const modal = document.getElementById('designModal');
+        if (event.target == modal) {
+            closeModal();
+        }
+    }
   </script>
 
 </body>

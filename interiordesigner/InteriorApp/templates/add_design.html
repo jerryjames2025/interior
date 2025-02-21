@@ -37,22 +37,33 @@
                     <!-- Room Type -->
                     <div class="col-md-6 mb-3">
                         <label for="room_type" class="form-label">Room Type</label>
-                        <select class="form-control" id="room_type" name="room_type" required>
+                        <select name="room_type" class="form-select" required>
                             <option value="">Select Room Type</option>
-                            {% for room_type in room_types %}
-                                <option value="{{ room_type }}">{{ room_type }}</option>
-                            {% endfor %}
+                            <option value="Living Room">Living Room</option>
+                            <option value="Kitchen">Kitchen</option>
+                            <option value="Bedroom">Bedroom</option>
+                            <option value="Bathroom">Bathroom</option>
+                            <option value="Dining Room">Dining Room</option>
+                            <option value="Business Office">Business Office</option>
+                            <option value="Hallway Entry">Hallway Entry</option>
                         </select>
                     </div>
 
                     <!-- Design Style -->
                     <div class="col-md-6 mb-3">
                         <label for="style" class="form-label">Design Style</label>
-                        <select class="form-control" id="style" name="style" required>
+                        <select class="form-select" id="style" name="style" required>
                             <option value="">Select Style</option>
-                            {% for style in design_styles %}
-                                <option value="{{ style }}">{{ style }}</option>
-                            {% endfor %}
+                            <option value="Modern">Modern</option>
+                            <option value="Traditional">Traditional</option>
+                            <option value="Contemporary">Contemporary</option>
+                            <option value="Minimalist">Minimalist</option>
+                            <option value="Industrial">Industrial</option>
+                            <option value="Rustic">Rustic</option>
+                            <option value="Scandinavian">Scandinavian</option>
+                            <option value="Bohemian">Bohemian</option>
+                            <option value="Mid-century Modern">Mid-century Modern</option>
+                            <option value="Art Deco">Art Deco</option>
                         </select>
                     </div>
                 </div>

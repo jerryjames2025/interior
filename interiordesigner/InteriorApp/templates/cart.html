@@ -13,6 +13,9 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/3.10.2/mdb.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Toastify CSS and JS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <style>
         body {
             background-color: #f8f9fa;
@@ -268,6 +271,25 @@
             from { transform: translateX(100%); }
             to { transform: translateX(0); }
         }
+
+        .toast-message {
+            background: linear-gradient(to right, #00b09b, #96c93d) !important;
+            border-radius: 10px !important;
+            padding: 15px 25px !important;
+            font-size: 16px !important;
+            font-weight: 500 !important;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
+            color: white !important;
+        }
+
+        .toast-message i {
+            margin-right: 8px;
+        }
+
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(-100px); opacity: 0; }
+        }
     </style>
 </head>
 
@@ -333,9 +355,7 @@
                                         <button type="submit" name="action" value="increase" class="quantity-btn">+</button>
                                     </form>
                                     
-                                    <button class="remove-btn" onclick="removeFromCart({{ item.product.id }})">
-                                        <i class="fas fa-trash me-2"></i>Remove
-                                    </button>
+                                    <button onclick="removeFromCart({{ item.product.id }})" class="remove-btn">Remove</button>
                                 </div>
                             </div>
                         </div>
@@ -359,9 +379,7 @@
                         <span>Total</span>
                         <span>₹{{ total_price|add:delivery_charges }}</span>
                     </div>
-                    <button id="rzp-button" class="checkout-btn">
-                        <i class="fas fa-lock me-2"></i>Proceed to Checkout
-                    </button>
+                    <button onclick="initiatePayment()" class="checkout-btn">Proceed to Checkout</button>
                 </div>
             </div>
         </div>
@@ -381,167 +399,118 @@
     <!-- Razorpay -->
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script>
-    document.getElementById('rzp-button').onclick = function(e) {
-        e.preventDefault();
+    function removeFromCart(productId) {
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
         
-        fetch('/create-order/', {
+        fetch(`/remove-from-cart/${productId}/`, {
             method: 'POST',
             headers: {
+                'X-CSRFToken': csrftoken,
                 'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token }}'
             },
-            body: JSON.stringify({
-                amount: {{ total_price|add:delivery_charges }} * 100,
-            })
+            credentials: 'same-origin'
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                var options = {
-                    "key": "{{ razorpay_key }}",
-                    "amount": data.amount,
-                    "currency": "INR",
-                    "name": "Aura Designs",
-                    "description": "Order Payment",
-                    "order_id": data.order_id,
-                    "handler": function (response) {
-                        document.body.style.cursor = 'wait';
-                        
-                        // Create the URL with the order_id parameter
-                        const paymentSuccessUrl = `/payment-success/${data.order_id}/`;
-                        
-                        fetch(paymentSuccessUrl, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRFToken': '{{ csrf_token }}'
-                            },
-                            body: JSON.stringify({
-                                razorpay_payment_id: response.razorpay_payment_id,
-                                razorpay_order_id: response.razorpay_order_id,
-                                razorpay_signature: response.razorpay_signature
-                            })
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                const cartContainer = document.querySelector('.cart-container');
-                                if (cartContainer) {
-                                    cartContainer.innerHTML = `
-                                        <div class="empty-cart">
-                                            <i class="fas fa-shopping-cart" style="font-size: 5rem; color: #3498db; margin-bottom: 2rem; animation: bounce 1s ease;"></i>
-                                            <p style="font-size: 1.5rem; color: #2c3e50; margin-bottom: 2rem;">Your cart is empty</p>
-                                            <a href="{% url 'products' %}" class="continue-shopping-btn">
-                                                <i class="fas fa-arrow-left me-2"></i>Continue Shopping
-                                            </a>
-                                        </div>`;
-                                }
-                                
-                                // Add this style for the bounce animation
-                                const style = document.createElement('style');
-                                style.textContent = `
-                                    @keyframes bounce {
-                                        0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-                                        40% { transform: translateY(-30px); }
-                                        60% { transform: translateY(-15px); }
-                                    }
-                                `;
-                                document.head.appendChild(style);
-                            } else {
-                                alert(data.message || 'Payment verification failed. Please contact support.');
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Payment Error:', error);
-                            alert('Error processing payment. Please check your order status in the orders section.');
-                        })
-                        .finally(() => {
-                            document.body.style.cursor = 'default';
-                        });
-                    },
-                    "prefill": {
-                        "name": "{{ request.user.get_full_name }}",
-                        "email": "{{ request.user.email }}"
-                    },
-                    "theme": {
-                        "color": "#3399cc"
-                    }
-                };
-                var rzp1 = new Razorpay(options);
-                rzp1.open();
-            } else {
-                alert(data.error || 'Error creating order. Please try again.');
-            }
-        })
-        .catch(error => {
-            console.error('Network Error:', error);
-            alert('Network error. Please check your internet connection and try again.');
-        });
-    };
-
-    function removeFromCart(productId) {
-        if (!confirm('Are you sure you want to remove this item?')) {
-            return;
-        }
-
-        fetch(`/cart/remove/${productId}/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token }}'
-            }
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                // Remove the item from the DOM
-                const cartItem = document.querySelector(`[data-product-id="${productId}"]`);
-                if (cartItem) {
-                    cartItem.remove();
-                }
+                // Animate item removal
+                const itemElement = document.querySelector(`[data-product-id="${productId}"]`);
+                itemElement.style.animation = 'slideOut 0.3s ease forwards';
                 
-                // Update total price
-                const totalPriceElement = document.querySelector('.total-price');
-                const finalTotalElement = document.querySelector('.final-total');
-                if (totalPriceElement && finalTotalElement) {
-                    totalPriceElement.textContent = `₹${data.total_price}`;
-                    finalTotalElement.textContent = `₹${data.total_price + 50}`; // 50 is delivery charge
-                }
-                
-                // Reload if cart is empty
-                if (data.cartCount === 0) {
-                    location.reload();
-                }
-            } else {
-                alert(data.message || 'Error removing item from cart');
+                // Show toast message
+                Toastify({
+                    text: "🛒 Item removed from cart successfully!",
+                    className: "toast-message",
+                    duration: 3000,
+                    gravity: "top",
+                    position: "center",
+                    stopOnFocus: true,
+                    onClick: function(){} // Prevents error on click
+                }).showToast();
+
+                // Remove item after animation
+                setTimeout(() => {
+                    itemElement.remove();
+                    window.location.reload(); // Reload to update totals
+                }, 300);
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Error removing item from cart. Please try again.');
+            Toastify({
+                text: "❌ Error removing item from cart",
+                className: "toast-message",
+                style: {
+                    background: "linear-gradient(to right, #ff5f6d, #ffc371)",
+                },
+                duration: 3000,
+                gravity: "top",
+                position: "center",
+                stopOnFocus: true
+            }).showToast();
         });
     }
 
-    // Add this helper function if not already present
-    function updateCartTotals() {
-        const cartItems = document.querySelectorAll('.cart-item');
-        let totalPrice = 0;
+    function updateQuantity(quantity, itemId) {
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
         
-        cartItems.forEach(item => {
-            const price = parseFloat(item.querySelector('.price').dataset.price);
-            const quantity = parseInt(item.querySelector('.quantity-input').dataset.quantity);
-            totalPrice += price * quantity;
+        fetch(`/cart/update/${itemId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ quantity: quantity })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert(data.message || 'Error updating quantity');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error updating quantity');
         });
+    }
+
+    function initiatePayment() {
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
         
-        // Update the total price display
-        const deliveryCharges = 50; // Make sure this matches your backend delivery charges
-        document.querySelector('.total-price').textContent = `₹${totalPrice}`;
-        document.querySelector('.final-total').textContent = `₹${totalPrice + deliveryCharges}`;
+        fetch('/create-order/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'Content-Type': 'application/json',
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const options = {
+                    key: '{{ razorpay_key }}',
+                    amount: data.amount,
+                    currency: data.currency,
+                    name: 'Interior Designer',
+                    description: 'Cart Payment',
+                    order_id: data.order_id,
+                    handler: function (response) {
+                        window.location.href = `/payment-success/${response.razorpay_order_id}/`;
+                    }
+                };
+                const rzp = new Razorpay(options);
+                rzp.open();
+            } else {
+                alert(data.message || 'Error creating order');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error initiating payment');
+        });
     }
     </script>
 </body>

@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block body %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Worker Registration</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label>Full Name</label>
+                                <input type="text" name="full_name" class="form-control" required>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label>Email</label>
+                                <input type="email" name="email" class="form-control" required>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label>Username</label>
+                                <input type="text" name="username" class="form-control" required>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label>Password</label>
+                                <input type="password" name="password" class="form-control" required>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label>Phone Number</label>
+                                <input type="tel" name="phone" class="form-control" required>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label>Years of Experience</label>
+                                <input type="number" name="experience" class="form-control" required>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label>Hourly Rate (₹)</label>
+                                <input type="number" name="hourly_rate" class="form-control" required>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label>Specialization</label>
+                                <select name="specialization" class="form-control" required>
+                                    <option value="">Select Specialization</option>
+                                    <option value="carpentry">Carpentry</option>
+                                    <option value="electrical">Electrical</option>
+                                    <option value="plumbing">Plumbing</option>
+                                    <option value="painting">Painting</option>
+                                    <option value="flooring">Flooring</option>
+                                    <option value="general">General Construction</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label>Skills</label>
+                            <div class="skill-checkboxes">
+                                <div class="form-check">
+                                    <input type="checkbox" name="skills[]" value="woodworking" class="form-check-input">
+                                    <label class="form-check-label">Woodworking</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="checkbox" name="skills[]" value="tiling" class="form-check-input">
+                                    <label class="form-check-label">Tiling</label>
+                                </div>
+                                <!-- Add more skills as needed -->
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label>Profile Picture</label>
+                            <input type="file" name="profile_picture" class="form-control" accept="image/*">
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">Register</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

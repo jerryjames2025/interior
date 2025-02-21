@@ -4,6 +4,7 @@ from django.contrib.auth import views as auth_views
 from django.contrib import messages
 from django.conf import settings
 from django.conf.urls.static import static
+from django.contrib.auth.decorators import login_required
 
 
 # class CustomLogoutView(auth_views.LogoutView):
@@ -47,7 +48,7 @@ urlpatterns = [
     path('cart/', views.cart_view, name='cart'),
     # path('search/', views.search_products, name='search_products'),
     # path('remove/<int:item_id>/', views.remove_from_cart, name='remove_from_cart'),
-    path('cart/add/<int:product_id>/', views.add_to_cart, name='add_to_cart'),
+    path('add-to-cart/<int:product_id>/', views.add_to_cart, name='add_to_cart'),
     path('cart/remove/<int:product_id>/', views.remove_from_cart, name='remove_from_cart'),
     path('cart/update/<int:item_id>/', views.update_cart, name='update_cart'),
     path('realhome', views.realhome, name='realhome'),  # Home Page
@@ -97,6 +98,12 @@ urlpatterns = [
     path('wallpapers/', views.wallpapers, name='wallpapers'),  # New URL for wallpapers
     path('indoor-plants/', views.indoor_plants, name='indoor_plants'),  # New URL for indoor plants
     path('storage-solutions/', views.storage_solutions, name='storage_solutions'),  # New URL for storage solutions
+    path('furniture/', views.furniture, name='furniture'),
+    path('curtains-and-drapes/', views.curtains_and_drapes, name='curtains_and_drapes'),
+    path('remove-from-cart/<int:product_id>/', views.remove_from_cart, name='remove_from_cart'),
+    path('worker/register/', views.worker_register, name='worker_register'),
+    path('worker/login/', views.worker_login, name='worker_login'),
+    path('worker/dashboard/', views.worker_dashboard, name='worker_dashboard'),
 ]
 
 
