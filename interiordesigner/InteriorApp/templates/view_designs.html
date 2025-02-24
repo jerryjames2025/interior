@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head %}
+<style>
+.designs-container {
+    padding: 40px 0;
+    background: #f8f9fa;
+}
+
+.section-title {
+    text-align: center;
+    margin-bottom: 50px;
+}
+
+.section-title h2 {
+    font-size: 2.8rem;
+    color: #2c3e50;
+    margin-bottom: 15px;
+    font-weight: 700;
+}
+
+.section-title p {
+    color: #666;
+    font-size: 1.2rem;
+}
+
+.design-card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+    transition: transform 0.3s ease;
+}
+
+.design-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.design-image {
+    height: 250px;
+    overflow: hidden;
+    position: relative;
+}
+
+.design-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.design-info {
+    padding: 20px;
+    background: white;
+}
+
+.design-name {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.design-category {
+    color: #e67e22;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+}
+
+.design-description {
+    color: #666;
+    margin-bottom: 15px;
+    line-height: 1.6;
+}
+
+.design-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+.design-price {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.btn-view-details {
+    padding: 8px 20px;
+    background: #e67e22;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    text-decoration: none;
+    transition: background 0.3s ease;
+}
+
+.btn-view-details:hover {
+    background: #d35400;
+    color: white;
+}
+
+.meet-workers-banner {
+    background: linear-gradient(135deg, #6c5ce7, #a363d9);
+    padding: 40px;
+    border-radius: 15px;
+    margin-top: 50px;
+    text-align: center;
+    color: white;
+}
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="designs-container">
+    <div class="container">
+        <div class="section-title">
+            <h2>Our Interior Designs</h2>
+            <p>Explore our collection of beautiful interior designs</p>
+        </div>
+
+        <!-- Debug information -->
+        <div class="alert alert-info">
+            Number of designs: {{ designs|length }}
+        </div>
+
+        <!-- Designs Grid -->
+        <div class="row">
+            {% for design in designs %}
+            <div class="col-md-4">
+                <div class="design-card">
+                    <div class="design-image">
+                        {% if design.image %}
+                            <img src="{{ design.image.url }}" alt="{{ design.design_name }}">
+                        {% else %}
+                            <img src="{% static 'images/default-design.jpg' %}" alt="Default Design">
+                        {% endif %}
+                    </div>
+                    <div class="design-info">
+                        <h3 class="design-name">{{ design.design_name }}</h3>
+                        <div class="design-category">{{ design.room_type }}</div>
+                        <p class="design-description">{{ design.description|truncatechars:100 }}</p>
+                        <div class="design-meta">
+                            <div class="design-price">₹{{ design.price }}</div>
+                            <a href="#" class="btn-view-details">View Details</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center">
+                <p>No designs available at the moment.</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Meet Workers Banner -->
+        <div class="meet-workers-banner">
+            <h3 class="mb-3">Looking for Professional Help?</h3>
+            <p class="mb-4">Connect with our skilled workers to bring your design dreams to life</p>
+            <a href="{% url 'meet_workers' %}" class="btn btn-light btn-lg">Meet Our Workers</a>
+        </div>
+    </div>
+</div>
+{% endblock %} 

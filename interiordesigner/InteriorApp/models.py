@@ -114,42 +114,28 @@ class Designer(models.Model):
 
 # Then define Design model
 class Design(models.Model):
-    designer = models.ForeignKey(Designer, on_delete=models.CASCADE, related_name='designs')
-    design_name = models.CharField(max_length=255)
+    ROOM_TYPE_CHOICES = [
+        ('living', 'Living Room'),
+        ('bedroom', 'Bedroom'),
+        ('kitchen', 'Kitchen'),
+        ('bathroom', 'Bathroom'),
+        ('office', 'Office'),
+    ]
+    
+    STYLE_CHOICES = [
+        ('modern', 'Modern'),
+        ('traditional', 'Traditional'),
+        ('minimalist', 'Minimalist'),
+        ('contemporary', 'Contemporary'),
+    ]
+
+    designer = models.ForeignKey(Designer, on_delete=models.CASCADE)
+    design_name = models.CharField(max_length=200)
     description = models.TextField()
+    room_type = models.CharField(max_length=50, choices=ROOM_TYPE_CHOICES)
+    style = models.CharField(max_length=50, choices=STYLE_CHOICES)
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    area_size = models.DecimalField(max_digits=8, decimal_places=2, default=0.0)
-    room_type = models.CharField(
-        max_length=50,
-        choices=[
-            ('Living Room', 'Living Room'),
-            ('Bedroom', 'Bedroom'),
-            ('Kitchen', 'Kitchen'),
-            ('Bathroom', 'Bathroom'),
-            ('Dining Room', 'Dining Room'),
-            ('Office', 'Office'),
-            ('Kids Room', 'Kids Room'),
-            ('Master Bedroom', 'Master Bedroom'),
-            ('Guest Room', 'Guest Room'),
-            ('Study Room', 'Study Room'),
-            ('Balcony', 'Balcony'),
-            ('Outdoor Space', 'Outdoor Space')
-        ]
-    )
-    style = models.CharField(
-        max_length=50,
-        choices=[
-            ('Modern', 'Modern'),
-            ('Traditional', 'Traditional'),
-            ('Contemporary', 'Contemporary'),
-            ('Minimalist', 'Minimalist'),
-            ('Industrial', 'Industrial'),
-            ('Rustic', 'Rustic')
-        ],
-        default='Modern'
-    )
-    features = models.JSONField(default=list)
-    image = models.ImageField(upload_to='design_images/', blank=True, null=True)
+    image = models.ImageField(upload_to='designs/')
     created_at = models.DateTimeField(auto_now_add=True)
     favorited_by = models.ManyToManyField(User, through='Favorite', related_name='favorite_designs_set')
 

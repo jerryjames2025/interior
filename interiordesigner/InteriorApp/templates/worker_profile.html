@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head %}
+<style>
+/* Add styles for worker profile page */
+.profile-header {
+    background: linear-gradient(135deg, #e67e22, #d35400);
+    color: white;
+    padding: 60px 0;
+}
+
+.profile-image {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 5px solid white;
+}
+
+.profile-stats {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    margin-top: -50px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.projects-section {
+    padding: 40px 0;
+}
+
+.project-card {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="profile-header">
+    <div class="container text-center">
+        {% if worker.profile_picture %}
+        <img src="{{ worker.profile_picture.url }}" alt="{{ worker.full_name }}" class="profile-image mb-4">
+        {% endif %}
+        <h1>{{ worker.full_name }}</h1>
+        <p class="lead">{{ worker.specialization|title }}</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="profile-stats">
+        <div class="row text-center">
+            <div class="col-md-3">
+                <h3>{{ worker.rating|floatformat:1 }}</h3>
+                <p>Rating</p>
+            </div>
+            <div class="col-md-3">
+                <h3>{{ worker.experience_years }}</h3>
+                <p>Years Experience</p>
+            </div>
+            <div class="col-md-3">
+                <h3>{{ worker.completed_projects }}</h3>
+                <p>Completed Projects</p>
+            </div>
+            <div class="col-md-3">
+                <h3>${{ worker.hourly_rate }}/hr</h3>
+                <p>Rate</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="projects-section">
+        <h2 class="mb-4">Completed Projects</h2>
+        <div class="row">
+            {% for assignment in completed_projects %}
+            <div class="col-md-6">
+                <div class="project-card">
+                    <h4>{{ assignment.project.name }}</h4>
+                    <p>{{ assignment.project.description }}</p>
+                    <div class="project-details">
+                        <span class="badge bg-success">Completed</span>
+                        <span class="text-muted">{{ assignment.completion_date|date:"M d, Y" }}</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

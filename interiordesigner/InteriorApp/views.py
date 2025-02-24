@@ -24,7 +24,7 @@ from .forms import FeedbackForm
 from django.core.paginator import Paginator
 from django.views.decorators.http import require_POST
 from django.db.models import Q
-from django.db.models import Sum
+from django.db.models import Sum, Avg
 import razorpay
 from django.views.decorators.csrf import csrf_exempt
 import json
@@ -217,7 +217,6 @@ def add_product(request):
             description = request.POST.get('description')
             price = request.POST.get('price')
             stock = request.POST.get('stock')
-            category = request.POST.get('category')
             image = request.FILES.get('image')
             seller_id = request.session['id']
             seller = Seller.objects.get(id=seller_id)
@@ -229,11 +228,10 @@ def add_product(request):
                     description=description,
                     price=price,
                     stock=stock,
-                    category=category,
                     image=image
                 )
                 product.save()
-                messages.success(request, 'Product added successfully.')
+                messages.success(request, 'Product added successfully!')
                 
                 # Redirect based on category
                 category_redirects = {
@@ -244,14 +242,9 @@ def add_product(request):
                     'Curtains': 'curtains_and_drapes',
                     'Wallpaper': 'wallpapers',
                     'Plants': 'indoor_plants',
-                    'Storage': 'storage_solutions'
+                    'Storage': 'storage_solution'
                 }
-                
-                redirect_url = category_redirects.get(category)
-                if redirect_url:
-                    return redirect(redirect_url)
-                
-                return redirect('products')  # Fallback to main products page
+                return redirect(category_redirects.get(product.category, 'products'))
             else:
                 messages.error(request, 'All fields are required.')
         except Exception as e:
@@ -453,7 +446,7 @@ def dlogin_view(request):
                 messages.error(request, 'Invalid password')
         except Designer.DoesNotExist:
             messages.error(request, 'Designer not found')
-        
+
     return render(request, 'dlogin.html')
 
 # Create a custom decorator for designer login
@@ -527,88 +520,93 @@ def uphome(request):
     featured_products = Product.objects.all()[:6]  # Fetch top 6 products as featured
     return render(request, 'uphome.html', {'featured_products': featured_products})
 
-# # Product detail view - individual product details
-# def product_detail(request, product_id):
-#     product = get_object_or_404(Product, id=product_id)
-#     return render(request, 'product_detail.html', {'product': product})
-
-#  Add to cart view
 @login_required
 def add_to_cart(request, product_id):
     if request.method == 'POST':
         try:
             product = get_object_or_404(Product, id=product_id)
+            quantity = int(request.POST.get('quantity', 1))
+            
+            # Validate quantity
+            if quantity <= 0:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Quantity must be positive'
+                })
+            
+            if quantity > product.stock:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Not enough stock available'
+                })
+
+            # Get or create cart
             cart, created = Cart.objects.get_or_create(user=request.user)
             
-            cart_item, created = CartItem.objects.get_or_create(
+            # Check if item already in cart
+            cart_item, item_created = CartItem.objects.get_or_create(
                 cart=cart,
                 product=product,
-                defaults={'quantity': 1}
+                defaults={'quantity': quantity}
             )
             
-            if not created:
-                cart_item.quantity += 1
+            # If item existed, update quantity
+            if not item_created:
+                cart_item.quantity += quantity
+                if cart_item.quantity > product.stock:
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'Not enough stock available'
+                    })
                 cart_item.save()
 
             # Get updated cart count
             cart_count = CartItem.objects.filter(cart=cart).aggregate(
                 total_items=Sum('quantity'))['total_items'] or 0
+
+            return JsonResponse({
+                'success': True,
+                'cart_count': cart_count
+            })
+
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            })
+
+    return JsonResponse({
+        'success': False,
+        'error': 'Invalid request method'
+    })
+
+@login_required
+def remove_from_cart(request, product_id):
+    if request.method == 'POST':
+        try:
+            cart = Cart.objects.get(user=request.user)
+            cart_item = CartItem.objects.get(cart=cart, product_id=product_id)
+            cart_item.delete()
             
+            # Recalculate cart count
+            cart_count = CartItem.objects.filter(cart=cart).aggregate(
+                total_items=Sum('quantity'))['total_items'] or 0
             
             
             return JsonResponse({
                 'success': True,
-                'message': f"{product.product_name} added to cart",
+                'message': 'Item removed from cart',
                 'cartCount': cart_count
             })
-            
         except Exception as e:
             return JsonResponse({
                 'success': False,
                 'message': str(e)
             }, status=400)
-    
     return JsonResponse({
         'success': False,
-        'message': 'Invalid request method'
+        'message': 'Invalid request'
     }, status=400)
-
-# Cart view - display items in cart
-#  def cart_view(request):
-#      cart_product_ids = request.session.get('cart', [])
-#      cart_products = Product.objects.filter(id__in=cart_product_ids)
-#      return render(request, 'cart.html', {'cart_products': cart_products})
-
-
-# # Add to favorites
-# def add_to_favorites(request, product_id):
-#     product = get_object_or_404(Product, id=product_id)
-#     favorites = request.session.get('favorites', [])
-#     if product.id not in favorites:
-#         favorites.append(product.id)
-#     request.session['favorites'] = favorites
-#     return redirect('favorites')
-
-# # Search functionality
-# def search(request):
-#     query = request.GET.get('q')
-#     products = Product.objects.filter(product_name__icontains=query)
-#     return render(request, 'search_results.html', {'products': products, 'query': query})
-
-
-# def cart_view(request):
-#     cart_items = Cart.objects.filter(user=request.user.id)
-#     return render(request, 'cart.html', {'cart_items': cart_items})
-
-# def search_products(request):
-#     query = request.GET.get('query')
-#     products = Product.objects.filter(product_name__icontains=query)
-#     return render(request, 'search_results.html', {'products': products})
-
-# def remove_from_cart(request, item_id):
-#     item = get_object_or_404(Cart, id=item_id, user=request.user)
-#     item.delete()
-#     return redirect('cart')
 
 @login_required
 def cart_view(request):
@@ -642,35 +640,6 @@ def cart_view(request):
         messages.error(request, f"Error loading cart: {str(e)}")
         return redirect('home')
 
-@login_required
-def remove_from_cart(request, product_id):
-    if request.method == 'POST':
-        try:
-            cart = Cart.objects.get(user=request.user)
-            cart_item = CartItem.objects.get(cart=cart, product_id=product_id)
-            cart_item.delete()
-            
-            # Recalculate cart count
-            cart_count = CartItem.objects.filter(cart=cart).aggregate(
-                total_items=Sum('quantity'))['total_items'] or 0
-            
-            
-            return JsonResponse({
-                'success': True,
-                'message': 'Item removed from cart',
-                'cartCount': cart_count
-            })
-        except Exception as e:
-            return JsonResponse({
-                'success': False,
-                'message': str(e)
-            }, status=400)
-    return JsonResponse({
-        'success': False,
-        'message': 'Invalid request'
-    }, status=400)
-
-# Update the cart (increase/decrease quantity)
 @login_required
 def update_cart(request, item_id):
     if 'id' in request.session:
@@ -1358,147 +1327,95 @@ def view_orders(request):
         messages.error(request, f'Error fetching orders: {str(e)}')
         return redirect('products')
 
+@login_required
 def modeling_view(request):
     return render(request, '3D_Modeling.html')
 
-@csrf_exempt
+@login_required
 def generate_3d_model(request):
-    if request.method == 'POST' and request.FILES.get('image'):
+    if request.method == 'POST' and request.FILES.get('room_image'):
         try:
-            image = request.FILES['image']
-            print(f"Processing image: {image.name}")
+            image = Image.open(request.FILES['room_image'])
+            image_np = np.array(image)
             
-            # Read and decode image
-            image_data = image.read()
-            nparr = np.frombuffer(image_data, np.uint8)
-            img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-            
-            if img is None:
-                raise ValueError("Failed to decode image")
-            
-            # Convert to RGB and get dimensions
-            img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            height, width = img_rgb.shape[:2]
-            
-            # Enhanced depth estimation pipeline
-            gray = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2GRAY)
-            
-            # Stronger noise reduction
-            filtered = cv2.bilateralFilter(gray, 15, 80, 80)
-            
-            # Enhance contrast
-            clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8,8))
-            enhanced = clahe.apply(filtered)
-            
-            # Smoother edge detection
-            edges = cv2.Canny(enhanced, 30, 90)
+            if image_np.shape[-1] == 4:
+                image_np = cv2.cvtColor(image_np, cv2.COLOR_RGBA2RGB)
+
+            # Resize for better processing
+            target_size = (512, 512)
+            image_np = cv2.resize(image_np, target_size)
+            gray = cv2.cvtColor(image_np, cv2.COLOR_RGB2GRAY)
+
+            # Enhanced edge detection
+            blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+            edges = cv2.Canny(blurred, 50, 150)
             kernel = np.ones((3,3), np.uint8)
             edges = cv2.dilate(edges, kernel, iterations=1)
-            edges = cv2.GaussianBlur(edges, (5,5), 0)
+
+            # Find contours
+            contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
             
-            # Create smoother depth map
-            depth_map = cv2.distanceTransform(~edges, cv2.DIST_L2, 5)
-            depth_map = cv2.GaussianBlur(depth_map, (7,7), 0)
-            depth_map = cv2.normalize(depth_map, None, 0, 1, cv2.NORM_MINMAX)
+            if not contours:
+                return JsonResponse({'error': 'No object detected'}, status=400)
             
-            # Lower resolution for smoother mesh
-            segments = min(100, min(width, height) // 4)
-            rows = segments + 1
-            cols = segments + 1
+            # Get the largest contour
+            main_contour = max(contours, key=cv2.contourArea)
             
+            # Approximate the contour
+            epsilon = 0.02 * cv2.arcLength(main_contour, True)
+            approx_contour = cv2.approxPolyDP(main_contour, epsilon, True)
+
+            # Create 3D vertices from contour
             vertices = []
-            uvs = []
-            
-            # Create smoother vertex distribution
-            for i in range(rows):
-                for j in range(cols):
-                    u = j / (cols - 1)
-                    v = 1 - (i / (rows - 1))
-                    
-                    # Smoother position calculation
-                    x = (u * 2 - 1)
-                    y = (v * 2 - 1)
-                    
-                    # Bilinear interpolation for depth
-                    img_y = int(v * (height - 1))
-                    img_x = int(u * (width - 1))
-                    
-                    # Get smoother depth value
-                    z = depth_map[img_y, img_x]
-                    
-                    # Reduce depth intensity
-                    z = np.power(z, 1.2) * 0.3  # Reduced depth scaling
-                    
-                    vertices.append([x, y, z])
-                    uvs.append([u, v])
-            
-            # Generate faces with proper orientation
+            for point in approx_contour:
+                x = (point[0][0] / target_size[0]) * 2 - 1
+                y = -(point[0][1] / target_size[1]) * 2 + 1  # Flip Y coordinate
+                
+                # Add front and back vertices
+                vertices.append([x, y, 0.2])  # Front
+                vertices.append([x, y, -0.2])  # Back
+
+            # Create faces
             faces = []
-            for i in range(rows - 1):
-                for j in range(cols - 1):
-                    v0 = i * cols + j
-                    v1 = v0 + 1
-                    v2 = (i + 1) * cols + j
-                    v3 = v2 + 1
-                    
-                    faces.append([v0, v1, v2])
-                    faces.append([v1, v3, v2])
-            
-            # Convert to numpy arrays
-            vertices = np.array(vertices, dtype=np.float32)
-            faces = np.array(faces, dtype=np.uint32)
-            uvs = np.array(uvs, dtype=np.float32)
-            
-            # Smooth the mesh
-            vertices = smooth_mesh(vertices, faces, iterations=2)
-            
-            # Convert image to base64 for texture
-            _, buffer = cv2.imencode('.png', img_rgb)
-            texture_data = base64.b64encode(buffer).decode('utf-8')
-            
+            num_points = len(approx_contour)
+            for i in range(num_points):
+                i2 = (i + 1) % num_points
+                v0 = i * 2  # Front vertex of current point
+                v1 = i2 * 2  # Front vertex of next point
+                v2 = v0 + 1  # Back vertex of current point
+                v3 = v1 + 1  # Back vertex of next point
+                
+                # Add two triangles for each quad face
+                faces.append([v0, v1, v2])
+                faces.append([v1, v3, v2])
+
+            # Create model data
+            model_data = {
+                'vertices': vertices,
+                'faces': faces,
+                'dimensions': {
+                    'width': 2.0,
+                    'height': 2.0,
+                    'depth': 0.4
+                }
+            }
+
             return JsonResponse({
                 'success': True,
-                'model_data': {
-                    'vertices': vertices.tolist(),
-                    'faces': faces.tolist(),
-                    'uvs': uvs.tolist(),
-                    'texture': f'data:image/png;base64,{texture_data}'
-                }
+                'model_data': model_data
             })
-            
+
         except Exception as e:
             print(f"Error: {str(e)}")
             return JsonResponse({
                 'success': False,
                 'error': str(e)
-            })
+            }, status=400)
 
-def smooth_mesh(vertices, faces, iterations=2):
-    """Smooth the mesh using Laplacian smoothing"""
-    for _ in range(iterations):
-        new_vertices = vertices.copy()
-        
-        # Create vertex neighbors dictionary
-        neighbors = {}
-        for face in faces:
-            for i in range(3):
-                v1, v2 = face[i], face[(i+1)%3]
-                if v1 not in neighbors:
-                    neighbors[v1] = []
-                if v2 not in neighbors[v1]:
-                    neighbors[v1].append(v2)
-        
-        # Apply smoothing
-        for i in range(len(vertices)):
-            if i in neighbors:
-                neighbor_vertices = vertices[neighbors[i]]
-                if len(neighbor_vertices) > 0:
-                    # Weight center vertex more heavily
-                    new_vertices[i] = 0.8 * vertices[i] + 0.2 * np.mean(neighbor_vertices, axis=0)
-        
-        vertices = new_vertices
-    
-    return vertices
+    return JsonResponse({
+        'success': False,
+        'error': 'Please upload an image'
+    }, status=400)
 
 @login_required
 def budget_planner(request):
@@ -1837,3 +1754,126 @@ def worker_dashboard(request):
     except Worker.DoesNotExist:
         messages.error(request, 'Worker profile not found')
         return redirect('worker_login')
+
+@login_required
+def meet_workers(request):
+    try:
+        # Get all workers ordered by rating
+        workers = Worker.objects.all().order_by('-rating')
+        
+        # Get filter parameters
+        specialization = request.GET.get('specialization')
+        experience = request.GET.get('experience')
+        rating = request.GET.get('rating')
+        
+        # Apply filters if provided
+        if specialization:
+            workers = workers.filter(specialization=specialization)
+        if experience:
+            workers = workers.filter(experience_years__gte=int(experience))
+        if rating:
+            workers = workers.filter(rating__gte=float(rating))
+            
+        context = {
+            'workers': workers,
+            'specializations': Worker.SPECIALIZATION_CHOICES
+        }
+        
+        return render(request, 'meet_workers.html', context)
+    except Exception as e:
+        messages.error(request, f'Error loading workers: {str(e)}')
+        return redirect('home')
+
+def worker_profile(request, worker_id):
+    worker = get_object_or_404(Worker, id=worker_id)
+    completed_projects = WorkerAssignment.objects.filter(
+        worker=worker, 
+        status='completed'
+    ).select_related('project')
+    
+    context = {
+        'worker': worker,
+        'completed_projects': completed_projects,
+    }
+    return render(request, 'worker_profile.html', context)
+
+def filter_workers(request):
+    workers = Worker.objects.all()
+    
+    specialization = request.GET.get('specialization')
+    experience = request.GET.get('experience')
+    rating = request.GET.get('rating')
+    
+    if specialization:
+        workers = workers.filter(specialization=specialization)
+    if experience:
+        workers = workers.filter(experience_years__gte=int(experience))
+    if rating:
+        workers = workers.filter(rating__gte=float(rating))
+    
+    workers_data = [{
+        'id': w.id,
+        'full_name': w.full_name,
+        'specialization': w.specialization,
+        'rating': w.rating,
+        'experience_years': w.experience_years,
+        'completed_projects': w.completed_projects,
+        'hourly_rate': w.hourly_rate,
+        'skills': w.skills,
+        'profile_picture': w.profile_picture.url if w.profile_picture else None
+    } for w in workers]
+    
+    return JsonResponse({'workers': workers_data})
+
+@login_required
+def view_designs(request):
+    try:
+        designs = Design.objects.all().order_by('-created_at')
+        print(f"Number of designs found: {designs.count()}")
+        
+        for design in designs:
+            print(f"Design: {design.design_name}, Image: {design.image if design.image else 'No image'}")
+        
+        context = {
+            'designs': designs,
+            'room_types': Design.ROOM_TYPE_CHOICES,
+            'styles': Design.STYLE_CHOICES
+        }
+        
+        return render(request, 'view_designs.html', context)
+    except Exception as e:
+        print(f"Error in view_designs: {str(e)}")
+        messages.error(request, f'Error loading designs: {str(e)}')
+        return redirect('home')
+
+@login_required
+def filter_designs(request):
+    designs = Design.objects.all()
+    
+    room_type = request.GET.get('room_type')
+    style = request.GET.get('style')
+    price_range = request.GET.get('price')
+    
+    if room_type:
+        designs = designs.filter(room_type=room_type)
+    if style:
+        designs = designs.filter(style=style)
+    if price_range:
+        if price_range == 'budget':
+            designs = designs.filter(price__lte=50000)
+        elif price_range == 'mid':
+            designs = designs.filter(price__gt=50000, price__lte=150000)
+        elif price_range == 'luxury':
+            designs = designs.filter(price__gt=150000)
+    
+    designs_data = [{
+        'id': d.id,
+        'design_name': d.design_name,
+        'room_type': d.room_type,
+        'style': d.style,
+        'price': str(d.price),
+        'description': d.description,
+        'image_url': d.image.url if d.image else None
+    } for d in designs]
+    
+    return JsonResponse({'designs': designs_data})

@@ -1,0 +1,270 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head %}
+<style>
+.workers-container {
+    padding: 40px 0;
+    background: #f8f9fa;
+}
+
+.section-title {
+    text-align: center;
+    margin-bottom: 50px;
+}
+
+.section-title h2 {
+    font-size: 2.5rem;
+    color: #2c3e50;
+    margin-bottom: 15px;
+}
+
+.section-title p {
+    color: #666;
+    font-size: 1.1rem;
+}
+
+.worker-card {
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+    margin-bottom: 30px;
+}
+
+.worker-card:hover {
+    transform: translateY(-10px);
+}
+
+.worker-image {
+    position: relative;
+    height: 250px;
+    overflow: hidden;
+}
+
+.worker-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.worker-info {
+    padding: 25px;
+}
+
+.worker-name {
+    font-size: 1.5rem;
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.worker-specialization {
+    color: #e67e22;
+    font-weight: 500;
+    margin-bottom: 15px;
+}
+
+.worker-stats {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.skills-container {
+    margin-bottom: 20px;
+}
+
+.skill-tag {
+    display: inline-block;
+    padding: 5px 15px;
+    background: #f0f2f5;
+    border-radius: 20px;
+    margin: 5px;
+    font-size: 0.9rem;
+    color: #2c3e50;
+}
+
+.rating {
+    color: #f1c40f;
+    margin-bottom: 15px;
+}
+
+.view-profile-btn {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, #e67e22, #d35400);
+    color: white;
+    text-align: center;
+    border-radius: 25px;
+    text-decoration: none;
+    transition: transform 0.3s ease;
+}
+
+.view-profile-btn:hover {
+    transform: translateY(-2px);
+    color: white;
+}
+
+.filters {
+    margin-bottom: 30px;
+    padding: 20px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.filter-group {
+    margin-bottom: 15px;
+}
+
+.filter-label {
+    font-weight: 500;
+    margin-bottom: 8px;
+    color: #2c3e50;
+}
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="workers-container">
+    <div class="container">
+        <div class="section-title">
+            <h2>Meet Our Expert Workers</h2>
+            <p>Find skilled professionals for your interior design projects</p>
+        </div>
+
+        <!-- Filters Section -->
+        <div class="filters">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="filter-group">
+                        <label class="filter-label">Specialization</label>
+                        <select class="form-select" id="specializationFilter">
+                            <option value="">All Specializations</option>
+                            <option value="carpentry">Carpentry</option>
+                            <option value="electrical">Electrical</option>
+                            <option value="plumbing">Plumbing</option>
+                            <option value="painting">Painting</option>
+                            <option value="flooring">Flooring</option>
+                            <option value="general">General Construction</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="filter-group">
+                        <label class="filter-label">Experience</label>
+                        <select class="form-select" id="experienceFilter">
+                            <option value="">Any Experience</option>
+                            <option value="1">1+ Years</option>
+                            <option value="3">3+ Years</option>
+                            <option value="5">5+ Years</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="filter-group">
+                        <label class="filter-label">Rating</label>
+                        <select class="form-select" id="ratingFilter">
+                            <option value="">Any Rating</option>
+                            <option value="4">4+ Stars</option>
+                            <option value="3">3+ Stars</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Workers Grid -->
+        <div class="row">
+            {% for worker in workers %}
+            <div class="col-md-4">
+                <div class="worker-card">
+                    <div class="worker-image">
+                        {% if worker.profile_picture %}
+                        <img src="{{ worker.profile_picture.url }}" alt="{{ worker.full_name }}">
+                        {% else %}
+                        <img src="{% static 'images/default-worker.jpg' %}" alt="Default Profile">
+                        {% endif %}
+                    </div>
+                    <div class="worker-info">
+                        <h3 class="worker-name">{{ worker.full_name }}</h3>
+                        <div class="worker-specialization">{{ worker.specialization|title }}</div>
+                        
+                        <div class="rating">
+                            {% for i in "12345" %}
+                            <i class="fas fa-star {% if forloop.counter <= worker.rating %}filled{% endif %}"></i>
+                            {% endfor %}
+                            <span>({{ worker.rating|floatformat:1 }})</span>
+                        </div>
+
+                        <div class="worker-stats">
+                            <div class="stat-item">
+                                <div class="stat-value">{{ worker.experience_years }}</div>
+                                <div class="stat-label">Years Exp.</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">{{ worker.completed_projects }}</div>
+                                <div class="stat-label">Projects</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">${{ worker.hourly_rate }}/hr</div>
+                                <div class="stat-label">Rate</div>
+                            </div>
+                        </div>
+
+                        <div class="skills-container">
+                            {% for skill in worker.skills %}
+                            <span class="skill-tag">{{ skill }}</span>
+                            {% endfor %}
+                        </div>
+
+                        <a href="{% url 'worker_profile' worker.id %}" class="view-profile-btn">View Profile</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Filter functionality
+    const filters = document.querySelectorAll('.form-select');
+    filters.forEach(filter => {
+        filter.addEventListener('change', applyFilters);
+    });
+
+    function applyFilters() {
+        const specialization = document.getElementById('specializationFilter').value;
+        const experience = document.getElementById('experienceFilter').value;
+        const rating = document.getElementById('ratingFilter').value;
+
+        // Make AJAX call to filter workers
+        fetch(`/filter-workers/?specialization=${specialization}&experience=${experience}&rating=${rating}`)
+            .then(response => response.json())
+            .then(data => {
+                // Update workers grid with filtered results
+                updateWorkersGrid(data.workers);
+            });
+    }
+});
+</script>
+{% endblock %} 

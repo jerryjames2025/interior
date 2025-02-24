@@ -104,6 +104,11 @@ urlpatterns = [
     path('worker/register/', views.worker_register, name='worker_register'),
     path('worker/login/', views.worker_login, name='worker_login'),
     path('worker/dashboard/', views.worker_dashboard, name='worker_dashboard'),
+    path('meet-workers/', views.meet_workers, name='meet_workers'),
+    path('worker/profile/<int:worker_id>/', views.worker_profile, name='worker_profile'),
+    path('filter-workers/', views.filter_workers, name='filter_workers'),
+    path('view-designs/', views.view_designs, name='view_designs'),
+    path('filter-designs/', views.filter_designs, name='filter_designs'),
 ]
 
 
