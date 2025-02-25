@@ -1877,3 +1877,180 @@ def filter_designs(request):
     } for d in designs]
     
     return JsonResponse({'designs': designs_data})
+
+def admin_login(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        
+        # Check for predefined admin credentials
+        if username == 'jerry' and password == 'jerry@123':
+            user = authenticate(request, username=username, password=password)
+            if user is not None:
+                login(request, user)
+                return redirect('admin_dashboard')
+            else:
+                messages.error(request, 'Invalid credentials')
+        else:
+            messages.error(request, 'Invalid admin credentials')
+    
+    return render(request, 'admin_login.html')
+
+@login_required
+def admin_dashboard(request):
+    # Get statistics and recent activities
+    context = {
+        'total_users': User.objects.count(),
+        'total_workers': Worker.objects.count(),
+        'total_designs': Design.objects.count(),
+        'completed_projects': Project.objects.filter(status='completed').count(),
+        'recent_activities': get_recent_activities()
+    }
+    return render(request, 'admin_dashboard.html', context)
+
+def admin_logout(request):
+    logout(request)
+    return redirect('admin_login')
+
+def get_recent_activities():
+    # Implement logic to get recent activities
+    # This could include user registrations, new designs, favorites, etc.
+    return []
+
+@login_required
+def admin_users(request):
+    users = []
+    
+    # Get regular users (customers)
+    regular_users = User.objects.filter(is_staff=False, is_superuser=False)
+    for user in regular_users:
+        if not hasattr(user, 'seller') and not hasattr(user, 'designer') and not hasattr(user, 'worker'):
+            users.append({
+                'full_name': f"{user.first_name} {user.last_name}",
+                'username': user.username,
+                'email': user.email,
+                'role': 'Customer',
+                'is_active': user.is_active,
+                'date_joined': user.date_joined,
+                'profile_picture': None
+            })
+    
+    # Get sellers
+    sellers = Seller.objects.all()
+    for seller in sellers:
+        try:
+            users.append({
+                'full_name': seller.name,
+                'username': seller.username,
+                'email': seller.email,
+                'role': 'Seller',
+                'is_active': seller.is_active,
+                'date_joined': timezone.now(),
+                'profile_picture': seller.profile_picture.url if hasattr(seller, 'profile_picture') and seller.profile_picture else None
+            })
+        except Exception as e:
+            print(f"Error processing seller {seller.id}: {str(e)}")
+            continue
+    
+    # Get designers
+    designers = Designer.objects.all()
+    for designer in designers:
+        try:
+            users.append({
+                'full_name': designer.full_name,
+                'username': designer.username,
+                'email': designer.email,
+                'role': 'Designer',
+                'is_active': True,
+                'date_joined': timezone.now(),
+                'profile_picture': designer.profile_picture.url if hasattr(designer, 'profile_picture') and designer.profile_picture else None
+            })
+        except Exception as e:
+            print(f"Error processing designer {designer.id}: {str(e)}")
+            continue
+    
+    # Get workers
+    workers = Worker.objects.all()
+    for worker in workers:
+        try:
+            users.append({
+                'full_name': worker.full_name,
+                'username': worker.username,
+                'email': worker.email,
+                'role': 'Worker',
+                'is_active': True,
+                'date_joined': timezone.now(),
+                'profile_picture': worker.profile_picture.url if hasattr(worker, 'profile_picture') and worker.profile_picture else None
+            })
+        except Exception as e:
+            print(f"Error processing worker {worker.id}: {str(e)}")
+            continue
+    
+    context = {
+        'users': users
+    }
+    return render(request, 'admin_users.html', context)
+
+@login_required
+def filter_users(request):
+    role = request.GET.get('role', 'all')
+    # Implement filtering logic similar to the above but only for the specified role
+    filtered_users = []  # Add filtering logic here
+    return JsonResponse({'users': filtered_users})
+
+def view_designers(request):
+    try:
+        designers = Designer.objects.all()
+        print(f"Number of designers found: {designers.count()}")  # Debug line
+        
+        designers_data = []
+        for designer in designers:
+            print(f"Processing designer: {designer.full_name}")  # Debug line
+            
+            # Get number of workers under this designer (if the relationship exists)
+            workers_count = Worker.objects.filter(designer=designer).count() if hasattr(Worker, 'designer') else 0
+            
+            # Get designs by this designer
+            designs = Design.objects.filter(designer=designer)
+            
+            # Calculate average rating (if rating field exists)
+            avg_rating = 0
+            if hasattr(Design, 'rating'):
+                avg_rating = designs.aggregate(avg_rating=Avg('rating'))['avg_rating'] or 0
+            
+            # Get total completed projects
+            completed_projects = designs.count()
+            
+            # Get recent designs
+            recent_designs = designs.order_by('-created_at')[:3]
+            
+            # Get specializations as list
+            specializations = []
+            if designer.specializations:
+                specializations = [s.strip() for s in designer.specializations.split(',') if s.strip()]
+            
+            designer_data = {
+                'designer': designer,
+                'workers_count': workers_count,
+                'avg_rating': round(float(avg_rating), 1),
+                'completed_projects': completed_projects,
+                'years_experience': getattr(designer, 'experience_years', 0),
+                'specializations': specializations,
+                'recent_designs': recent_designs,
+                'full_name': designer.full_name,
+                'email': designer.email,
+                'description': designer.description or "An experienced interior designer passionate about creating beautiful spaces.",
+                'profile_picture': designer.profile_picture if designer.profile_picture else None
+            }
+            
+            print(f"Designer data prepared: {designer_data}")  # Debug line
+            designers_data.append(designer_data)
+        
+        context = {
+            'designers_data': designers_data
+        }
+        return render(request, 'designers.html', context)
+    except Exception as e:
+        print(f"Error in view_designers: {str(e)}")
+        messages.error(request, f'Error loading designers: {str(e)}')
+        return redirect('home')

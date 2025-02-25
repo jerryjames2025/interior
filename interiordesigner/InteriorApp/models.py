@@ -104,11 +104,11 @@ class Designer(models.Model):
     phone = models.CharField(max_length=15)
     username = models.CharField(max_length=50, unique=True)
     password = models.CharField(max_length=128)
-
-    @property
-    def name(self):
-        return self.full_name
-
+    experience_years = models.PositiveIntegerField(default=0)
+    specializations = models.CharField(max_length=255, blank=True)
+    description = models.TextField(blank=True)
+    profile_picture = models.ImageField(upload_to='designer_profiles/', blank=True, null=True)
+    
     def __str__(self):
         return self.full_name
 

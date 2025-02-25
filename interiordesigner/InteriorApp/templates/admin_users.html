@@ -1,0 +1,246 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head %}
+<style>
+.admin-dashboard {
+    display: flex;
+    min-height: 100vh;
+    background: #f8f9fa;
+}
+
+/* Keep the existing admin sidebar styles from admin_dashboard.html */
+.admin-sidebar {
+    width: 280px;
+    background: #2c3e50;
+    color: white;
+    padding: 20px;
+    position: fixed;
+    height: 100vh;
+    overflow-y: auto;
+}
+
+.admin-content {
+    flex: 1;
+    margin-left: 280px;
+    padding: 30px;
+}
+
+.users-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.users-filters {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.filter-btn {
+    padding: 8px 16px;
+    border: 2px solid #e67e22;
+    border-radius: 20px;
+    background: transparent;
+    color: #e67e22;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.filter-btn.active {
+    background: #e67e22;
+    color: white;
+}
+
+.users-table {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    overflow: hidden;
+}
+
+.users-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.users-table th {
+    background: #f8f9fa;
+    padding: 15px;
+    text-align: left;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.users-table td {
+    padding: 15px;
+    border-top: 1px solid #eee;
+}
+
+.user-role {
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 0.85em;
+    font-weight: 500;
+}
+
+.role-customer {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.role-seller {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.role-designer {
+    background: #fce4ec;
+    color: #c2185b;
+}
+
+.role-worker {
+    background: #fff3e0;
+    color: #f57c00;
+}
+
+.user-status {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 5px;
+}
+
+.status-active {
+    background: #4caf50;
+}
+
+.status-inactive {
+    background: #f44336;
+}
+
+.action-btn {
+    padding: 6px 12px;
+    border-radius: 15px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-view {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.btn-edit {
+    background: #fff3e0;
+    color: #f57c00;
+}
+
+.btn-delete {
+    background: #ffebee;
+    color: #c62828;
+}
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="admin-dashboard">
+    <!-- Include the same sidebar as admin_dashboard.html -->
+    {% include 'admin_sidebar.html' with active_page='users' %}
+
+    <div class="admin-content">
+        <div class="users-header">
+            <h2>Platform Users</h2>
+            <div class="users-filters">
+                <button class="filter-btn active" data-filter="all">All Users</button>
+                <button class="filter-btn" data-filter="customer">Customers</button>
+                <button class="filter-btn" data-filter="seller">Sellers</button>
+                <button class="filter-btn" data-filter="designer">Designers</button>
+                <button class="filter-btn" data-filter="worker">Workers</button>
+            </div>
+        </div>
+
+        <div class="users-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Joined Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                {% if user.profile_picture %}
+                                    <img src="{{ user.profile_picture.url }}" alt="Profile" style="width: 40px; height: 40px; border-radius: 50%;">
+                                {% else %}
+                                    <div style="width: 40px; height: 40px; border-radius: 50%; background: #eee; display: flex; align-items: center; justify-content: center;">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                {% endif %}
+                                <div>
+                                    <div style="font-weight: 500;">{{ user.full_name }}</div>
+                                    <div style="font-size: 0.85em; color: #666;">@{{ user.username }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ user.email }}</td>
+                        <td>
+                            <span class="user-role role-{{ user.role|lower }}">
+                                {{ user.role }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="user-status status-{{ user.is_active|yesno:'active,inactive' }}"></span>
+                            {{ user.is_active|yesno:'Active,Inactive' }}
+                        </td>
+                        <td>{{ user.date_joined|date:"M d, Y" }}</td>
+                        <td>
+                            <button class="action-btn btn-view">View</button>
+                            <button class="action-btn btn-edit">Edit</button>
+                            <button class="action-btn btn-delete">Delete</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    
+    filterButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            // Remove active class from all buttons
+            filterButtons.forEach(btn => btn.classList.remove('active'));
+            // Add active class to clicked button
+            this.classList.add('active');
+            
+            // Get filter value
+            const filter = this.dataset.filter;
+            
+            // Make AJAX call to filter users
+            fetch(`/admin/filter-users/?role=${filter}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Update table with filtered users
+                    updateUsersTable(data.users);
+                });
+        });
+    });
+});
+</script>
+{% endblock %} 

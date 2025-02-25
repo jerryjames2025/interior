@@ -1,148 +1,244 @@
+{% extends 'base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Designers Page</title>
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}"> <!-- Link to your CSS file -->
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f4;
-        }
-        nav {
-            background-color: #333;
-            color: white;
-            padding: 15px;
-            text-align: center;
-        }
-        nav a {
-            color: white;
-            text-decoration: none;
-            margin: 0 15px;
-        }
-        .container {
-            width: 80%;
-            margin: 20px auto;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-        h1 {
-            text-align: center;
-            color: #333;
-        }
-        .designer-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-        .designer-card {
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            padding: 15px;
-            text-align: center;
-            transition: transform 0.2s;
-        }
-        .designer-card:hover {
-            transform: scale(1.05);
-        }
-        .designer-card img {
-            width: 100%;
-            height: auto;
-            border-radius: 8px;
-        }
-        .designer-name {
-            font-size: 18px;
-            font-weight: bold;
-            margin: 10px 0;
-        }
-        .designer-email, .designer-phone {
-            color: #555;
-            font-size: 14px;
-        }
-        .view-profile, .contact-designer {
-            display: inline-block;
-            margin-top: 10px;
-            padding: 8px 12px;
-            background-color: #007bff;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-        }
-        .view-profile:hover, .contact-designer:hover {
-            background-color: #0056b3;
-        }
-        .no-designers {
-            text-align: center;
-            color: #888;
-            font-style: italic;
-        }
-        .design-photos {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            margin-top: 10px;
-        }
-        .design-photo {
-            margin: 5px;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-        .design-photo img {
-            width: 100px; /* Adjust size as needed */
-            height: auto;
-        }
-        .designer-description {
-            margin: 10px 0;
-            font-size: 14px;
-            color: #666;
-        }
-    </style>
-</head>
-<body>
-    <nav>
-        <a href="{% url 'home' %}">Home</a>
-        <a href="{% url 'realhome' %}">Real Home</a>
-        <a href="{% url 'designers' %}">Designers</a>
-        <a href="{% url 'logout' %}">Logout</a>
-    </nav>
-    <div class="container">
-        <h1>Registered Designers</h1>
-        <div class="designer-grid">
-            {% for designer in designers %}
-            <div class="designer-card">
-                <img src="{{ designer.userprofile.profile_picture.url|default:'path/to/default/image.png' }}" alt="{{ designer.user.first_name }} {{ designer.user.last_name }}">
-                <div class="designer-name">{{ designer.user.first_name }} {{ designer.user.last_name }}</div>
-                <div class="designer-email">{{ designer.user.email }}</div>
-                <div class="designer-phone">{{ designer.phone }}</div>
-                <div class="designer-description">{{ designer.userprofile.bio|default:"No description available." }}</div>
-                
-                <!-- Display design photos -->
-                <div class="design-photos">
-                    {% for design in designer.designs.all %}  <!-- Assuming you have a related_name 'designs' in your Design model -->
-                    <div class="design-photo">
-                        <img src="{{ design.image.url }}" alt="Design Photo">
-                    </div>
-                    {% empty %}
-                    <p>No design photos available.</p>
-                    {% endfor %}
-                </div>
 
-                <a href="{% url 'designer_detail' designer.id %}" class="view-profile">View Profile</a>
-                <a href="{% url 'contact_designer' designer.id %}" class="contact-designer">Contact</a>
+{% block head %}
+<style>
+.designers-container {
+    padding: 50px 0;
+    background: #f8f9fa;
+}
+
+.designer-card {
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+    transition: transform 0.3s ease;
+}
+
+.designer-card:hover {
+    transform: translateY(-5px);
+}
+
+.designer-header {
+    position: relative;
+    padding: 20px;
+    background: linear-gradient(135deg, #e67e22, #d35400);
+    color: white;
+}
+
+.designer-profile {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.designer-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 3px solid white;
+    overflow: hidden;
+}
+
+.designer-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.designer-info h3 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.designer-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    padding: 20px;
+    background: #f8f9fa;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #e67e22;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.designer-body {
+    padding: 20px;
+}
+
+.designer-description {
+    margin-bottom: 20px;
+}
+
+.specializations {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.specialization-tag {
+    padding: 5px 15px;
+    background: #e3f2fd;
+    color: #1976d2;
+    border-radius: 20px;
+    font-size: 0.9rem;
+}
+
+.recent-designs {
+    margin-top: 20px;
+}
+
+.design-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.design-thumbnail {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.design-thumbnail img {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+}
+
+.rating {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.rating i {
+    color: #ffd700;
+}
+
+.contact-btn {
+    display: inline-block;
+    padding: 10px 25px;
+    background: #e67e22;
+    color: white;
+    border-radius: 25px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    margin-top: 20px;
+}
+
+.contact-btn:hover {
+    background: #d35400;
+    transform: translateY(-2px);
+}
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="designers-container">
+    <div class="container">
+        <h2 class="text-center mb-5">Our Interior Designers</h2>
+        
+        {% if designers_data %}
+            <div class="row">
+                {% for data in designers_data %}
+                <div class="col-md-6">
+                    <div class="designer-card">
+                        <div class="designer-header">
+                            <div class="designer-profile">
+                                <div class="designer-avatar">
+                                    {% if data.designer.profile_picture %}
+                                        <img src="{{ data.designer.profile_picture.url }}" alt="{{ data.designer.full_name }}">
+                                    {% else %}
+                                        <img src="{% static 'images/default-avatar.jpg' %}" alt="Default Avatar">
+                                    {% endif %}
+                                </div>
+                                <div class="designer-info">
+                                    <h3>{{ data.designer.full_name }}</h3>
+                                    <div class="rating">
+                                        <i class="fas fa-star"></i>
+                                        <span>{{ data.avg_rating }}/5</span>
+                                    </div>
+                                    <div class="designer-email">{{ data.designer.email }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="designer-stats">
+                            <div class="stat-item">
+                                <div class="stat-value">{{ data.years_experience }}</div>
+                                <div class="stat-label">Years Exp.</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">{{ data.completed_projects }}</div>
+                                <div class="stat-label">Projects</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">{{ data.workers_count }}</div>
+                                <div class="stat-label">Workers</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">{{ data.avg_rating }}</div>
+                                <div class="stat-label">Rating</div>
+                            </div>
+                        </div>
+                        
+                        <div class="designer-body">
+                            <div class="designer-description">
+                                {{ data.designer.description|default:"An experienced interior designer passionate about creating beautiful spaces." }}
+                            </div>
+                            
+                            {% if data.specializations %}
+                            <div class="specializations">
+                                {% for spec in data.specializations %}
+                                <span class="specialization-tag">{{ spec }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            
+                            {% if data.recent_designs %}
+                            <div class="recent-designs">
+                                <h4>Recent Designs</h4>
+                                <div class="design-grid">
+                                    {% for design in data.recent_designs %}
+                                    <div class="design-thumbnail">
+                                        {% if design.image %}
+                                            <img src="{{ design.image.url }}" alt="{{ design.design_name }}">
+                                        {% else %}
+                                            <img src="{% static 'images/default-design.jpg' %}" alt="Default Design">
+                                        {% endif %}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            <a href="#" class="contact-btn">Contact Designer</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
             </div>
-            {% empty %}
-            <div class="no-designers">No designers found.</div>
-            {% endfor %}
-        </div>
+        {% else %}
+            <div class="text-center">
+                <p>No designers are currently registered. Check back later!</p>
+            </div>
+        {% endif %}
     </div>
-</body>
-</html> 
+</div>
+{% endblock %} 

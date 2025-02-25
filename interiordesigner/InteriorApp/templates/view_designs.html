@@ -92,18 +92,41 @@
 }
 
 .btn-view-details {
-    padding: 8px 20px;
+    padding: 10px 25px;
     background: #e67e22;
     color: white;
     border: none;
-    border-radius: 5px;
+    border-radius: 25px;
     text-decoration: none;
-    transition: background 0.3s ease;
+    transition: all 0.3s ease;
+    display: inline-block;
+    font-weight: 500;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+}
+
+.btn-view-details:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 100%;
+    background: #ffd700; /* Yellow color */
+    transition: all 0.3s ease;
+    z-index: -1;
 }
 
 .btn-view-details:hover {
-    background: #d35400;
-    color: white;
+    color: #000;
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.btn-view-details:hover:before {
+    width: 100%;
 }
 
 .meet-workers-banner {
@@ -114,15 +137,560 @@
     text-align: center;
     color: white;
 }
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(145deg, #000000, #333333);
+    padding: 15px 30px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+}
+
+.navbar-left, .navbar-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.dropdown-container {
+    position: relative;
+}
+
+.dropdown-trigger {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 25px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.dropdown-trigger:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: white;
+    min-width: 250px;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+    margin-top: 10px;
+    display: none;
+    z-index: 1000;
+}
+
+.dropdown-container:hover .dropdown-menu {
+    display: block;
+    animation: fadeInUp 0.3s ease;
+}
+
+.dropdown-menu a {
+    display: block;
+    padding: 12px 20px;
+    color: #2c3e50;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.dropdown-menu a:hover {
+    background: #f8f9fa;
+    color: #3498db;
+}
+
+.search-container {
+    flex: 0 1 500px;
+}
+
+.search-bar {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 25px;
+    padding: 5px 15px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.search-bar input {
+    border: none;
+    outline: none;
+    padding: 8px;
+    width: 100%;
+    background: transparent;
+}
+
+.search-bar button {
+    background: none;
+    border: none;
+    color: #3498db;
+    cursor: pointer;
+    padding: 8px;
+}
+
+.cart-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 25px;
+    text-decoration: none;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+}
+
+.cart-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+.cart-count {
+    background: #e74c3c;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 50%;
+    font-size: 0.8em;
+}
+
+.nav-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 25px;
+    text-decoration: none;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+}
+
+.nav-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Add these dropdown navigation styles */
+.nav-links {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    gap: 30px;
+}
+
+.nav-links li {
+    position: relative;
+}
+
+.nav-links li a {
+    padding: 10px 25px;
+    background: #e67e22;
+    color: white;
+    border: none;
+    border-radius: 25px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: inline-block;
+    font-weight: 500;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+}
+
+.nav-links li a:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 100%;
+    background: #ffd700; /* Yellow color */
+    transition: all 0.3s ease;
+    z-index: -1;
+}
+
+.nav-links li a:hover {
+    color: #000;
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.nav-links li a:hover:before {
+    width: 100%;
+}
+
+.nav-links .dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: white;
+    min-width: 200px;
+    border-radius: 8px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+    display: none;
+    z-index: 1000;
+    margin-top: 10px;
+}
+
+.nav-links li:hover .dropdown {
+    display: block;
+}
+
+.nav-links .dropdown a {
+    background: transparent;
+    color: #333;
+    padding: 12px 20px;
+    border-radius: 0;
+    display: block;
+    box-shadow: none;
+}
+
+.nav-links .dropdown a:hover {
+    background: #ffd700;
+    color: #000;
+    transform: none;
+}
+
+/* Meet Workers Banner button style */
+.meet-workers-btn {
+    padding: 12px 30px;
+    background: white;
+    color: #6c5ce7;
+    border: none;
+    border-radius: 25px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: inline-block;
+    font-weight: 600;
+    font-size: 1.1rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+}
+
+.meet-workers-btn:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 100%;
+    background: #ffd700; /* Yellow color */
+    transition: all 0.3s ease;
+    z-index: -1;
+}
+
+.meet-workers-btn:hover {
+    color: #000;
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.meet-workers-btn:hover:before {
+    width: 100%;
+}
+
+/* Add to your existing styles */
+.nav-links .dropdown a.active {
+    background: #e67e22;
+    color: white;
+}
+
+.nav-links .dropdown a.active:hover {
+    background: #ffd700;
+    color: #000;
+}
 </style>
 {% endblock %}
 
 {% block body %}
+
+<nav class="navbar">
+    <div class="navbar-left">
+        <div class="navbar-logo">
+            <img src="{% static 'images/logo.jpeg' %}" alt="Logo" style="height: 50px;" />
+        </div>
+        <ul class="nav-links">
+            <li>
+                <a href="#">Designs <i class="fas fa-chevron-down"></i></a>
+                <div class="dropdown">
+                    <a href="{% url 'view_designs' %}" {% if not selected_category %}class="active"{% endif %}>All Designs</a>
+                    <a href="{% url 'view_designs' %}?category=kitchen" {% if selected_category == 'kitchen' %}class="active"{% endif %}>Kitchen Designs</a>
+                    <a href="{% url 'view_designs' %}?category=living" {% if selected_category == 'living' %}class="active"{% endif %}>Living Room Designs</a>
+                    <a href="{% url 'view_designs' %}?category=bedroom" {% if selected_category == 'bedroom' %}class="active"{% endif %}>Bedroom Designs</a>
+                    <a href="{% url 'view_designs' %}?category=bathroom" {% if selected_category == 'bathroom' %}class="active"{% endif %}>Bathroom Designs</a>
+                    <a href="{% url 'view_designs' %}?category=dining" {% if selected_category == 'dining' %}class="active"{% endif %}>Dining Room Designs</a>
+                    <a href="{% url 'view_designs' %}?category=office" {% if selected_category == 'office' %}class="active"{% endif %}>Business/Office Designs</a>
+                    <a href="{% url 'view_designs' %}?category=hallway" {% if selected_category == 'hallway' %}class="active"{% endif %}>Hallway/Entry Designs</a>
+                </div>
+            </li>
+            <li>
+                <a href="{% url 'meet_workers' %}">Meet Workers</a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="search-container">
+        <div class="search-bar">
+            <input type="text" placeholder="Search designs..." id="searchInput">
+            <button type="submit" id="searchButton"><i class="fas fa-search"></i></button>
+        </div>
+    </div>
+
+    <div class="navbar-right">
+       
+        </a>
+        {% if request.session.id %}
+            
+        {% endif %}
+    </div>
+</nav>
+
+<style>
+    .navbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: linear-gradient(145deg, #000000, #333333);
+        padding: 15px 30px;
+        box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+    }
+
+    .navbar-left, .navbar-right {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .dropdown-container {
+        position: relative;
+    }
+
+    .dropdown-trigger {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        padding: 12px 24px;
+        border-radius: 25px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .dropdown-trigger:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    .dropdown-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        background: white;
+        min-width: 250px;
+        border-radius: 12px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+        margin-top: 10px;
+        display: none;
+        z-index: 1000;
+    }
+
+    .dropdown-container:hover .dropdown-menu {
+        display: block;
+        animation: fadeInUp 0.3s ease;
+    }
+
+    .dropdown-menu a {
+        display: block;
+        padding: 12px 20px;
+        color: #2c3e50;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .dropdown-menu a:hover {
+        background: #f8f9fa;
+        color: #3498db;
+    }
+
+    .search-container {
+        flex: 0 1 500px;
+    }
+
+    .search-bar {
+        display: flex;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 25px;
+        padding: 5px 15px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .search-bar input {
+        border: none;
+        outline: none;
+        padding: 8px;
+        width: 100%;
+        background: transparent;
+    }
+
+    .search-bar button {
+        background: none;
+        border: none;
+        color: #3498db;
+        cursor: pointer;
+        padding: 8px;
+    }
+
+    .cart-button {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        padding: 12px 24px;
+        border-radius: 25px;
+        text-decoration: none;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s ease;
+    }
+
+    .cart-button:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-2px);
+    }
+
+    .cart-count {
+        background: #e74c3c;
+        color: white;
+        padding: 2px 6px;
+        border-radius: 50%;
+        font-size: 0.8em;
+    }
+
+    .nav-button {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        padding: 12px 24px;
+        border-radius: 25px;
+        text-decoration: none;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s ease;
+    }
+
+    .nav-button:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-2px);
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+
+<div class="product-page-container">
+    <!-- Main Content -->
+    <main class="products-main">
+        <!-- Top Bar with Sort -->
+       
+
+        <!-- Products Grid -->
+        <div class="products-grid">
+            {% for product in products %}
+            <div class="product-card" data-category="{{ product.category }}" data-price="{{ product.price }}">
+                <div class="product-image">
+                    <img src="{{ product.image.url }}" alt="{{ product.product_name }}">
+                    <button class="quick-view-btn" onclick="showQuickView({{ product.id }})">
+                        Quick View
+                    </button>
+                </div>
+                <div class="product-info">
+                    <h3 class="product-name">{{ product.product_name }}</h3>
+                    <p class="product-description">{{ product.description|truncatechars:100 }}</p>
+                    <div class="product-price">₹{{ product.price }}</div>
+                    <button class="add-to-cart-btn" onclick="addToCart({{ product.id }})">
+                        <i class="fas fa-shopping-cart"></i> Add to Cart
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </main>
+</div>
+
+
+
+<script>
+    document.getElementById('searchButton').addEventListener('click', function() {
+        const query = document.getElementById('searchInput').value;
+        if (query) {
+            // Redirect to the products page with the search query
+            window.location.href = "{% url 'products' %}?search=" + encodeURIComponent(query);
+        }
+    });
+
+    // Optional: Allow pressing 'Enter' to submit the search
+    document.getElementById('searchInput').addEventListener('keypress', function(event) {
+        if (event.key === 'Enter') {
+            document.getElementById('searchButton').click();
+        }
+    });
+</script>
+
+
 <div class="designs-container">
     <div class="container">
         <div class="section-title">
-            <h2>Our Interior Designs</h2>
-            <p>Explore our collection of beautiful interior designs</p>
+            <h2>
+                {% if selected_category %}
+                    {{ selected_category|title }} Designs
+                {% else %}
+                    Our Interior Designs
+                {% endif %}
+            </h2>
+            <p>
+                {% if selected_category %}
+                    Explore our collection of beautiful {{ selected_category|lower }} designs
+                {% else %}
+                    Explore our collection of beautiful interior designs
+                {% endif %}
+            </p>
         </div>
 
         <!-- Debug information -->

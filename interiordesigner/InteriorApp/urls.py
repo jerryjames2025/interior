@@ -109,6 +109,12 @@ urlpatterns = [
     path('filter-workers/', views.filter_workers, name='filter_workers'),
     path('view-designs/', views.view_designs, name='view_designs'),
     path('filter-designs/', views.filter_designs, name='filter_designs'),
+    path('admin-login/', views.admin_login, name='admin_login'),
+    path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
+    path('admin-logout/', views.admin_logout, name='admin_logout'),
+    path('admin/users/', views.admin_users, name='admin_users'),
+    path('admin/filter-users/', views.filter_users, name='filter_users'),
+    path('designers/', views.view_designers, name='view_designers'),
 ]
 
 

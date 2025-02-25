@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head %}
+<style>
+.admin-login-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1a1c20, #2c3e50);
+    padding: 50px 0;
+}
+
+.admin-login-card {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    overflow: hidden;
+}
+
+.admin-login-header {
+    background: linear-gradient(135deg, #e67e22, #d35400);
+    padding: 30px;
+    text-align: center;
+    color: white;
+}
+
+.admin-login-header h2 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 600;
+}
+
+.admin-login-body {
+    padding: 40px;
+}
+
+.admin-login-form input {
+    border-radius: 25px;
+    padding: 12px 20px;
+    border: 2px solid #eee;
+    transition: all 0.3s ease;
+}
+
+.admin-login-form input:focus {
+    border-color: #e67e22;
+    box-shadow: 0 0 10px rgba(230, 126, 34, 0.1);
+}
+
+.admin-login-btn {
+    background: linear-gradient(135deg, #e67e22, #d35400);
+    color: white;
+    border: none;
+    border-radius: 25px;
+    padding: 12px 30px;
+    width: 100%;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.admin-login-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(230, 126, 34, 0.3);
+}
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="admin-login-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="admin-login-card">
+                    <div class="admin-login-header">
+                        <h2>AURA DESIGNS Admin</h2>
+                        <p class="mb-0">Platform Management System</p>
+                    </div>
+                    <div class="admin-login-body">
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+
+                        <form method="POST" class="admin-login-form">
+                            {% csrf_token %}
+                            <div class="mb-4">
+                                <label class="form-label">Username</label>
+                                <input type="text" name="username" class="form-control" required>
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label">Password</label>
+                                <input type="password" name="password" class="form-control" required>
+                            </div>
+                            <button type="submit" class="admin-login-btn">Login to Dashboard</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
