@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Team Requests</h2>
+
+    <!-- Pending Requests -->
+    <div class="card mb-4">
+        <div class="card-header bg-warning text-white">
+            <h5 class="mb-0">Pending Requests</h5>
+        </div>
+        <div class="card-body">
+            {% if pending_requests %}
+                {% for request in pending_requests %}
+                    <div class="request-card mb-3">
+                        <div class="d-flex align-items-center">
+                            {% if request.worker.profile_picture %}
+                                <img src="{{ request.worker.profile_picture.url }}" alt="{{ request.worker.full_name }}" class="worker-img me-3">
+                            {% else %}
+                                <div class="worker-img-placeholder me-3">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                            {% endif %}
+                            <div>
+                                <h6>{{ request.worker.full_name }}</h6>
+                                <p class="text-muted mb-0">{{ request.worker.specialization }}</p>
+                                <small>Sent on: {{ request.created_at|date:"M d, Y" }}</small>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted mb-0">No pending requests</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Accepted Requests -->
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">Accepted Requests</h5>
+        </div>
+        <div class="card-body">
+            {% if accepted_requests %}
+                {% for request in accepted_requests %}
+                    <div class="request-card mb-3">
+                        <div class="d-flex align-items-center">
+                            {% if request.worker.profile_picture %}
+                                <img src="{{ request.worker.profile_picture.url }}" alt="{{ request.worker.full_name }}" class="worker-img me-3">
+                            {% else %}
+                                <div class="worker-img-placeholder me-3">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                            {% endif %}
+                            <div>
+                                <h6>{{ request.worker.full_name }}</h6>
+                                <p class="text-muted mb-0">{{ request.worker.specialization }}</p>
+                                <small>Accepted on: {{ request.updated_at|date:"M d, Y" }}</small>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted mb-0">No accepted requests</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Declined Requests -->
+    <div class="card">
+        <div class="card-header bg-danger text-white">
+            <h5 class="mb-0">Declined Requests</h5>
+        </div>
+        <div class="card-body">
+            {% if declined_requests %}
+                {% for request in declined_requests %}
+                    <div class="request-card mb-3">
+                        <div class="d-flex align-items-center">
+                            {% if request.worker.profile_picture %}
+                                <img src="{{ request.worker.profile_picture.url }}" alt="{{ request.worker.full_name }}" class="worker-img me-3">
+                            {% else %}
+                                <div class="worker-img-placeholder me-3">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                            {% endif %}
+                            <div>
+                                <h6>{{ request.worker.full_name }}</h6>
+                                <p class="text-muted mb-0">{{ request.worker.specialization }}</p>
+                                <small>Declined on: {{ request.updated_at|date:"M d, Y" }}</small>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted mb-0">No declined requests</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.worker-img, .worker-img-placeholder {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.worker-img-placeholder {
+    background: #e9ecef;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6c757d;
+}
+
+.request-card {
+    padding: 15px;
+    border-radius: 8px;
+    background: #f8f9fa;
+    transition: transform 0.2s ease;
+}
+
+.request-card:hover {
+    transform: translateX(5px);
+    background: #f1f3f5;
+}
+</style>
+{% endblock %} 

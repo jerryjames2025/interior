@@ -1,0 +1,354 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <div class="company-info text-center">
+            {% if company.logo %}
+                <img src="{{ company.logo.url }}" alt="{{ company.company_name }}" class="company-logo">
+            {% else %}
+                <div class="company-logo-placeholder">
+                    <i class="fas fa-building"></i>
+                </div>
+            {% endif %}
+            <h4 class="mt-3">{{ company.company_name }}</h4>
+            <p class="text-muted">{{ company.company_size }} Company</p>
+        </div>
+        
+        <ul class="nav-links">
+            <li class="active">
+                <a href="#"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+            </li>
+            <li>
+                <a href="#applications"><i class="fas fa-users"></i> Applications</a>
+            </li>
+            <li>
+                <a href="#"><i class="fas fa-project-diagram"></i> Projects</a>
+            </li>
+            <li>
+                <a href="{% url 'company_change_password' %}"><i class="fas fa-key"></i> Change Password</a>
+            </li>
+            <li>
+                <a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Stats Cards -->
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-icon bg-primary">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+                <div class="stat-details">
+                    <h3>{{ total_applications }}</h3>
+                    <p>Total Applications</p>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon bg-warning">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-details">
+                    <h3>{{ pending_applications }}</h3>
+                    <p>Pending Applications</p>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon bg-success">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-details">
+                    <h3>{{ accepted_applications|default:"0" }}</h3>
+                    <p>Accepted Workers</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Company Details -->
+        <div class="company-details card">
+            <div class="card-header">
+                <h5><i class="fas fa-info-circle"></i> Company Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Registration Number:</strong> {{ company.registration_number }}</p>
+                        <p><strong>Established:</strong> {{ company.established_year }}</p>
+                        <p><strong>Email:</strong> {{ company.email }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Phone:</strong> {{ company.phone }}</p>
+                        <p><strong>Address:</strong> {{ company.address }}</p>
+                        <p><strong>Website:</strong> <a href="{{ company.website }}" target="_blank">{{ company.website }}</a></p>
+                    </div>
+                </div>
+                
+                <div class="specializations mt-3">
+                    <strong>Specializations:</strong><br>
+                    {% for spec in company.specializations %}
+                        <span class="badge bg-primary">{{ spec }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Worker Applications -->
+        <div class="applications card mt-4" id="applications">
+            <div class="card-header">
+                <h5><i class="fas fa-users"></i> Recent Applications</h5>
+            </div>
+            <div class="card-body">
+                {% if worker_applications %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Worker Name</th>
+                                    <th>Specialization</th>
+                                    <th>Experience</th>
+                                    <th>Applied Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for application in worker_applications %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if application.worker.profile_picture %}
+                                                <img src="{{ application.worker.profile_picture.url }}" class="worker-avatar">
+                                            {% else %}
+                                                <div class="worker-avatar-placeholder">
+                                                    <i class="fas fa-user"></i>
+                                                </div>
+                                            {% endif %}
+                                            <span class="ms-2">{{ application.worker.full_name }}</span>
+                                        </div>
+                                    </td>
+                                    <td>{{ application.worker.specialization }}</td>
+                                    <td>{{ application.worker.experience_years }} years</td>
+                                    <td>{{ application.created_at|date:"M d, Y" }}</td>
+                                    <td>
+                                        {% if application.status == 'pending' %}
+                                            <form method="POST" class="d-inline" action="{% url 'handle_application' application.id 'accept' %}">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-success">
+                                                    <i class="fas fa-check"></i> Accept
+                                                </button>
+                                            </form>
+                                            <form method="POST" class="d-inline" action="{% url 'handle_application' application.id 'reject' %}">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-danger">
+                                                    <i class="fas fa-times"></i> Reject
+                                                </button>
+                                            </form>
+                                        {% else %}
+                                            <span class="badge bg-{{ application.status|yesno:'success,danger' }}">
+                                                {{ application.status|title }}
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-inbox fa-3x text-muted"></i>
+                        <p class="mt-3">No applications received yet</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+</div>
+
+<style>
+.dashboard-container {
+    display: flex;
+    min-height: 100vh;
+    background-color: #f8f9fa;
+}
+
+.sidebar {
+    width: 280px;
+    background: linear-gradient(135deg, #2c3e50, #3498db);
+    color: white;
+    padding: 2rem;
+    position: fixed;
+    height: 100vh;
+    overflow-y: auto;
+}
+
+.company-logo, .company-logo-placeholder {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    margin: 0 auto;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.company-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.company-logo-placeholder i {
+    font-size: 3rem;
+    color: #2c3e50;
+}
+
+.nav-links {
+    list-style: none;
+    padding: 0;
+    margin-top: 2rem;
+}
+
+.nav-links li {
+    margin-bottom: 0.5rem;
+}
+
+.nav-links a {
+    color: white;
+    text-decoration: none;
+    padding: 0.8rem 1rem;
+    display: block;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.nav-links a:hover, .nav-links li.active a {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.nav-links i {
+    margin-right: 10px;
+}
+
+.main-content {
+    flex: 1;
+    margin-left: 280px;
+    padding: 2rem;
+}
+
+.stats-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+}
+
+.stat-icon i {
+    font-size: 1.5rem;
+    color: white;
+}
+
+.stat-details h3 {
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: 600;
+}
+
+.stat-details p {
+    margin: 0;
+    color: #6c757d;
+}
+
+.card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    background: white;
+    border-bottom: 1px solid #e9ecef;
+    padding: 1.5rem;
+}
+
+.card-header h5 {
+    margin: 0;
+    color: #2c3e50;
+}
+
+.specializations .badge {
+    margin: 0.2rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+}
+
+.worker-avatar, .worker-avatar-placeholder {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+}
+
+.worker-avatar-placeholder {
+    background: #e9ecef;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.worker-avatar-placeholder i {
+    color: #6c757d;
+}
+
+.table {
+    margin-bottom: 0;
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.8rem;
+    font-size: 0.875rem;
+}
+</style>
+{% endblock %} 

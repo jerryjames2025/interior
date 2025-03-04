@@ -38,6 +38,7 @@ from functools import wraps
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from django.utils import timezone
+from django.contrib.auth import update_session_auth_hash
 
 # Initialize Razorpay client
 razorpay_client = razorpay.Client(
@@ -223,30 +224,27 @@ def add_product(request):
 
             if product_name and price and stock:  # Simple validation
                 product = Product(
-                    seller=seller,
                     product_name=product_name,
                     description=description,
                     price=price,
                     stock=stock,
-                    image=image
+                    image=image,
+                    seller=seller
                 )
                 product.save()
                 messages.success(request, 'Product added successfully!')
                 
                 # Redirect based on category
                 category_redirects = {
-                    'Furniture': 'furniture',
-                    'Lighting': 'lighting_bulbs',
-                    'Decor_Items': 'decoration_items',
-                    'Carpets': 'carpets_and_rugs',
-                    'Curtains': 'curtains_and_drapes',
-                    'Wallpaper': 'wallpapers',
-                    'Plants': 'indoor_plants',
-                    'Storage': 'storage_solution'
+                    'furniture': 'furniture',
+                    'lighting': 'lighting',
+                    'decor': 'decor',
+                    'carpets': 'carpets',
+                    'wallpaper': 'wallpaper',
+                    'plants': 'plants',
+                    'storage': 'storage'
                 }
                 return redirect(category_redirects.get(product.category, 'products'))
-            else:
-                messages.error(request, 'All fields are required.')
         except Exception as e:
             messages.error(request, f'Error adding product: {str(e)}')
             return redirect('add_product')
@@ -430,22 +428,22 @@ def dregister(request):
     return render(request, 'dregister.html')
 
 
-def dlogin_view(request):
+def designer_login(request):
     if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
+        username = request.POST['username']
+        password = request.POST['password']
         
         try:
             designer = Designer.objects.get(username=username)
-            if designer.password == password:  # Note: Use proper password hashing in production
-                # Set the designer session
+            if designer.check_password(password):
+                login(request, designer)
                 request.session['designer_id'] = designer.id
                 messages.success(request, 'Login successful!')
                 return redirect('dhome')
             else:
-                messages.error(request, 'Invalid password')
+                messages.error(request, 'Invalid username or password')
         except Designer.DoesNotExist:
-            messages.error(request, 'Designer not found')
+            messages.error(request, 'Invalid username or password')
 
     return render(request, 'dlogin.html')
 
@@ -531,50 +529,34 @@ def add_to_cart(request, product_id):
             if quantity <= 0:
                 return JsonResponse({
                     'success': False,
-                    'error': 'Quantity must be positive'
+                    'error': 'Quantity must be greater than 0'
                 })
             
-            if quantity > product.stock:
-                return JsonResponse({
-                    'success': False,
-                    'error': 'Not enough stock available'
-                })
-
             # Get or create cart
             cart, created = Cart.objects.get_or_create(user=request.user)
             
-            # Check if item already in cart
-            cart_item, item_created = CartItem.objects.get_or_create(
+            # Add item to cart
+            cart_item, created = CartItem.objects.get_or_create(
                 cart=cart,
                 product=product,
                 defaults={'quantity': quantity}
             )
             
-            # If item existed, update quantity
-            if not item_created:
+            if not created:
                 cart_item.quantity += quantity
-                if cart_item.quantity > product.stock:
-                    return JsonResponse({
-                        'success': False,
-                        'error': 'Not enough stock available'
-                    })
                 cart_item.save()
-
-            # Get updated cart count
-            cart_count = CartItem.objects.filter(cart=cart).aggregate(
-                total_items=Sum('quantity'))['total_items'] or 0
-
+            
             return JsonResponse({
                 'success': True,
-                'cart_count': cart_count
+                'cart_count': cart.get_total_items()
             })
-
+            
         except Exception as e:
             return JsonResponse({
                 'success': False,
                 'error': str(e)
             })
-
+    
     return JsonResponse({
         'success': False,
         'error': 'Invalid request method'
@@ -795,13 +777,39 @@ def remove_from_designer_cart(request, item_id):
 def browse(request):
     return render(request, 'browse.html')
 
+@login_required
 def dhome(request):
-    # Logic to get data for the designer dashboard
-    return render(request, 'dhome.html')
-
-def shome(request):
-    # Logic to get data for the seller dashboard
-    return render(request, 'shome.html')
+    try:
+        # Check if user has a designer profile
+        if not hasattr(request.user, 'designer'):
+            messages.error(request, "You don't have a designer profile. Please register as a designer first.")
+            return redirect('dregister')  # Redirect to designer registration
+            
+        designer = request.user.designer
+        designs = Design.objects.filter(designer=designer)
+        
+        # Get statistics for the dashboard
+        total_views = 0
+        total_likes = 0
+        total_comments = 0
+        
+        # If you have these fields in your Design model, calculate them
+        # total_views = designs.aggregate(Sum('views'))['views__sum'] or 0
+        # total_likes = designs.aggregate(Sum('likes'))['likes__sum'] or 0
+        # total_comments = designs.aggregate(Sum('comments'))['comments__sum'] or 0
+        
+        context = {
+            'designer': designer,
+            'designs': designs,
+            'total_views': total_views,
+            'total_likes': total_likes,
+            'total_comments': total_comments,
+        }
+        return render(request, 'dhome.html', context)
+    except Exception as e:
+        print(f"Error in dhome: {str(e)}")
+        messages.error(request, f"Error loading dashboard: {str(e)}")
+        return redirect('home')  # Redirect to main home page on error
 
 # Remove Designer View
 def remove_designer(request, designer_id):
@@ -1677,42 +1685,40 @@ def payment_success_page(request):
         messages.error(request, f'Error fetching orders: {str(e)}')
         return redirect('cart')
 
+@login_required
 def worker_register(request):
     if request.method == 'POST':
+        # Get form data
+        full_name = request.POST.get('full_name')
+        email = request.POST.get('email')
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        phone = request.POST.get('phone')
+        specialization = request.POST.get('specialization')
+        
         try:
-            # Create User instance
-            user = User.objects.create_user(
-                username=request.POST['username'],
-                password=request.POST['password'],
-                email=request.POST['email'],
-                first_name=request.POST['full_name']
-            )
-
-            # Create Worker instance
-            skills = request.POST.getlist('skills[]')  # Get skills as list
+            # Create user
+            user = User.objects.create_user(username=username, email=email, password=password)
+            
+            # Create worker profile without a designer
             worker = Worker.objects.create(
                 user=user,
-                full_name=request.POST['full_name'],
-                phone=request.POST['phone'],
-                email=request.POST['email'],
-                experience_years=request.POST['experience'],
-                skills=skills,
-                hourly_rate=request.POST['hourly_rate'],
-                specialization=request.POST['specialization']
+                full_name=full_name,
+                email=email,
+                phone=phone,
+                specialization=specialization,
+                # No designer assigned initially
             )
-
-            # Handle profile picture
-            if 'profile_picture' in request.FILES:
-                worker.profile_picture = request.FILES['profile_picture']
-                worker.save()
-
-            messages.success(request, 'Registration successful! Please login.')
+            
+            messages.success(request, 'Registration successful! You can now log in.')
             return redirect('worker_login')
-
+        
         except Exception as e:
+            # Delete the user if worker creation fails
+            if 'user' in locals():
+                user.delete()
             messages.error(request, f'Registration failed: {str(e)}')
-            return redirect('worker_register')
-
+    
     return render(request, 'worker_register.html')
 
 def worker_login(request):
@@ -1735,25 +1741,45 @@ def worker_login(request):
 def worker_dashboard(request):
     try:
         worker = request.user.worker
-        assignments = WorkerAssignment.objects.filter(worker=worker).select_related('project', 'project__designer')
+        assignments = WorkerAssignment.objects.filter(worker=worker)
+        
+        # Get construction companies instead of designers
+        construction_companies = ConstructionCompany.objects.all()
         
         context = {
             'worker': worker,
             'assignments': assignments,
             'completed_projects': assignments.filter(status='completed').count(),
             'pending_projects': assignments.filter(status='pending').count(),
-            'total_earnings': sum(a.project.budget for a in assignments.filter(status='completed')),
-            'current_month_earnings': sum(
-                a.project.budget for a in assignments.filter(
-                    status='completed',
-                    completion_date__month=timezone.now().month
-                )
-            ),
+            'total_earnings': sum(a.project.budget for a in assignments.filter(status='completed')) if assignments.exists() else 0,
+            'construction_companies': construction_companies,
         }
+        
         return render(request, 'worker_dashboard.html', context)
-    except Worker.DoesNotExist:
-        messages.error(request, 'Worker profile not found')
+        
+    except Exception as e:
+        messages.error(request, f'Error loading dashboard: {str(e)}')
         return redirect('worker_login')
+
+@login_required
+def apply_to_company(request, designer_id):
+    if request.method == 'POST':
+        try:
+            designer = Designer.objects.get(id=designer_id)
+            worker = request.user.worker
+            
+            # Create a team request
+            TeamRequest.objects.create(
+                worker=worker,
+                designer=designer,
+                status='pending'
+            )
+            
+            messages.success(request, f'Application sent to {designer.full_name}')
+        except Exception as e:
+            messages.error(request, f'Error sending application: {str(e)}')
+    
+    return redirect('worker_dashboard')
 
 @login_required
 def meet_workers(request):
@@ -1963,27 +1989,10 @@ def admin_users(request):
                 'role': 'Designer',
                 'is_active': True,
                 'date_joined': timezone.now(),
-                'profile_picture': designer.profile_picture.url if hasattr(designer, 'profile_picture') and designer.profile_picture else None
+                'profile_picture': designer.profile_picture if designer.profile_picture else None
             })
         except Exception as e:
             print(f"Error processing designer {designer.id}: {str(e)}")
-            continue
-    
-    # Get workers
-    workers = Worker.objects.all()
-    for worker in workers:
-        try:
-            users.append({
-                'full_name': worker.full_name,
-                'username': worker.username,
-                'email': worker.email,
-                'role': 'Worker',
-                'is_active': True,
-                'date_joined': timezone.now(),
-                'profile_picture': worker.profile_picture.url if hasattr(worker, 'profile_picture') and worker.profile_picture else None
-            })
-        except Exception as e:
-            print(f"Error processing worker {worker.id}: {str(e)}")
             continue
     
     context = {
@@ -2054,3 +2063,405 @@ def view_designers(request):
         print(f"Error in view_designers: {str(e)}")
         messages.error(request, f'Error loading designers: {str(e)}')
         return redirect('home')
+
+@login_required
+def find_workers(request):
+    try:
+        workers = Worker.objects.all()  # Fetch all workers
+        specializations = Worker.objects.values_list('specialization', flat=True).distinct()  # Get unique specializations
+        
+        context = {
+            'workers': workers,
+            'specializations': specializations,
+        }
+        return render(request, 'find_workers.html', context)  # Render the find_workers template
+    except Exception as e:
+        messages.error(request, f'Error loading workers: {str(e)}')
+        return redirect('dhome')  # Redirect to the designer home page on error
+
+@login_required
+def send_worker_request(request, worker_id):
+    if request.method == 'POST':
+        try:
+            worker = Worker.objects.get(id=worker_id)
+            designer = request.user.designer
+            
+            # Check if request already exists
+            if not TeamRequest.objects.filter(
+                worker=worker,
+                designer=designer,
+                status='pending'
+            ).exists():
+                # Create new request
+                team_request = TeamRequest.objects.create(
+                    worker=worker,
+                    designer=designer,
+                    status='pending'
+                )
+                
+                # Create notification for worker
+                Notification.objects.create(
+                    worker=worker,
+                    message=f"Designer {designer.full_name} wants to add you to their team",
+                    type='team_request',
+                    related_id=team_request.id
+                )
+                
+                return JsonResponse({'success': True})
+            
+            return JsonResponse({'success': False, 'message': 'Request already sent'})
+        except Worker.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Worker not found'}, status=404)
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+    
+    return JsonResponse({'success': False, 'message': 'Invalid request method'}, status=405)
+
+@login_required
+def view_team_requests(request):
+    try:
+        # Get all team requests for the logged-in designer
+        team_requests = TeamRequest.objects.filter(designer=request.user.designer).select_related('worker')
+        
+        # Organize requests by status
+        pending_requests = team_requests.filter(status='pending')
+        accepted_requests = team_requests.filter(status='accepted')
+        declined_requests = team_requests.filter(status='declined')
+        
+        context = {
+            'pending_requests': pending_requests,
+            'accepted_requests': accepted_requests,
+            'declined_requests': declined_requests
+        }
+        
+        return render(request, 'team_requests.html', context)  # Render the team_requests template
+    except Exception as e:
+        messages.error(request, f'Error loading team requests: {str(e)}')
+        return redirect('dhome')  # Redirect to the designer home page on error
+
+@login_required
+def accept_request(request, request_id):
+    if request.method == 'POST':
+        try:
+            team_request = TeamRequest.objects.get(id=request_id, worker=request.user.worker)
+            team_request.status = 'accepted'
+            team_request.save()
+            
+            # Create notification for designer
+            Notification.objects.create(
+                designer=team_request.designer,
+                message=f"{team_request.worker.full_name} has accepted your team request",
+                type='request_accepted'
+            )
+            
+            return JsonResponse({'success': True})
+        except TeamRequest.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Request not found or you do not have permission'}, status=404)
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+    
+    return JsonResponse({'success': False, 'message': 'Invalid request method'}, status=405)
+
+@login_required
+def decline_request(request, request_id):
+    if request.method == 'POST':
+        try:
+            # Get the team request for the logged-in worker
+            team_request = TeamRequest.objects.get(id=request_id, worker=request.user.worker)
+            team_request.status = 'declined'
+            team_request.save()
+            
+            # Create notification for designer
+            Notification.objects.create(
+                designer=team_request.designer,
+                message=f"{team_request.worker.full_name} has declined your team request",
+                type='request_declined'
+            )
+            
+            return JsonResponse({'success': True})
+        except TeamRequest.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Request not found or you do not have permission'}, status=404)
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+    
+    return JsonResponse({'success': False, 'message': 'Invalid request method'}, status=405)
+
+@login_required
+def designer_dashboard(request):
+    try:
+        # Check if user has a designer profile
+        if not hasattr(request.user, 'designer'):
+            messages.error(request, "You don't have a designer profile. Please register as a designer first.")
+            return redirect('dregister')
+            
+        designer = request.user.designer
+        designs = Design.objects.filter(designer=designer)
+        
+        # Add more context data for the dashboard
+        total_designs = designs.count()
+        
+        # You can add more statistics if your models support them
+        # For example, if Design model has a views field:
+        # total_views = designs.aggregate(Sum('views'))['views__sum'] or 0
+        
+        context = {
+            'designer': designer,
+            'designs': designs,
+            'total_designs': total_designs,
+            # Add more context variables as needed
+        }
+        
+        # Print debug information
+        print(f"Designer Dashboard - Designer: {designer.full_name}, Designs: {total_designs}")
+        
+        return render(request, 'designer_dashboard.html', context)
+    except Exception as e:
+        print(f"Error in designer_dashboard: {str(e)}")
+        messages.error(request, f"Error loading dashboard: {str(e)}")
+        return redirect('dhome')
+
+@login_required
+def edit_profile(request):
+    designer = request.user.designer
+    if request.method == 'POST':
+        # Handle form submission
+        designer.full_name = request.POST.get('full_name')
+        designer.phone = request.POST.get('phone')
+        if 'profile_picture' in request.FILES:
+            designer.profile_picture = request.FILES['profile_picture']
+        designer.save()
+        messages.success(request, 'Profile updated successfully!')
+        return redirect('dhome')
+    
+    context = {
+        'designer': designer
+    }
+    return render(request, 'edit_profile.html', context)
+
+@login_required
+def apply_for_company(request, designer_id):
+    try:
+        designer = Designer.objects.get(id=designer_id)
+        context = {
+            'designer': designer
+        }
+        print(f"Rendering apply_for_company.html for designer: {designer.full_name}")  # Debug print
+        return render(request, 'apply_for_company.html', context)
+    except Designer.DoesNotExist:
+        messages.error(request, "Designer not found.")
+        return redirect('worker_dashboard')
+
+@login_required
+def submit_company_application(request, designer_id):
+    if request.method == 'POST':
+        try:
+            designer = Designer.objects.get(id=designer_id)
+            worker = request.user.worker
+
+            # Update worker profile with new information
+            worker.full_name = request.POST.get('full_name')
+            worker.email = request.POST.get('email')
+            worker.phone = request.POST.get('phone')
+            worker.specialization = request.POST.get('profession')
+            worker.experience_years = int(request.POST.get('experience'))
+            worker.hourly_rate = float(request.POST.get('salary'))
+            
+            if 'resume' in request.FILES:
+                worker.resume = request.FILES['resume']
+            
+            worker.save()
+
+            # Create team request
+            TeamRequest.objects.create(
+                worker=worker,
+                designer=designer,
+                status='pending'
+            )
+
+            messages.success(request, f"Application submitted successfully to {designer.full_name}'s company!")
+            return redirect('worker_dashboard')
+
+        except Exception as e:
+            messages.error(request, f"Error submitting application: {str(e)}")
+            return redirect('apply_for_company', designer_id=designer_id)
+
+    return redirect('worker_dashboard')
+
+@login_required
+def company_register(request):
+    if request.method == 'POST':
+        try:
+            # Get passwords and verify they match
+            password = request.POST.get('password')
+            confirm_password = request.POST.get('confirm_password')
+            
+            if not password:
+                messages.error(request, 'Password is required!')
+                return render(request, 'company_register.html')
+                
+            if password != confirm_password:
+                messages.error(request, 'Passwords do not match!')
+                return render(request, 'company_register.html')
+            
+            # Validate password strength
+            if len(password) < 8:
+                messages.error(request, 'Password must be at least 8 characters long!')
+                return render(request, 'company_register.html')
+            
+            # Create user account with email as username
+            email = request.POST.get('email')
+            if User.objects.filter(email=email).exists():
+                messages.error(request, 'Email already registered!')
+                return render(request, 'company_register.html')
+                
+            user = User.objects.create_user(
+                username=email,
+                email=email,
+                password=password
+            )
+            
+            # Create construction company profile
+            company = ConstructionCompany.objects.create(
+                user=user,
+                company_name=request.POST.get('company_name'),
+                email=email,
+                phone=request.POST.get('phone'),
+                address=request.POST.get('address'),
+                registration_number=request.POST.get('registration_number'),
+                established_year=request.POST.get('established_year'),
+                company_size=request.POST.get('company_size'),
+                description=request.POST.get('description')
+            )
+            
+            if 'logo' in request.FILES:
+                company.logo = request.FILES['logo']
+                company.save()
+            
+            messages.success(request, 'Company registered successfully! Please login.')
+            return redirect('company_login')
+            
+        except Exception as e:
+            if 'user' in locals():
+                user.delete()
+            messages.error(request, f'Registration failed: {str(e)}')
+            
+    return render(request, 'company_register.html')
+
+def company_login(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        
+        try:
+            # Since we used email as username during registration
+            user = authenticate(username=email, password=password)
+            
+            if user is not None and hasattr(user, 'constructioncompany'):
+                login(request, user)
+                messages.success(request, f'Welcome back, {user.constructioncompany.company_name}!')
+                return redirect('company_dashboard')
+            else:
+                messages.error(request, 'Invalid email or password')
+        except Exception as e:
+            messages.error(request, 'Invalid email or password')
+        
+    return render(request, 'company_login.html')
+
+@login_required
+def company_change_password(request):
+    if request.method == 'POST':
+        old_password = request.POST.get('old_password')
+        new_password = request.POST.get('new_password')
+        confirm_password = request.POST.get('confirm_password')
+        
+        if not request.user.check_password(old_password):
+            messages.error(request, 'Current password is incorrect!')
+            return redirect('company_change_password')
+            
+        if new_password != confirm_password:
+            messages.error(request, 'New passwords do not match!')
+            return redirect('company_change_password')
+            
+        if len(new_password) < 8:
+            messages.error(request, 'Password must be at least 8 characters long!')
+            return redirect('company_change_password')
+            
+        # Change password
+        request.user.set_password(new_password)
+        request.user.save()
+        
+        # Update session auth hash to prevent logout
+        update_session_auth_hash(request, request.user)
+        
+        messages.success(request, 'Password changed successfully!')
+        return redirect('company_dashboard')
+        
+    return render(request, 'company_change_password.html')
+
+@login_required
+def company_dashboard(request):
+    try:
+        company = request.user.constructioncompany
+        # Get workers who have applied to this company
+        worker_applications = TeamRequest.objects.filter(company=company).select_related('worker')
+        
+        context = {
+            'company': company,
+            'worker_applications': worker_applications,
+            'total_applications': worker_applications.count(),
+            'pending_applications': worker_applications.filter(status='pending').count(),
+            'accepted_applications': worker_applications.filter(status='accepted').count(),
+        }
+        return render(request, 'company_dashboard.html', context)
+    except Exception as e:
+        messages.error(request, f'Error loading dashboard: {str(e)}')
+        return redirect('company_login')
+
+@login_required
+def apply_to_company(request, company_id):
+    try:
+        company = ConstructionCompany.objects.get(id=company_id)
+        worker = request.user.worker
+
+        # Check if already applied
+        if TeamRequest.objects.filter(worker=worker, company=company).exists():
+            messages.warning(request, 'You have already applied to this company')
+            return redirect('worker_dashboard')
+
+        # Create new application
+        TeamRequest.objects.create(
+            worker=worker,
+            company=company,
+            status='pending'
+        )
+        
+        messages.success(request, f'Successfully applied to {company.company_name}')
+        return redirect('worker_dashboard')
+
+    except ConstructionCompany.DoesNotExist:
+        messages.error(request, 'Company not found')
+    except Exception as e:
+        messages.error(request, f'Error applying to company: {str(e)}')
+    
+    return redirect('worker_dashboard')
+
+@login_required
+def handle_application(request, application_id, action):
+    try:
+        application = TeamRequest.objects.get(id=application_id, company=request.user.constructioncompany)
+        
+        if action == 'accept':
+            application.status = 'accepted'
+            messages.success(request, f'Application from {application.worker.full_name} accepted')
+        elif action == 'reject':
+            application.status = 'rejected'
+            messages.success(request, f'Application from {application.worker.full_name} rejected')
+            
+        application.save()
+        
+    except TeamRequest.DoesNotExist:
+        messages.error(request, 'Application not found')
+    except Exception as e:
+        messages.error(request, f'Error handling application: {str(e)}')
+    
+    return redirect('company_dashboard')

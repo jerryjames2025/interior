@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<!-- Add this debug message at the top -->
+{% if messages %}
+    <div class="container mt-3">
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white text-center">
+                    <h3 class="mb-0">
+                        <i class="fas fa-building me-2"></i>
+                        Apply for Company
+                    </h3>
+                </div>
+                <div class="card-body p-4">
+                    <form id="applyForm" method="POST" action="{% url 'submit_company_application' designer.id %}" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <!-- Personal Information -->
+                        <div class="section-title mb-4">
+                            <h4><i class="fas fa-user me-2"></i>Personal Information</h4>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Full Name</label>
+                                <input type="text" name="full_name" class="form-control" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Email</label>
+                                <input type="email" name="email" class="form-control" required>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Age</label>
+                                <input type="number" name="age" class="form-control" min="18" max="65" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Phone Number</label>
+                                <input type="tel" name="phone" class="form-control" required>
+                            </div>
+                        </div>
+
+                        <!-- Professional Information -->
+                        <div class="section-title mb-4 mt-4">
+                            <h4><i class="fas fa-briefcase me-2"></i>Professional Details</h4>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Profession</label>
+                                <select name="profession" class="form-select" required>
+                                    <option value="">Select Profession</option>
+                                    <option value="carpentry">Carpentry</option>
+                                    <option value="electrical">Electrical</option>
+                                    <option value="plumbing">Plumbing</option>
+                                    <option value="painting">Painting</option>
+                                    <option value="flooring">Flooring</option>
+                                    <option value="general">General Construction</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Years of Experience</label>
+                                <input type="number" name="experience" id="experience" class="form-control" min="0" required onchange="updateSalary()">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Previously Worked At</label>
+                            <textarea name="previous_work" class="form-control" rows="3" placeholder="List your previous work experiences..."></textarea>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Expected Salary (per hour)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">₹</span>
+                                    <input type="number" name="salary" id="salary" class="form-control" readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Upload Resume (Optional)</label>
+                                <input type="file" name="resume" class="form-control" accept=".pdf,.doc,.docx">
+                            </div>
+                        </div>
+
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg px-5">
+                                <i class="fas fa-paper-plane me-2"></i>Submit Application
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    border: none;
+    border-radius: 15px;
+}
+
+.card-header {
+    border-radius: 15px 15px 0 0 !important;
+    background: linear-gradient(135deg, #2c3e50, #3498db);
+}
+
+.section-title {
+    color: #2c3e50;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+}
+
+.form-control, .form-select {
+    border-radius: 8px;
+    padding: 10px 15px;
+    border: 1px solid #ced4da;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #2c3e50, #3498db);
+    border: none;
+    border-radius: 8px;
+    padding: 12px 25px;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+}
+</style>
+
+<script>
+function updateSalary() {
+    const experience = parseInt(document.getElementById('experience').value);
+    let salary = 0;
+    
+    if (experience >= 5) {
+        salary = 300;
+    } else if (experience >= 3) {
+        salary = 200;
+    } else if (experience >= 1) {
+        salary = 100;
+    }
+    
+    document.getElementById('salary').value = salary;
+}
+</script>
+{% endblock %} 

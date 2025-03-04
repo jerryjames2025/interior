@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>Find Workers</h2>
+            <p class="text-muted">Browse and connect with skilled workers for your projects</p>
+        </div>
+    </div>
+
+    <!-- Search and Filter Section -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="search-box">
+                <input type="text" id="searchWorkers" class="form-control" placeholder="Search workers by name or skills...">
+            </div>
+        </div>
+        <div class="col-md-4">
+            <select class="form-select" id="filterSpecialization">
+                <option value="">All Specializations</option>
+                {% for specialization in specializations %}
+                    <option value="{{ specialization }}">{{ specialization }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <!-- Workers Grid -->
+    <div class="row" id="workersGrid">
+        {% for worker in workers %}
+        <div class="col-md-4 mb-4">
+            <div class="worker-card">
+                <div class="worker-header">
+                    {% if worker.profile_picture %}
+                        <img src="{{ worker.profile_picture.url }}" alt="{{ worker.full_name }}" class="worker-img">
+                    {% else %}
+                        <div class="worker-img-placeholder">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    {% endif %}
+                    <h5>{{ worker.full_name }}</h5>
+                    <p class="specialization">{{ worker.specialization }}</p>
+                </div>
+                <div class="worker-body">
+                    <div class="worker-stats">
+                        <div class="stat">
+                            <i class="fas fa-star"></i>
+                            <span>{{ worker.rating|default:"New" }}</span>
+                        </div>
+                        <div class="stat">
+                            <i class="fas fa-briefcase"></i>
+                            <span>{{ worker.experience_years }} Years</span>
+                        </div>
+                    </div>
+                    <div class="skills-tags">
+                        {% for skill in worker.skills.split %}
+                            <span class="skill-tag">{{ skill }}</span>
+                        {% endfor %}
+                    </div>
+                    <button class="btn btn-primary send-request-btn" 
+                            data-worker-id="{{ worker.id }}"
+                            {% if worker in requested_workers %}disabled{% endif %}>
+                        {% if worker in requested_workers %}
+                            Request Sent
+                        {% else %}
+                            Send Request
+                        {% endif %}
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+.worker-card {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+    overflow: hidden;
+    transition: transform 0.3s ease;
+}
+
+.worker-card:hover {
+    transform: translateY(-5px);
+}
+
+.worker-header {
+    background: linear-gradient(135deg, #6c5ce7, #a363d9);
+    color: white;
+    padding: 20px;
+    text-align: center;
+}
+
+.worker-img, .worker-img-placeholder {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin: 0 auto 15px;
+    object-fit: cover;
+    background: rgba(255,255,255,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.worker-body {
+    padding: 20px;
+}
+
+.worker-stats {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 15px;
+}
+
+.skill-tag {
+    background: #f0f2f5;
+    padding: 4px 12px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    margin: 2px;
+    display: inline-block;
+}
+
+.send-request-btn {
+    width: 100%;
+    margin-top: 15px;
+}
+
+.send-request-btn:disabled {
+    background: #6c757d;
+    border-color: #6c757d;
+}
+</style>
+
+<script>
+document.querySelectorAll('.send-request-btn').forEach(button => {
+    button.addEventListener('click', function() {
+        const workerId = this.dataset.workerId;
+        const btn = this;
+        
+        fetch(`/designer/send-request/${workerId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                btn.textContent = 'Request Sent';
+                btn.disabled = true;
+            }
+        });
+    });
+});
+
+// Search and filter functionality
+document.getElementById('searchWorkers').addEventListener('input', filterWorkers);
+document.getElementById('filterSpecialization').addEventListener('change', filterWorkers);
+
+function filterWorkers() {
+    const searchTerm = document.getElementById('searchWorkers').value.toLowerCase();
+    const specialization = document.getElementById('filterSpecialization').value.toLowerCase();
+    
+    document.querySelectorAll('.worker-card').forEach(card => {
+        const name = card.querySelector('h5').textContent.toLowerCase();
+        const workerSpecialization = card.querySelector('.specialization').textContent.toLowerCase();
+        const skills = Array.from(card.querySelectorAll('.skill-tag')).map(tag => tag.textContent.toLowerCase());
+        
+        const matchesSearch = name.includes(searchTerm) || skills.some(skill => skill.includes(searchTerm));
+        const matchesSpecialization = !specialization || workerSpecialization === specialization;
+        
+        card.closest('.col-md-4').style.display = (matchesSearch && matchesSpecialization) ? 'block' : 'none';
+    });
+}
+</script>
+{% endblock %} 
