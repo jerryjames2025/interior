@@ -636,15 +636,11 @@
         <a href="{% url '3d_modeling' %}" class="products-link">3D View</a>
       </li>
       <li>
-        <a href="view-designs">Designs <i class=""></i></a>
-        
-          
-        </div>
+        <a href="{% url 'view_designs' %}">Designs</a>
       </li>
       <li>
         <a href="{% url 'products' %}" class="products-link">Products</a>
       </li>
-      <li><a href="{% url 'designers' %}">Designers</a></li>
     </ul>
     <div class="search-container">
       <input type="text" id="searchInput" placeholder="Search designs...">

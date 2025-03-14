@@ -36,25 +36,17 @@ class Seller(models.Model):
     name = models.CharField(max_length=255)
     phone = models.CharField(max_length=15)
     company = models.CharField(max_length=255)
-    password = models.CharField(max_length=255)  # Changed from max_digits to max_length
+    password = models.CharField(max_length=128)  # For storing hashed password
     is_active = models.BooleanField(default=True)
-    is_admin = models.BooleanField(default=False)
-
-    USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ['email']
 
     def __str__(self):
         return self.username
 
-    @property
-    def is_staff(self):
-        return self.is_admin
+    def check_password(self, raw_password):
+        return check_password(raw_password, self.password)
 
-    def has_perm(self, perm, obj=None):
-        return True
-
-    def has_module_perms(self, app_label):
-        return True
+    def set_password(self, raw_password):
+        self.password = make_password(raw_password)
 
 class Product(models.Model):
     CATEGORY_CHOICES = [
@@ -99,30 +91,25 @@ from django.contrib.auth.models import User
 
 # Define Designer model first
 class Designer(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    full_name = models.CharField(max_length=100)
-    email = models.EmailField()
+    username = models.CharField(max_length=150, unique=True)
+    password = models.CharField(max_length=128)
+    email = models.EmailField(unique=True)
+    full_name = models.CharField(max_length=255)
     phone = models.CharField(max_length=15)
-    username = models.CharField(max_length=50)
     profile_picture = models.ImageField(upload_to='designer_profiles/', null=True, blank=True)
-    password = models.CharField(max_length=128)  # Will store hashed password
+    created_at = models.DateTimeField(auto_now_add=True, null=True)
     experience_years = models.PositiveIntegerField(default=0)
     specializations = models.CharField(max_length=255, blank=True)
     description = models.TextField(blank=True)
-    
-    def set_password(self, raw_password):
-        self.password = make_password(raw_password)
-        
-    def check_password(self, raw_password):
-        return check_password(raw_password, self.password)
-    
-    def save(self, *args, **kwargs):
-        if not self.id:  # Only hash on creation
-            self.set_password(self.password)
-        super().save(*args, **kwargs)
 
     def __str__(self):
-        return self.full_name
+        return self.username
+
+    def check_password(self, raw_password):
+        return check_password(raw_password, self.password)
+
+    def set_password(self, raw_password):
+        self.password = make_password(raw_password)
 
 # Then define Design model
 class Design(models.Model):
@@ -142,15 +129,18 @@ class Design(models.Model):
     ]
 
     designer = models.ForeignKey(Designer, on_delete=models.CASCADE)
-    design_name = models.CharField(max_length=100)
+    design_name = models.CharField(max_length=255)
     description = models.TextField()
-    category = models.CharField(max_length=50)  # Add category field
-    room_type = models.CharField(max_length=50, choices=ROOM_TYPE_CHOICES)
-    style = models.CharField(max_length=50, choices=STYLE_CHOICES)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     image = models.ImageField(upload_to='designs/')
-    created_at = models.DateTimeField(auto_now_add=True)  # Automatically set the date when created
-    favorited_by = models.ManyToManyField(User, through='Favorite', related_name='favorite_designs_set')
+    category = models.CharField(max_length=100)
+    room_type = models.CharField(max_length=100)
+    style = models.CharField(max_length=100)
+    created_at = models.DateTimeField(auto_now_add=True)
+    views = models.IntegerField(default=0)
+    likes = models.IntegerField(default=0)
+    area_size = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+    favorited_by = models.ManyToManyField(User, related_name='favorite_designs', blank=True)
 
     def __str__(self):
         return self.design_name
@@ -296,116 +286,54 @@ class ProjectImage(models.Model):
     def __str__(self):
         return f"Image for {self.project.name}"
 
-class Worker(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    full_name = models.CharField(max_length=100)
-    phone = models.CharField(max_length=15)
-    email = models.EmailField(unique=True)
-    experience_years = models.IntegerField()
-    skills = models.JSONField()  # Store skills as a list
-    hourly_rate = models.DecimalField(max_digits=10, decimal_places=2)
-    availability = models.BooleanField(default=True)
-    rating = models.DecimalField(max_digits=3, decimal_places=2, default=0.0)
-    completed_projects = models.IntegerField(default=0)
-    profile_picture = models.ImageField(upload_to='worker_profiles/', null=True, blank=True)
-    designer = models.ForeignKey(Designer, on_delete=models.CASCADE, null=True, blank=True)
-    
-    SPECIALIZATION_CHOICES = [
-        ('carpentry', 'Carpentry'),
-        ('electrical', 'Electrical'),
-        ('plumbing', 'Plumbing'),
-        ('painting', 'Painting'),
-        ('flooring', 'Flooring'),
-        ('general', 'General Construction'),
-    ]
-    specialization = models.CharField(max_length=20, choices=SPECIALIZATION_CHOICES)
-    
-    def __str__(self):
-        return self.full_name
+# class Notification(models.Model):
+#     worker = models.ForeignKey(Worker, on_delete=models.CASCADE, null=True, blank=True)
+#     designer = models.ForeignKey(Designer, on_delete=models.CASCADE, null=True, blank=True)
+#     message = models.TextField()
+#     type = models.CharField(max_length=50)  # team_invitation, team_acceptance, team_decline
+#     related_id = models.IntegerField(null=True, blank=True)
+#     created_at = models.DateTimeField(auto_now_add=True)
+#     is_read = models.BooleanField(default=False)
 
-class WorkerAssignment(models.Model):
-    worker = models.ForeignKey(Worker, on_delete=models.CASCADE)
-    designer = models.ForeignKey(Designer, on_delete=models.CASCADE)
-    project = models.ForeignKey(Project, on_delete=models.CASCADE)
-    assigned_date = models.DateTimeField(auto_now_add=True)
-    completion_date = models.DateTimeField(null=True, blank=True)
-    status = models.CharField(max_length=20, default='pending', choices=[
-        ('pending', 'Pending'),
-        ('in_progress', 'In Progress'),
-        ('completed', 'Completed'),
-        ('cancelled', 'Cancelled')
-    ])
-    payment_status = models.CharField(max_length=20, default='pending', choices=[
-        ('pending', 'Pending'),
-        ('paid', 'Paid'),
-        ('cancelled', 'Cancelled')
-    ])
-    
-    def __str__(self):
-        return f"{self.worker.full_name} - {self.project.name}"
-
-class Team(models.Model):
-    project = models.ForeignKey(Design, on_delete=models.CASCADE)
-    designer = models.ForeignKey(Designer, on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
-    status = models.CharField(max_length=20, default='active')
-
-    def __str__(self):
-        return f"Team for {self.project.name}"
-
-class TeamMember(models.Model):
-    team = models.ForeignKey(Team, on_delete=models.CASCADE)
-    worker = models.ForeignKey(Worker, on_delete=models.CASCADE)
-    status = models.CharField(max_length=20, default='pending')  # pending, accepted, declined
-    joined_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.worker.full_name} - {self.team.project.name}"
-
-class Notification(models.Model):
-    worker = models.ForeignKey(Worker, on_delete=models.CASCADE, null=True, blank=True)
-    designer = models.ForeignKey(Designer, on_delete=models.CASCADE, null=True, blank=True)
-    message = models.TextField()
-    type = models.CharField(max_length=50)  # team_invitation, team_acceptance, team_decline
-    related_id = models.IntegerField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    is_read = models.BooleanField(default=False)
-
-    def __str__(self):
-        return f"Notification for {self.worker or self.designer}"
+#     def __str__(self):
+#         return f"Notification for {self.worker or self.designer}"
 
 # First, define the ConstructionCompany model
 class ConstructionCompany(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    company_name = models.CharField(max_length=200)
+    company_name = models.CharField(max_length=100)
+    registration_number = models.CharField(max_length=50, unique=True)
     email = models.EmailField(unique=True)
     phone = models.CharField(max_length=15)
-    address = models.TextField()
-    registration_number = models.CharField(max_length=50, unique=True)
-    established_year = models.PositiveIntegerField()
-    company_size = models.CharField(max_length=50, choices=[
-        ('small', '1-50 employees'),
-        ('medium', '51-200 employees'),
-        ('large', '201+ employees')
+    company_size = models.CharField(max_length=20, choices=[
+        ('small', 'Small'),
+        ('medium', 'Medium'),
+        ('large', 'Large')
     ])
-    description = models.TextField()
     logo = models.ImageField(upload_to='company_logos/', null=True, blank=True)
 
     def __str__(self):
         return self.company_name
 
-# Then define the TeamRequest model
-class TeamRequest(models.Model):
-    worker = models.ForeignKey(Worker, on_delete=models.CASCADE)
-    designer = models.ForeignKey(Designer, on_delete=models.CASCADE)
-    company = models.ForeignKey(ConstructionCompany, on_delete=models.CASCADE, null=True, blank=True)
-    status = models.CharField(max_length=20, default='pending')
+class Company(models.Model):
+    name = models.CharField(max_length=200)
+    email = models.EmailField()
+    phone = models.CharField(max_length=20)
+    address = models.TextField()
+    established_year = models.IntegerField()
+    description = models.TextField()
+    logo = models.ImageField(upload_to='company_logos/', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
-        unique_together = [['worker', 'designer'], ['worker', 'company']]
+    def __str__(self):
+        return self.name
+
+class Worker(models.Model):
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='workers')
+    name = models.CharField(max_length=200)
+    skill = models.CharField(max_length=100)
+    experience_years = models.IntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        if self.company:
-            return f"{self.worker.full_name} -> {self.company.company_name}"
-        return f"{self.worker.full_name} -> {self.designer.full_name}"
+        return f"{self.name} - {self.skill}"

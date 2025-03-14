@@ -262,7 +262,7 @@
             </ul>
             {% endif %}
 
-            <form method="POST" action="">
+            <form method="POST" action="{% url 'dlogin' %}">
                 {% csrf_token %}
                 <div class="form-group">
                     <i class="fas fa-user"></i>

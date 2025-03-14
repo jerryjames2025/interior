@@ -449,7 +449,7 @@
                 </div>
             </li>
             <li>
-                <a href="{% url 'meet_workers' %}">Meet Workers</a>
+                {% comment %} <a href="{% url 'meet_workers' %}">Meet Workers</a> {% endcomment %}
             </li>
         </ul>
     </div>
@@ -731,8 +731,8 @@
         <!-- Meet Workers Banner -->
         <div class="meet-workers-banner">
             <h3 class="mb-3">Looking for Professional Help?</h3>
-            <p class="mb-4">Connect with our skilled workers to bring your design dreams to life</p>
-            <a href="{% url 'meet_workers' %}" class="btn btn-light btn-lg">Meet Our Workers</a>
+            <p class="mb-4">Connect with our skilled designers to bring your design dreams to life</p>
+            {% comment %} <a href="{% url 'meet_workers' %}" class="btn btn-light btn-lg">Meet Our Workers</a> {% endcomment %}
         </div>
     </div>
 </div>

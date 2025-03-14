@@ -36,6 +36,48 @@
         .btn {
             border-radius: 0.25rem;
         }
+        .company-card {
+            border: 1px solid #eee;
+            border-radius: 10px;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+        .company-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .company-logo {
+            height: 150px;
+            overflow: hidden;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .company-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .company-info {
+            padding: 20px;
+        }
+        .skill-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 5px;
+        }
+        .no-logo {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #e9ecef;
+            color: #6c757d;
+            font-size: 3rem;
+        }
     </style>
 </head>
 <body>
@@ -103,7 +145,7 @@
             </div>
         </div>
 
-        <!-- Actions Card (moved to top) -->
+        <!-- Actions Card -->
         <div class="row">
             <div class="col-md-8 offset-md-2 mb-4">
                 <div class="card shadow">
@@ -112,12 +154,12 @@
                     </div>
                     <div class="card-body py-4">
                         <div class="d-flex justify-content-center gap-4">
-                            <a href="{% url 'find_workers' %}" class="btn btn-primary btn-lg">
+                            {% comment %} <a href="{% url 'find_workers' %}" class="btn btn-primary btn-lg">
                                 <i class="fas fa-search"></i> Find Workers
-                            </a>
-                            <a href="{% url 'view_team_requests' %}" class="btn btn-info btn-lg">
-                                <i class="fas fa-users"></i> View Team Requests
-                            </a>
+                            </a> {% endcomment %}
+                            {% comment %} <a href="{% url 'view_team_requests' %}" class="btn btn-info btn-lg">
+                                <i class="fas fa-users"></i> View Team Requests {% endcomment %}
+                            {% comment %} </a> {% endcomment %}
                         </div>
                     </div>
                 </div>
@@ -179,6 +221,73 @@
                         {% endif %}
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Add this section to your designer dashboard -->
+        <div class="section mt-4">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Available Construction Companies</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for company in companies %}
+                        <div class="col-md-4 mb-4">
+                            <div class="company-card">
+                                <div class="company-logo">
+                                    {% if company.logo %}
+                                        <img src="{{ company.logo.url }}" alt="{{ company.name }}">
+                                    {% else %}
+                                        <div class="no-logo">
+                                            <i class="fas fa-building"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="company-info">
+                                    <h5>{{ company.name }}</h5>
+                                    <p><i class="fas fa-map-marker-alt"></i> {{ company.address }}</p>
+                                    <p><i class="fas fa-phone"></i> {{ company.phone }}</p>
+                                    <div class="worker-skills">
+                                        <small>Available Skills:</small>
+                                        <div class="skill-tags">
+                                            {% for worker in company.workers.all %}
+                                                <span class="badge bg-info">{{ worker.skill }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <button class="btn btn-primary mt-3" onclick="viewCompanyDetails({{ company.id }})">
+                                        View Details
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="col-12">
+                            <p class="text-center">No companies available at the moment.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Replace or remove the likes statistics card -->
+        <div class="stats-cards">
+            <div class="stat-card">
+                <i class="fas fa-paint-brush"></i>
+                <h3>{{ designs.count }}</h3>
+                <p>Total Designs</p>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-eye"></i>
+                <h3>{{ total_views }}</h3>
+                <p>Total Views</p>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-comment"></i>
+                <h3>{{ total_comments }}</h3>
+                <p>Total Comments</p>
             </div>
         </div>
     </div>

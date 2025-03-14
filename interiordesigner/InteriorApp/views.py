@@ -9,8 +9,8 @@ from django.utils.encoding import force_bytes, force_str  # Ensure force_str is 
 from django.conf import settings
 from django.urls import reverse
 from .tokens import account_activation_token
-from django.contrib.auth.hashers import make_password
-from django.core.exceptions import ValidationError
+from django.contrib.auth.hashers import make_password, check_password
+from django.core.exceptions import ValidationError, FieldError
 from django.core.validators import validate_email
 from django.db.utils import IntegrityError
 from django.contrib.auth import logout
@@ -26,7 +26,7 @@ from django.views.decorators.http import require_POST
 from django.db.models import Q
 from django.db.models import Sum, Avg
 import razorpay
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 import json
 import requests.exceptions
 import numpy as np
@@ -45,7 +45,24 @@ razorpay_client = razorpay.Client(
     auth=(settings.RAZORPAY_API_KEY, settings.RAZORPAY_API_SECRET))
 
 def home(request):
-    return render(request, 'home.html')
+    # Get recent designs
+    recent_designs = Design.objects.order_by('-created_at')[:4]
+    
+    # Get recent designers
+    top_designers = Designer.objects.order_by('-id')[:3]
+    
+    # Get latest products
+    latest_products = Product.objects.order_by('-created_at')[:6]
+    
+    context = {
+        'recent_designs': recent_designs,
+        'top_designers': top_designers,
+        'latest_products': latest_products,
+        'user': request.user,
+        'is_designer': hasattr(request.user, 'designer') if request.user.is_authenticated else False,
+        'is_customer': not hasattr(request.user, 'designer') if request.user.is_authenticated else False,
+    }
+    return render(request, 'home.html', context)
 
 def print_hello(request):
     return HttpResponse("Hello")
@@ -204,13 +221,13 @@ def seller_dashboard(request):
 def seller_login_required(view_func):
     @wraps(view_func)
     def _wrapped_view(request, *args, **kwargs):
-        if 'id' not in request.session:
+        if 'seller_id' not in request.session:
             messages.error(request, 'Please login as a seller first')
             return redirect('slogin')
         return view_func(request, *args, **kwargs)
     return _wrapped_view
 
-@login_required
+@seller_login_required
 def add_product(request):
     if request.method == 'POST':
         try:
@@ -219,32 +236,48 @@ def add_product(request):
             price = request.POST.get('price')
             stock = request.POST.get('stock')
             image = request.FILES.get('image')
-            seller_id = request.session['id']
+            category = request.POST.get('category')
+            style = request.POST.get('style')
+            
+            # Get seller from session using seller_id instead of id
+            seller_id = request.session.get('seller_id')
+            if not seller_id:
+                raise ValueError("Please login as a seller")
+                
             seller = Seller.objects.get(id=seller_id)
 
-            if product_name and price and stock:  # Simple validation
-                product = Product(
-                    product_name=product_name,
-                    description=description,
-                    price=price,
-                    stock=stock,
-                    image=image,
-                    seller=seller
-                )
-                product.save()
-                messages.success(request, 'Product added successfully!')
-                
-                # Redirect based on category
-                category_redirects = {
-                    'furniture': 'furniture',
-                    'lighting': 'lighting',
-                    'decor': 'decor',
-                    'carpets': 'carpets',
-                    'wallpaper': 'wallpaper',
-                    'plants': 'plants',
-                    'storage': 'storage'
-                }
-                return redirect(category_redirects.get(product.category, 'products'))
+            if not all([product_name, price, stock, style]):
+                raise ValueError("All required fields must be filled")
+
+            product = Product(
+                seller=seller,
+                product_name=product_name,
+                description=description,
+                price=price,
+                stock=stock,
+                image=image,
+                category=category,
+                style=style
+            )
+            product.save()
+            messages.success(request, 'Product added successfully!')
+            
+            # Redirect based on category
+            category_redirects = {
+                'Furniture': 'furniture',
+                'Lighting': 'lighting_bulbs',
+                'Decor': 'decor_items',
+                'Carpets': 'carpets_and_rugs',
+                'Curtains': 'curtains_and_drapes',
+                'Wallpaper': 'wallpapers',
+                'Plants': 'indoor_plants',
+                'Storage': 'storage_solutions'
+            }
+            return redirect(category_redirects.get(product.category, 'products'))
+            
+        except ValueError as e:
+            messages.error(request, str(e))
+            return redirect('add_product')
         except Exception as e:
             messages.error(request, f'Error adding product: {str(e)}')
             return redirect('add_product')
@@ -253,7 +286,7 @@ def add_product(request):
 
 # Edit an existing product (without form)
 def edit_product(request, product_id):
-    seller_id = request.session['id']
+    seller_id = request.session['seller_id']
     seller = Seller.objects.get(id = seller_id)
     product = get_object_or_404(Product, id=product_id, seller=seller)
     
@@ -290,86 +323,55 @@ def delete_product(request, product_id):
     
     return render(request, 'delete_product.html', {'product': product})
 
-def seller_login(request):
-    if request.method == 'POST':
-        username = request.POST['username']
-        password = request.POST['password']
-
-        try:
-            seller = Seller.objects.get(username=username, password=password)
-        except Seller.DoesNotExist:
-            messages.error(request, 'Invalid username or password')
-            return redirect('slogin')
-
-        if seller is not None:
-            # Ensure you're storing the correct seller ID in the session
-            request.session['seller'] = seller.username  # Store seller's username
-            request.session['id'] = seller.id  # Store seller's ID (which should be an integer)
-            return redirect('shome')
-        else:
-            messages.error(request, 'Invalid username or password.')
-
-    return render(request, 'slogin.html')
-
-def shome(request):
-    seller_id = request.session.get('id')
-    print(seller_id)
-    if seller_id:
-        try:
-            # Ensure you are passing an integer ID to this query
-            seller = Seller.objects.get(id=seller_id)
-            products = Product.objects.filter(seller=seller)
-            print(seller_id)
-        except Seller.DoesNotExist:
-            print("ii")
-            messages.error(request, 'Seller not found.')
-            return redirect('slogin')
-    else:
-        print("jj")
-        messages.error(request, 'You need to login first.')
-        return redirect('slogin')
-    print(products)
-    print("")
-    return render(request, 'shome.html', {'products': products})
-
-
-
 def sregister(request):
     if request.method == 'POST':
-        name = request.POST.get('name')
         username = request.POST.get('username')
         email = request.POST.get('email')
-        phone = request.POST.get('phone')
-        company = request.POST.get('company')
-        password = request.POST.get('password')
-
-        # Check if the username or email already exists
+        
+        # Check if username or email exists in Seller table only
         if Seller.objects.filter(username=username).exists():
             messages.error(request, 'Username is already taken.')
-            return redirect('sregister')  # Redirect back to the registration form
+            return redirect('sregister')
 
         if Seller.objects.filter(email=email).exists():
             messages.error(request, 'Email is already registered.')
             return redirect('sregister')
 
-        # Create a new seller instance
+        # Create seller without User instance
         seller = Seller.objects.create(
-            name=name,
+            name=request.POST.get('name'),
             username=username,
             email=email,
-            phone=phone,
-            company=company,
-            password=password  # Storing password as plain text (Note: This is not recommended in production)
+            phone=request.POST.get('phone'),
+            company=request.POST.get('company'),
+            password=make_password(request.POST.get('password'))  # Hash the password
         )
 
-        # Optionally, add a success message
         messages.success(request, 'Your account has been created successfully!')
+        return redirect('slogin')
 
-        # Redirect to another page, like login or dashboard
-        return redirect('slogin')  # Update this with your actual login URL name
-
-    # If it's a GET request, just render the registration form
     return render(request, 'sregister.html')
+
+def seller_login(request):
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        
+        try:
+            seller = Seller.objects.get(username=username)
+            if seller.check_password(password):
+                # Store seller info in session
+                request.session['seller_id'] = seller.id
+                request.session['role'] = 'seller'
+                messages.success(request, 'Login successful!')
+                return redirect('shome')
+            else:
+                messages.error(request, 'Invalid password')
+        except Seller.DoesNotExist:
+            messages.error(request, 'Invalid username')
+        
+        return redirect('slogin')
+    return render(request, 'slogin.html')
 
 designs = [
     {
@@ -394,39 +396,32 @@ def dportfolio_view(request):
 def dregister(request):
     if request.method == 'POST':
         try:
-            # First create the User instance
-            user = User.objects.create_user(
-                username=request.POST['username'],
-                password=request.POST['password'],
-                email=request.POST['email'],
-                first_name=request.POST['full_name']
-            )
+            # Check if username or email already exists in Designer table
+            if Designer.objects.filter(username=request.POST['username']).exists():
+                messages.error(request, 'Username already taken')
+                return redirect('dregister')
+            
+            if Designer.objects.filter(email=request.POST['email']).exists():
+                messages.error(request, 'Email already registered')
+                return redirect('dregister')
 
-            # Then create the Designer instance
+            # Create Designer instance directly without User
             designer = Designer.objects.create(
-                user=user,
-                full_name=request.POST['full_name'],
+                username=request.POST['username'],
+                password=make_password(request.POST['password']),  # Hash the password
                 email=request.POST['email'],
-                phone=request.POST['phone'],
-                username=request.POST['username']
-            )
-
-            # Finally create the UserProfile and mark as designer
-            user_profile = UserProfile.objects.create(
-                user=user,  # Link to User instance, not Designer
-                phone=request.POST['phone'],
-                is_designer=True
+                full_name=request.POST['full_name'],
+                phone=request.POST['phone']
             )
 
             messages.success(request, 'Registration successful! Please login.')
-            return redirect('login')
+            return redirect('dlogin')
 
         except Exception as e:
             messages.error(request, f'Registration failed: {str(e)}')
             return redirect('dregister')
 
     return render(request, 'dregister.html')
-
 
 def designer_login(request):
     if request.method == 'POST':
@@ -435,29 +430,52 @@ def designer_login(request):
         
         try:
             designer = Designer.objects.get(username=username)
-            if designer.check_password(password):
-                login(request, designer)
+            if check_password(password, designer.password):
+                # Store designer info in session
                 request.session['designer_id'] = designer.id
+                request.session['role'] = 'designer'
                 messages.success(request, 'Login successful!')
-                return redirect('dhome')
+                return redirect('dhome')  # Changed from dhome to designer_dashboard
             else:
-                messages.error(request, 'Invalid username or password')
+                messages.error(request, 'Invalid password')
         except Designer.DoesNotExist:
-            messages.error(request, 'Invalid username or password')
+            messages.error(request, 'Invalid username')
+        
+        return redirect('dlogin')
 
     return render(request, 'dlogin.html')
 
-# Create a custom decorator for designer login
+# Add the decorator to protect designer routes
 def designer_login_required(view_func):
     @wraps(view_func)
     def _wrapped_view(request, *args, **kwargs):
-        if not request.session.get('designer_id'):
+        designer_id = request.session.get('designer_id')
+        if not designer_id:
             messages.error(request, 'Please login as a designer first')
-            return redirect('dlogin')  # Redirect to designer login
+            return redirect('dlogin')
         return view_func(request, *args, **kwargs)
     return _wrapped_view
 
-@designer_login_required  # Change from @login_required
+@designer_login_required
+def designer_dashboard(request):
+    try:
+        designer = Designer.objects.get(id=request.session.get('designer_id'))
+        designs = Design.objects.filter(designer=designer)
+        
+        context = {
+            'designer': designer,
+            'designs': designs,
+            'total_views': designs.aggregate(Sum('views'))['views__sum'] or 0,
+            'total_likes': sum(design.favorited_by.count() for design in designs),  # Count favorites as likes
+            'total_comments': 0,
+            'companies': Company.objects.all().prefetch_related('workers')
+        }
+        return render(request, 'designer_dashboard.html', context)
+        
+    except Designer.DoesNotExist:
+        messages.error(request, 'Designer not found')
+        return redirect('dlogin')
+
 def add_design(request):
     if request.method == 'POST':
         try:
@@ -470,7 +488,7 @@ def add_design(request):
                 design_name=request.POST['design_name'],
                 description=request.POST['description'],
                 price=request.POST['price'],
-                area_size=request.POST['area_size'],
+                category=request.POST['room_type'],  # Use room_type as category
                 room_type=request.POST['room_type'],
                 style=request.POST['style']
             )
@@ -481,7 +499,7 @@ def add_design(request):
                 design.save()
 
             messages.success(request, 'Design added successfully!')
-            return redirect('dhome')
+            return redirect('designer_dashboard')
 
         except Designer.DoesNotExist:
             messages.error(request, 'You must be registered as a designer to add designs.')
@@ -529,19 +547,20 @@ def add_to_cart(request, product_id):
             if quantity <= 0:
                 return JsonResponse({
                     'success': False,
-                    'error': 'Quantity must be greater than 0'
+                    'error': 'Invalid quantity'
                 })
             
             # Get or create cart
             cart, created = Cart.objects.get_or_create(user=request.user)
             
-            # Add item to cart
+            # Get or create cart item
             cart_item, created = CartItem.objects.get_or_create(
                 cart=cart,
                 product=product,
                 defaults={'quantity': quantity}
             )
             
+            # If cart item already exists, update quantity
             if not created:
                 cart_item.quantity += quantity
                 cart_item.save()
@@ -562,7 +581,7 @@ def add_to_cart(request, product_id):
         'error': 'Invalid request method'
     })
 
-@login_required
+
 def remove_from_cart(request, product_id):
     if request.method == 'POST':
         try:
@@ -590,7 +609,7 @@ def remove_from_cart(request, product_id):
         'message': 'Invalid request'
     }, status=400)
 
-@login_required
+
 def cart_view(request):
     try:
         cart = Cart.objects.get(user=request.user)
@@ -622,10 +641,10 @@ def cart_view(request):
         messages.error(request, f"Error loading cart: {str(e)}")
         return redirect('home')
 
-@login_required
+
 def update_cart(request, item_id):
-    if 'id' in request.session:
-        user = request.session['id']
+    if 'seller_id' in request.session:
+        user = request.session['seller_id']
         cart_item = get_object_or_404(CartItem, id=item_id)
 
         action = request.POST.get('action')
@@ -642,19 +661,20 @@ def update_cart(request, item_id):
     
     
 def realhome(request):
+    # Get all designs
     designs = Design.objects.all()
-    user_favorites = []
     
-    if 'id' in request.session:
+    # Get user favorites
+    user_favorites = []
+    if request.user.is_authenticated:
         user_favorites = Favorite.objects.filter(
-            user_id=request.session['id']
+            user=request.user
         ).values_list('design_id', flat=True)
     
     context = {
         'designs': designs,
-        'user_favorites': user_favorites
+        'user_favorites': list(user_favorites),  # Convert to list for template
     }
-    
     return render(request, 'realhome.html', context)
 
 # Designers Page View
@@ -746,7 +766,7 @@ def designer_cart_view(request):
     }
     return render(request, 'dcart.html', context)
 
-@login_required
+
 def update_designer_cart(request, item_id):
     # Get the specific cart item
     item = get_object_or_404(DesignerCartItem, id=item_id, user=request.user)
@@ -764,7 +784,7 @@ def update_designer_cart(request, item_id):
 
     return redirect('dcart')
 
-@login_required
+
 def remove_from_designer_cart(request, item_id):
     # Get the specific cart item and delete it
     item = get_object_or_404(DesignerCartItem, id=item_id, user=request.user)
@@ -778,40 +798,6 @@ def browse(request):
     return render(request, 'browse.html')
 
 @login_required
-def dhome(request):
-    try:
-        # Check if user has a designer profile
-        if not hasattr(request.user, 'designer'):
-            messages.error(request, "You don't have a designer profile. Please register as a designer first.")
-            return redirect('dregister')  # Redirect to designer registration
-            
-        designer = request.user.designer
-        designs = Design.objects.filter(designer=designer)
-        
-        # Get statistics for the dashboard
-        total_views = 0
-        total_likes = 0
-        total_comments = 0
-        
-        # If you have these fields in your Design model, calculate them
-        # total_views = designs.aggregate(Sum('views'))['views__sum'] or 0
-        # total_likes = designs.aggregate(Sum('likes'))['likes__sum'] or 0
-        # total_comments = designs.aggregate(Sum('comments'))['comments__sum'] or 0
-        
-        context = {
-            'designer': designer,
-            'designs': designs,
-            'total_views': total_views,
-            'total_likes': total_likes,
-            'total_comments': total_comments,
-        }
-        return render(request, 'dhome.html', context)
-    except Exception as e:
-        print(f"Error in dhome: {str(e)}")
-        messages.error(request, f"Error loading dashboard: {str(e)}")
-        return redirect('home')  # Redirect to main home page on error
-
-# Remove Designer View
 def remove_designer(request, designer_id):
     designer = get_object_or_404(User, id=designer_id)
     designer.delete()  # Remove the designer
@@ -969,10 +955,10 @@ def hallway_entry_designs(request):
 
 @require_POST
 def toggle_favorite(request, design_id):
-    if 'id' not in request.session:
+    if 'seller_id' not in request.session:
         return JsonResponse({'success': False, 'error': 'Please log in first'}, status=401)
     try:
-        user_id = request.session['id']
+        user_id = request.session['seller_id']
         design = Design.objects.get(id=design_id)
         favorite, created = Favorite.objects.get_or_create(
             user_id=user_id,
@@ -995,16 +981,16 @@ def toggle_favorite(request, design_id):
 def fav(request):
     return render(request, 'favourite.html')
 
-@login_required
+
 @require_POST
 def remove_from_favorites(request, design_id):
-    if 'id' not in request.session:
+    if 'seller_id' not in request.session:
         return JsonResponse({
             'success': False,
             'error': 'Please log in first'
         }, status=401)
     
-    user_id = request.session['id']
+    user_id = request.session['seller_id']
     try:
         favorite = Favorite.objects.get(
             user_id=user_id,
@@ -1028,11 +1014,11 @@ def remove_from_favorites(request, design_id):
 
 @login_required
 def favorites_view(request):
-    if 'id' not in request.session:
+    if 'seller_id' not in request.session:
         messages.error(request, "Please log in to view favorites")
         return redirect('login')
     
-    user_id = request.session['id']
+    user_id = request.session['seller_id']
     favorites = Favorite.objects.filter(user_id=user_id).select_related('design')
     
     return render(request, 'favourites.html', {
@@ -1053,9 +1039,9 @@ def search_designs(request):
                 
                 # Get user favorites if logged in
                 user_favorites = []
-                if 'id' in request.session:
+                if 'seller_id' in request.session:
                     user_favorites = Favorite.objects.filter(
-                        user_id=request.session['id']
+                        user_id=request.session['seller_id']
                     ).values_list('design_id', flat=True)
                 
                 results = [{
@@ -1086,7 +1072,7 @@ def get_favorites_count(request):
     if not request.user.is_authenticated:
         return JsonResponse({'count': 0})
     
-    count = Favorite.objects.filter(user_id=request.session.get('id', 0)).count()
+    count = Favorite.objects.filter(user_id=request.session.get('seller_id', 0)).count()
     return JsonResponse({'count': count})
 
 def products_list(request):
@@ -1137,7 +1123,7 @@ def products_list(request):
         'selected_sort': sort,
         'min_price_filter': min_price,
         'max_price_filter': max_price,
-        'cart_count': CartItem.objects.filter(cart__user_id=request.session.get('id', 0)).count()
+        'cart_count': CartItem.objects.filter(cart__user_id=request.session.get('seller_id', 0)).count()
     }
     
     return render(request, 'products.html', context)
@@ -1291,7 +1277,7 @@ def payment_success(request, order_id):
 @login_required
 def get_cart_count(request):
     try:
-        cart = Cart.objects.get(user_id=request.session.get('id'))
+        cart = Cart.objects.get(user_id=request.session.get('seller_id'))
         cart_count = CartItem.objects.filter(cart=cart).count()
     except Cart.DoesNotExist:
         cart_count = 0
@@ -1301,7 +1287,7 @@ def get_cart_count(request):
 def view_orders(request):
     try:
         # Get user ID from session
-        user_id = request.session.get('id')
+        user_id = request.session.get('seller_id')
         if not user_id:
             messages.error(request, 'Please log in to view your orders')
             return redirect('login')
@@ -1685,222 +1671,260 @@ def payment_success_page(request):
         messages.error(request, f'Error fetching orders: {str(e)}')
         return redirect('cart')
 
-@login_required
-def worker_register(request):
-    if request.method == 'POST':
-        # Get form data
-        full_name = request.POST.get('full_name')
-        email = request.POST.get('email')
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-        phone = request.POST.get('phone')
-        specialization = request.POST.get('specialization')
-        
-        try:
-            # Create user
-            user = User.objects.create_user(username=username, email=email, password=password)
+# def company_register(request):
+#     if request.method == 'POST':
+#         try:
+#             # Get passwords and verify they match
+#             password = request.POST.get('password')
+#             confirm_password = request.POST.get('confirm_password')
             
-            # Create worker profile without a designer
-            worker = Worker.objects.create(
-                user=user,
-                full_name=full_name,
-                email=email,
-                phone=phone,
-                specialization=specialization,
-                # No designer assigned initially
-            )
+#             if not password:
+#                 messages.error(request, 'Password is required!')
+#                 return render(request, 'company_register.html')
+                
+#             if password != confirm_password:
+#                 messages.error(request, 'Passwords do not match!')
+#                 return render(request, 'company_register.html')
             
-            messages.success(request, 'Registration successful! You can now log in.')
-            return redirect('worker_login')
-        
-        except Exception as e:
-            # Delete the user if worker creation fails
-            if 'user' in locals():
-                user.delete()
-            messages.error(request, f'Registration failed: {str(e)}')
-    
-    return render(request, 'worker_register.html')
+#             # Validate password strength
+#             if len(password) < 8:
+#                 messages.error(request, 'Password must be at least 8 characters long!')
+#                 return render(request, 'company_register.html')
+            
+#             # Create user account with email as username
+#             email = request.POST.get('email')
+#             if User.objects.filter(email=email).exists():
+#                 messages.error(request, 'Email already registered!')
+#                 return render(request, 'company_register.html')
+                
+#             user = User.objects.create_user(
+#                 username=email,
+#                 email=email,
+#                 password=password
+#             )
+            
+#             # Create construction company profile
+#             company = ConstructionCompany.objects.create(
+#                 user=user,
+#                 company_name=request.POST.get('company_name'),
+#                 email=email,
+#                 phone=request.POST.get('phone'),
+#                 address=request.POST.get('address'),
+#                 registration_number=request.POST.get('registration_number'),
+#                 established_year=request.POST.get('established_year'),
+#                 company_size=request.POST.get('company_size'),
+#                 description=request.POST.get('description')
+#             )
+            
+#             if 'logo' in request.FILES:
+#                 company.logo = request.FILES['logo']
+#                 company.save()
+            
+#             messages.success(request, 'Company registered successfully! Please login.')
+#             return redirect('company_login')
+            
+#         except Exception as e:
+#             if 'user' in locals():
+#                 user.delete()
+#             messages.error(request, f'Registration failed: {str(e)}')
+            
+#     return render(request, 'company_register.html')
 
-def worker_login(request):
-    if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
+# @login_required
+# def company_login(request):
+#     if request.method == 'POST':
+#         email = request.POST.get('email')
+#         password = request.POST.get('password')
         
-        user = authenticate(username=username, password=password)
+#         try:
+#             company = ConstructionCompany.objects.get(email=email)
+#             user = authenticate(username=company.user.username, password=password)
+            
+#             if user is not None:
+#                 login(request, user)
+#                 return redirect('company_dashboard')
+#             else:
+#                 messages.error(request, 'Invalid credentials')
+#         except ConstructionCompany.DoesNotExist:
+#             messages.error(request, 'Company not found')
         
-        if user is not None and hasattr(user, 'worker'):
-            auth_login(request, user)
-            messages.success(request, 'Login successful!')
-            return redirect('worker_dashboard')
-        else:
-            messages.error(request, 'Invalid credentials')
+#     return render(request, 'company_login.html')
+
+# @login_required
+# def company_change_password(request):
+#     if request.method == 'POST':
+#         old_password = request.POST.get('old_password')
+#         new_password = request.POST.get('new_password')
+#         confirm_password = request.POST.get('confirm_password')
+        
+#         if not request.user.check_password(old_password):
+#             messages.error(request, 'Current password is incorrect!')
+#             return redirect('company_change_password')
+            
+#         if new_password != confirm_password:
+#             messages.error(request, 'New passwords do not match!')
+#             return redirect('company_change_password')
+            
+#         if len(new_password) < 8:
+#             messages.error(request, 'Password must be at least 8 characters long!')
+#             return redirect('company_change_password')
+            
+#         # Change password
+#         request.user.set_password(new_password)
+#         request.user.save()
+        
+#         # Update session auth hash to prevent logout
+#         update_session_auth_hash(request, request.user)
+        
+#         messages.success(request, 'Password changed successfully!')
+#         return redirect('company_dashboard')
+        
+#     return render(request, 'company_change_password.html')
+
+# @login_required
+# def company_dashboard(request):
+#     try:
+#         company = ConstructionCompany.objects.get(user=request.user)
+#         applications = TeamRequest.objects.filter(company=company).select_related('worker')
+        
+#         context = {
+#             'company': company,
+#             'applications': applications,
+#             'pending_applications': applications.filter(status='pending').count(),
+#             'accepted_applications': applications.filter(status='accepted').count(),
+#             'total_applications': applications.count(),
+#         }
+#         return render(request, 'company_dashboard.html', context)
+#     except ConstructionCompany.DoesNotExist:
+#         messages.error(request, "Company profile not found")
+#         return redirect('company_login')
+
+# @login_required
+# def handle_application(request, application_id, action):
+#     try:
+#         application = TeamRequest.objects.get(id=application_id)
+        
+#         if action == 'accept':
+#             application.status = 'accepted'
+#             # Update worker's company
+#             application.worker.company = application.company
+#             application.worker.save()
+#             messages.success(request, f'Accepted {application.worker.full_name} to your team')
+#         elif action == 'reject':
+#             application.status = 'rejected'
+#             messages.info(request, f'Rejected {application.worker.full_name}\'s application')
+            
+#         application.save()
+        
+#     except TeamRequest.DoesNotExist:
+#         messages.error(request, 'Application not found')
+#     except Exception as e:
+#         messages.error(request, f'Error handling application: {str(e)}')
     
-    return render(request, 'worker_login.html')
+#     return redirect('company_dashboard')
 
 @login_required
-def worker_dashboard(request):
-    try:
-        worker = request.user.worker
-        assignments = WorkerAssignment.objects.filter(worker=worker)
-        
-        # Get construction companies instead of designers
-        construction_companies = ConstructionCompany.objects.all()
-        
-        context = {
-            'worker': worker,
-            'assignments': assignments,
-            'completed_projects': assignments.filter(status='completed').count(),
-            'pending_projects': assignments.filter(status='pending').count(),
-            'total_earnings': sum(a.project.budget for a in assignments.filter(status='completed')) if assignments.exists() else 0,
-            'construction_companies': construction_companies,
-        }
-        
-        return render(request, 'worker_dashboard.html', context)
-        
-    except Exception as e:
-        messages.error(request, f'Error loading dashboard: {str(e)}')
-        return redirect('worker_login')
-
-@login_required
-def apply_to_company(request, designer_id):
+def submit_company_application(request, designer_id):
     if request.method == 'POST':
         try:
             designer = Designer.objects.get(id=designer_id)
-            worker = request.user.worker
-            
-            # Create a team request
-            TeamRequest.objects.create(
-                worker=worker,
-                designer=designer,
-                status='pending'
-            )
-            
-            messages.success(request, f'Application sent to {designer.full_name}')
+            # Add your application submission logic here
+            messages.success(request, 'Application submitted successfully!')
+            return redirect('designer_dashboard')
         except Exception as e:
-            messages.error(request, f'Error sending application: {str(e)}')
-    
-    return redirect('worker_dashboard')
+            messages.error(request, f'Error submitting application: {str(e)}')
+            return redirect('designer_dashboard')
+    return redirect('designer_dashboard')
 
 @login_required
-def meet_workers(request):
-    try:
-        # Get all workers ordered by rating
-        workers = Worker.objects.all().order_by('-rating')
-        
-        # Get filter parameters
-        specialization = request.GET.get('specialization')
-        experience = request.GET.get('experience')
-        rating = request.GET.get('rating')
-        
-        # Apply filters if provided
-        if specialization:
-            workers = workers.filter(specialization=specialization)
-        if experience:
-            workers = workers.filter(experience_years__gte=int(experience))
-        if rating:
-            workers = workers.filter(rating__gte=float(rating))
-            
-        context = {
-            'workers': workers,
-            'specializations': Worker.SPECIALIZATION_CHOICES
-        }
-        
-        return render(request, 'meet_workers.html', context)
-    except Exception as e:
-        messages.error(request, f'Error loading workers: {str(e)}')
-        return redirect('home')
-
-def worker_profile(request, worker_id):
-    worker = get_object_or_404(Worker, id=worker_id)
-    completed_projects = WorkerAssignment.objects.filter(
-        worker=worker, 
-        status='completed'
-    ).select_related('project')
+def view_designers(request):
+    # Get all designers with their profiles
+    designers = Designer.objects.select_related('user').all()
     
-    context = {
-        'worker': worker,
-        'completed_projects': completed_projects,
-    }
-    return render(request, 'worker_profile.html', context)
-
-def filter_workers(request):
-    workers = Worker.objects.all()
-    
+    # Get filter parameters
     specialization = request.GET.get('specialization')
     experience = request.GET.get('experience')
     rating = request.GET.get('rating')
     
+    # Apply filters if they exist
     if specialization:
-        workers = workers.filter(specialization=specialization)
+        designers = designers.filter(specialization=specialization)
     if experience:
-        workers = workers.filter(experience_years__gte=int(experience))
+        designers = designers.filter(experience_years__gte=experience)
     if rating:
-        workers = workers.filter(rating__gte=float(rating))
+        designers = designers.filter(rating__gte=rating)
     
-    workers_data = [{
-        'id': w.id,
-        'full_name': w.full_name,
-        'specialization': w.specialization,
-        'rating': w.rating,
-        'experience_years': w.experience_years,
-        'completed_projects': w.completed_projects,
-        'hourly_rate': w.hourly_rate,
-        'skills': w.skills,
-        'profile_picture': w.profile_picture.url if w.profile_picture else None
-    } for w in workers]
-    
-    return JsonResponse({'workers': workers_data})
+    context = {
+        'designers': designers,
+        'specializations': Designer.objects.values_list('specialization', flat=True).distinct(),
+        'experience_ranges': [
+            {'label': '0-2 years', 'value': 0},
+            {'label': '2-5 years', 'value': 2},
+            {'label': '5+ years', 'value': 5}
+        ],
+        'rating_ranges': [
+            {'label': '4+ stars', 'value': 4},
+            {'label': '3+ stars', 'value': 3},
+            {'label': 'All ratings', 'value': 0}
+        ]
+    }
+    return render(request, 'designers.html', context)
 
 @login_required
 def view_designs(request):
-    try:
-        designs = Design.objects.all().order_by('-created_at')
-        print(f"Number of designs found: {designs.count()}")
-        
-        for design in designs:
-            print(f"Design: {design.design_name}, Image: {design.image if design.image else 'No image'}")
-        
-        context = {
-            'designs': designs,
-            'room_types': Design.ROOM_TYPE_CHOICES,
-            'styles': Design.STYLE_CHOICES
-        }
-        
-        return render(request, 'view_designs.html', context)
-    except Exception as e:
-        print(f"Error in view_designs: {str(e)}")
-        messages.error(request, f'Error loading designs: {str(e)}')
-        return redirect('home')
+    # Get all designs with their designers
+    designs = Design.objects.select_related('designer').all()
+    
+    # Get filter parameters
+    style = request.GET.get('style')
+    room_type = request.GET.get('room_type')
+    price_range = request.GET.get('price_range')
+    
+    # Apply filters if they exist
+    if style:
+        designs = designs.filter(style=style)
+    if room_type:
+        designs = designs.filter(room_type=room_type)
+    if price_range:
+        min_price, max_price = price_range.split('-')
+        designs = designs.filter(price__gte=min_price, price__lte=max_price)
+    
+    context = {
+        'designs': designs,
+        'styles': Design.objects.values_list('style', flat=True).distinct(),
+        'room_types': Design.objects.values_list('room_type', flat=True).distinct(),
+    }
+    return render(request, 'view_designs.html', context)
 
 @login_required
 def filter_designs(request):
     designs = Design.objects.all()
     
-    room_type = request.GET.get('room_type')
-    style = request.GET.get('style')
-    price_range = request.GET.get('price')
+    # Get filter parameters from request
+    filters = {}
+    if request.GET.get('style'):
+        filters['style'] = request.GET.get('style')
+    if request.GET.get('room_type'):
+        filters['room_type'] = request.GET.get('room_type')
+    if request.GET.get('min_price'):
+        filters['price__gte'] = request.GET.get('min_price')
+    if request.GET.get('max_price'):
+        filters['price__lte'] = request.GET.get('max_price')
     
-    if room_type:
-        designs = designs.filter(room_type=room_type)
-    if style:
-        designs = designs.filter(style=style)
-    if price_range:
-        if price_range == 'budget':
-            designs = designs.filter(price__lte=50000)
-        elif price_range == 'mid':
-            designs = designs.filter(price__gt=50000, price__lte=150000)
-        elif price_range == 'luxury':
-            designs = designs.filter(price__gt=150000)
+    # Apply filters
+    designs = designs.filter(**filters)
     
+    # Return filtered designs as JSON
     designs_data = [{
-        'id': d.id,
-        'design_name': d.design_name,
-        'room_type': d.room_type,
-        'style': d.style,
-        'price': str(d.price),
-        'description': d.description,
-        'image_url': d.image.url if d.image else None
-    } for d in designs]
+        'id': design.id,
+        'title': design.title,
+        'description': design.description,
+        'price': str(design.price),
+        'image_url': design.image.url if design.image else None,
+        'designer_name': design.designer.full_name,
+        'style': design.style,
+        'room_type': design.room_type,
+    } for design in designs]
     
     return JsonResponse({'designs': designs_data})
 
@@ -1909,92 +1933,52 @@ def admin_login(request):
         username = request.POST.get('username')
         password = request.POST.get('password')
         
-        # Check for predefined admin credentials
+        # Check against predefined credentials
         if username == 'jerry' and password == 'jerry@123':
-            user = authenticate(request, username=username, password=password)
-            if user is not None:
-                login(request, user)
-                return redirect('admin_dashboard')
-            else:
-                messages.error(request, 'Invalid credentials')
+            # Store admin session
+            request.session['is_admin'] = True
+            messages.success(request, 'Welcome Admin!')
+            return redirect('admin_dashboard')
         else:
-            messages.error(request, 'Invalid admin credentials')
+            messages.error(request, 'Invalid credentials')
+            return redirect('admin_login')
     
     return render(request, 'admin_login.html')
 
-@login_required
+# Add admin_required decorator
+def admin_required(view_func):
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if request.session.get('is_admin'):
+            return view_func(request, *args, **kwargs)
+        return redirect('admin_login')
+    return _wrapped_view
+
+@admin_required
 def admin_dashboard(request):
-    # Get statistics and recent activities
     context = {
         'total_users': User.objects.count(),
-        'total_workers': Worker.objects.count(),
-        'total_designs': Design.objects.count(),
-        'completed_projects': Project.objects.filter(status='completed').count(),
-        'recent_activities': get_recent_activities()
+        'total_products': Product.objects.count(),
+        'total_orders': Order.objects.count() if 'Order' in globals() else 0,
+        'recent_activities': [],
+        'companies': Company.objects.all().prefetch_related('workers')
     }
     return render(request, 'admin_dashboard.html', context)
 
+@login_required
 def admin_logout(request):
-    logout(request)
+    if request.user.is_superuser:
+        logout(request)
+        messages.success(request, 'Successfully logged out from admin panel')
     return redirect('admin_login')
-
-def get_recent_activities():
-    # Implement logic to get recent activities
-    # This could include user registrations, new designs, favorites, etc.
-    return []
 
 @login_required
 def admin_users(request):
-    users = []
+    if not request.user.is_superuser:
+        messages.error(request, 'Access denied. Admin privileges required.')
+        return redirect('home')
     
-    # Get regular users (customers)
-    regular_users = User.objects.filter(is_staff=False, is_superuser=False)
-    for user in regular_users:
-        if not hasattr(user, 'seller') and not hasattr(user, 'designer') and not hasattr(user, 'worker'):
-            users.append({
-                'full_name': f"{user.first_name} {user.last_name}",
-                'username': user.username,
-                'email': user.email,
-                'role': 'Customer',
-                'is_active': user.is_active,
-                'date_joined': user.date_joined,
-                'profile_picture': None
-            })
-    
-    # Get sellers
-    sellers = Seller.objects.all()
-    for seller in sellers:
-        try:
-            users.append({
-                'full_name': seller.name,
-                'username': seller.username,
-                'email': seller.email,
-                'role': 'Seller',
-                'is_active': seller.is_active,
-                'date_joined': timezone.now(),
-                'profile_picture': seller.profile_picture.url if hasattr(seller, 'profile_picture') and seller.profile_picture else None
-            })
-        except Exception as e:
-            print(f"Error processing seller {seller.id}: {str(e)}")
-            continue
-    
-    # Get designers
-    designers = Designer.objects.all()
-    for designer in designers:
-        try:
-            users.append({
-                'full_name': designer.full_name,
-                'username': designer.username,
-                'email': designer.email,
-                'role': 'Designer',
-                'is_active': True,
-                'date_joined': timezone.now(),
-                'profile_picture': designer.profile_picture if designer.profile_picture else None
-            })
-        except Exception as e:
-            print(f"Error processing designer {designer.id}: {str(e)}")
-            continue
-    
+    users = User.objects.all().order_by('-date_joined')
     context = {
         'users': users
     }
@@ -2002,466 +1986,145 @@ def admin_users(request):
 
 @login_required
 def filter_users(request):
-    role = request.GET.get('role', 'all')
-    # Implement filtering logic similar to the above but only for the specified role
-    filtered_users = []  # Add filtering logic here
-    return JsonResponse({'users': filtered_users})
-
-def view_designers(request):
-    try:
-        designers = Designer.objects.all()
-        print(f"Number of designers found: {designers.count()}")  # Debug line
-        
-        designers_data = []
-        for designer in designers:
-            print(f"Processing designer: {designer.full_name}")  # Debug line
-            
-            # Get number of workers under this designer (if the relationship exists)
-            workers_count = Worker.objects.filter(designer=designer).count() if hasattr(Worker, 'designer') else 0
-            
-            # Get designs by this designer
-            designs = Design.objects.filter(designer=designer)
-            
-            # Calculate average rating (if rating field exists)
-            avg_rating = 0
-            if hasattr(Design, 'rating'):
-                avg_rating = designs.aggregate(avg_rating=Avg('rating'))['avg_rating'] or 0
-            
-            # Get total completed projects
-            completed_projects = designs.count()
-            
-            # Get recent designs
-            recent_designs = designs.order_by('-created_at')[:3]
-            
-            # Get specializations as list
-            specializations = []
-            if designer.specializations:
-                specializations = [s.strip() for s in designer.specializations.split(',') if s.strip()]
-            
-            designer_data = {
-                'designer': designer,
-                'workers_count': workers_count,
-                'avg_rating': round(float(avg_rating), 1),
-                'completed_projects': completed_projects,
-                'years_experience': getattr(designer, 'experience_years', 0),
-                'specializations': specializations,
-                'recent_designs': recent_designs,
-                'full_name': designer.full_name,
-                'email': designer.email,
-                'description': designer.description or "An experienced interior designer passionate about creating beautiful spaces.",
-                'profile_picture': designer.profile_picture if designer.profile_picture else None
-            }
-            
-            print(f"Designer data prepared: {designer_data}")  # Debug line
-            designers_data.append(designer_data)
-        
-        context = {
-            'designers_data': designers_data
-        }
-        return render(request, 'designers.html', context)
-    except Exception as e:
-        print(f"Error in view_designers: {str(e)}")
-        messages.error(request, f'Error loading designers: {str(e)}')
-        return redirect('home')
-
-@login_required
-def find_workers(request):
-    try:
-        workers = Worker.objects.all()  # Fetch all workers
-        specializations = Worker.objects.values_list('specialization', flat=True).distinct()  # Get unique specializations
-        
-        context = {
-            'workers': workers,
-            'specializations': specializations,
-        }
-        return render(request, 'find_workers.html', context)  # Render the find_workers template
-    except Exception as e:
-        messages.error(request, f'Error loading workers: {str(e)}')
-        return redirect('dhome')  # Redirect to the designer home page on error
-
-@login_required
-def send_worker_request(request, worker_id):
-    if request.method == 'POST':
-        try:
-            worker = Worker.objects.get(id=worker_id)
-            designer = request.user.designer
-            
-            # Check if request already exists
-            if not TeamRequest.objects.filter(
-                worker=worker,
-                designer=designer,
-                status='pending'
-            ).exists():
-                # Create new request
-                team_request = TeamRequest.objects.create(
-                    worker=worker,
-                    designer=designer,
-                    status='pending'
-                )
-                
-                # Create notification for worker
-                Notification.objects.create(
-                    worker=worker,
-                    message=f"Designer {designer.full_name} wants to add you to their team",
-                    type='team_request',
-                    related_id=team_request.id
-                )
-                
-                return JsonResponse({'success': True})
-            
-            return JsonResponse({'success': False, 'message': 'Request already sent'})
-        except Worker.DoesNotExist:
-            return JsonResponse({'success': False, 'message': 'Worker not found'}, status=404)
-        except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+    if not request.user.is_superuser:
+        return JsonResponse({'error': 'Access denied'}, status=403)
     
-    return JsonResponse({'success': False, 'message': 'Invalid request method'}, status=405)
-
-@login_required
-def view_team_requests(request):
-    try:
-        # Get all team requests for the logged-in designer
-        team_requests = TeamRequest.objects.filter(designer=request.user.designer).select_related('worker')
-        
-        # Organize requests by status
-        pending_requests = team_requests.filter(status='pending')
-        accepted_requests = team_requests.filter(status='accepted')
-        declined_requests = team_requests.filter(status='declined')
-        
-        context = {
-            'pending_requests': pending_requests,
-            'accepted_requests': accepted_requests,
-            'declined_requests': declined_requests
-        }
-        
-        return render(request, 'team_requests.html', context)  # Render the team_requests template
-    except Exception as e:
-        messages.error(request, f'Error loading team requests: {str(e)}')
-        return redirect('dhome')  # Redirect to the designer home page on error
-
-@login_required
-def accept_request(request, request_id):
-    if request.method == 'POST':
-        try:
-            team_request = TeamRequest.objects.get(id=request_id, worker=request.user.worker)
-            team_request.status = 'accepted'
-            team_request.save()
-            
-            # Create notification for designer
-            Notification.objects.create(
-                designer=team_request.designer,
-                message=f"{team_request.worker.full_name} has accepted your team request",
-                type='request_accepted'
-            )
-            
-            return JsonResponse({'success': True})
-        except TeamRequest.DoesNotExist:
-            return JsonResponse({'success': False, 'message': 'Request not found or you do not have permission'}, status=404)
-        except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+    role = request.GET.get('role', '')
+    users = User.objects.all()
     
-    return JsonResponse({'success': False, 'message': 'Invalid request method'}, status=405)
-
-@login_required
-def decline_request(request, request_id):
-    if request.method == 'POST':
-        try:
-            # Get the team request for the logged-in worker
-            team_request = TeamRequest.objects.get(id=request_id, worker=request.user.worker)
-            team_request.status = 'declined'
-            team_request.save()
-            
-            # Create notification for designer
-            Notification.objects.create(
-                designer=team_request.designer,
-                message=f"{team_request.worker.full_name} has declined your team request",
-                type='request_declined'
-            )
-            
-            return JsonResponse({'success': True})
-        except TeamRequest.DoesNotExist:
-            return JsonResponse({'success': False, 'message': 'Request not found or you do not have permission'}, status=404)
-        except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+    if role:
+        if role == 'designer':
+            users = users.filter(designer__isnull=False)
+        elif role == 'customer':
+            users = users.filter(designer__isnull=True, is_staff=False)
     
-    return JsonResponse({'success': False, 'message': 'Invalid request method'}, status=405)
-
-@login_required
-def designer_dashboard(request):
-    try:
-        # Check if user has a designer profile
-        if not hasattr(request.user, 'designer'):
-            messages.error(request, "You don't have a designer profile. Please register as a designer first.")
-            return redirect('dregister')
-            
-        designer = request.user.designer
-        designs = Design.objects.filter(designer=designer)
-        
-        # Add more context data for the dashboard
-        total_designs = designs.count()
-        
-        # You can add more statistics if your models support them
-        # For example, if Design model has a views field:
-        # total_views = designs.aggregate(Sum('views'))['views__sum'] or 0
-        
-        context = {
-            'designer': designer,
-            'designs': designs,
-            'total_designs': total_designs,
-            # Add more context variables as needed
-        }
-        
-        # Print debug information
-        print(f"Designer Dashboard - Designer: {designer.full_name}, Designs: {total_designs}")
-        
-        return render(request, 'designer_dashboard.html', context)
-    except Exception as e:
-        print(f"Error in designer_dashboard: {str(e)}")
-        messages.error(request, f"Error loading dashboard: {str(e)}")
-        return redirect('dhome')
+    users_data = [{
+        'id': user.id,
+        'username': user.username,
+        'email': user.email,
+        'date_joined': user.date_joined.strftime('%Y-%m-%d'),
+        'is_active': user.is_active,
+        'role': 'Designer' if hasattr(user, 'designer') else 'Customer'
+    } for user in users]
+    
+    return JsonResponse({'users': users_data})
 
 @login_required
 def edit_profile(request):
-    designer = request.user.designer
-    if request.method == 'POST':
-        # Handle form submission
-        designer.full_name = request.POST.get('full_name')
-        designer.phone = request.POST.get('phone')
-        if 'profile_picture' in request.FILES:
-            designer.profile_picture = request.FILES['profile_picture']
-        designer.save()
-        messages.success(request, 'Profile updated successfully!')
-        return redirect('dhome')
-    
-    context = {
-        'designer': designer
-    }
-    return render(request, 'edit_profile.html', context)
-
-@login_required
-def apply_for_company(request, designer_id):
     try:
-        designer = Designer.objects.get(id=designer_id)
+        designer = Designer.objects.get(user=request.user)
+        
+        if request.method == 'POST':
+            # Update designer profile
+            designer.full_name = request.POST.get('full_name')
+            designer.phone = request.POST.get('phone')
+            designer.specialization = request.POST.get('specialization')
+            designer.experience_years = request.POST.get('experience_years')
+            designer.bio = request.POST.get('bio')
+            
+            # Handle profile picture upload
+            if 'profile_picture' in request.FILES:
+                designer.profile_picture = request.FILES['profile_picture']
+            
+            # Handle portfolio images
+            if 'portfolio_images' in request.FILES:
+                for image in request.FILES.getlist('portfolio_images'):
+                    PortfolioImage.objects.create(
+                        designer=designer,
+                        image=image
+                    )
+            
+            designer.save()
+            messages.success(request, 'Profile updated successfully!')
+            return redirect('designer_dashboard')
+            
         context = {
-            'designer': designer
+            'designer': designer,
+            'portfolio_images': designer.portfolioimages.all() if hasattr(designer, 'portfolioimages') else None,
+            'specializations': [
+                'Interior Design',
+                'Residential Design',
+                'Commercial Design',
+                'Sustainable Design',
+                'Modern Design',
+                'Traditional Design',
+                'Industrial Design',
+                'Minimalist Design'
+            ]
         }
-        print(f"Rendering apply_for_company.html for designer: {designer.full_name}")  # Debug print
-        return render(request, 'apply_for_company.html', context)
+        return render(request, 'edit_profile.html', context)
+        
     except Designer.DoesNotExist:
-        messages.error(request, "Designer not found.")
-        return redirect('worker_dashboard')
+        messages.error(request, 'Designer profile not found')
+        return redirect('home')
+    except Exception as e:
+        messages.error(request, f'Error updating profile: {str(e)}')
+        return redirect('designer_dashboard')
 
-@login_required
-def submit_company_application(request, designer_id):
+@admin_required
+def admin_add_company(request):
     if request.method == 'POST':
         try:
-            designer = Designer.objects.get(id=designer_id)
-            worker = request.user.worker
-
-            # Update worker profile with new information
-            worker.full_name = request.POST.get('full_name')
-            worker.email = request.POST.get('email')
-            worker.phone = request.POST.get('phone')
-            worker.specialization = request.POST.get('profession')
-            worker.experience_years = int(request.POST.get('experience'))
-            worker.hourly_rate = float(request.POST.get('salary'))
-            
-            if 'resume' in request.FILES:
-                worker.resume = request.FILES['resume']
-            
-            worker.save()
-
-            # Create team request
-            TeamRequest.objects.create(
-                worker=worker,
-                designer=designer,
-                status='pending'
-            )
-
-            messages.success(request, f"Application submitted successfully to {designer.full_name}'s company!")
-            return redirect('worker_dashboard')
-
-        except Exception as e:
-            messages.error(request, f"Error submitting application: {str(e)}")
-            return redirect('apply_for_company', designer_id=designer_id)
-
-    return redirect('worker_dashboard')
-
-@login_required
-def company_register(request):
-    if request.method == 'POST':
-        try:
-            # Get passwords and verify they match
-            password = request.POST.get('password')
-            confirm_password = request.POST.get('confirm_password')
-            
-            if not password:
-                messages.error(request, 'Password is required!')
-                return render(request, 'company_register.html')
-                
-            if password != confirm_password:
-                messages.error(request, 'Passwords do not match!')
-                return render(request, 'company_register.html')
-            
-            # Validate password strength
-            if len(password) < 8:
-                messages.error(request, 'Password must be at least 8 characters long!')
-                return render(request, 'company_register.html')
-            
-            # Create user account with email as username
-            email = request.POST.get('email')
-            if User.objects.filter(email=email).exists():
-                messages.error(request, 'Email already registered!')
-                return render(request, 'company_register.html')
-                
-            user = User.objects.create_user(
-                username=email,
-                email=email,
-                password=password
-            )
-            
-            # Create construction company profile
-            company = ConstructionCompany.objects.create(
-                user=user,
-                company_name=request.POST.get('company_name'),
-                email=email,
+            # Create company
+            company = Company.objects.create(
+                name=request.POST.get('company_name'),
+                email=request.POST.get('email'),
                 phone=request.POST.get('phone'),
                 address=request.POST.get('address'),
-                registration_number=request.POST.get('registration_number'),
                 established_year=request.POST.get('established_year'),
-                company_size=request.POST.get('company_size'),
                 description=request.POST.get('description')
             )
             
+            # Handle logo upload
             if 'logo' in request.FILES:
                 company.logo = request.FILES['logo']
                 company.save()
             
-            messages.success(request, 'Company registered successfully! Please login.')
-            return redirect('company_login')
+            # Handle workers
+            worker_names = request.POST.getlist('worker_names[]')
+            worker_skills = request.POST.getlist('worker_skills[]')
+            worker_experience = request.POST.getlist('worker_experience[]')
+            
+            for i in range(len(worker_names)):
+                Worker.objects.create(
+                    company=company,
+                    name=worker_names[i],
+                    skill=worker_skills[i],
+                    experience_years=worker_experience[i]
+                )
+            
+            messages.success(request, 'Company added successfully!')
+            return redirect('admin_dashboard')
             
         except Exception as e:
-            if 'user' in locals():
-                user.delete()
-            messages.error(request, f'Registration failed: {str(e)}')
-            
-    return render(request, 'company_register.html')
+            messages.error(request, f'Error adding company: {str(e)}')
+            return redirect('admin_add_company')
+    
+    return render(request, 'admin_add_company.html')
 
-def company_login(request):
-    if request.method == 'POST':
-        email = request.POST.get('email')
-        password = request.POST.get('password')
+def shome(request):
+    seller_id = request.session.get('seller_id')
+    if not seller_id:
+        messages.error(request, 'You need to login first.')
+        return redirect('slogin')
         
-        try:
-            # Since we used email as username during registration
-            user = authenticate(username=email, password=password)
-            
-            if user is not None and hasattr(user, 'constructioncompany'):
-                login(request, user)
-                messages.success(request, f'Welcome back, {user.constructioncompany.company_name}!')
-                return redirect('company_dashboard')
-            else:
-                messages.error(request, 'Invalid email or password')
-        except Exception as e:
-            messages.error(request, 'Invalid email or password')
-        
-    return render(request, 'company_login.html')
-
-@login_required
-def company_change_password(request):
-    if request.method == 'POST':
-        old_password = request.POST.get('old_password')
-        new_password = request.POST.get('new_password')
-        confirm_password = request.POST.get('confirm_password')
-        
-        if not request.user.check_password(old_password):
-            messages.error(request, 'Current password is incorrect!')
-            return redirect('company_change_password')
-            
-        if new_password != confirm_password:
-            messages.error(request, 'New passwords do not match!')
-            return redirect('company_change_password')
-            
-        if len(new_password) < 8:
-            messages.error(request, 'Password must be at least 8 characters long!')
-            return redirect('company_change_password')
-            
-        # Change password
-        request.user.set_password(new_password)
-        request.user.save()
-        
-        # Update session auth hash to prevent logout
-        update_session_auth_hash(request, request.user)
-        
-        messages.success(request, 'Password changed successfully!')
-        return redirect('company_dashboard')
-        
-    return render(request, 'company_change_password.html')
-
-@login_required
-def company_dashboard(request):
     try:
-        company = request.user.constructioncompany
-        # Get workers who have applied to this company
-        worker_applications = TeamRequest.objects.filter(company=company).select_related('worker')
-        
+        seller = Seller.objects.get(id=seller_id)
+        products = Product.objects.filter(seller=seller)
         context = {
-            'company': company,
-            'worker_applications': worker_applications,
-            'total_applications': worker_applications.count(),
-            'pending_applications': worker_applications.filter(status='pending').count(),
-            'accepted_applications': worker_applications.filter(status='accepted').count(),
+            'seller': seller,
+            'products': products
         }
-        return render(request, 'company_dashboard.html', context)
-    except Exception as e:
-        messages.error(request, f'Error loading dashboard: {str(e)}')
-        return redirect('company_login')
-
-@login_required
-def apply_to_company(request, company_id):
-    try:
-        company = ConstructionCompany.objects.get(id=company_id)
-        worker = request.user.worker
-
-        # Check if already applied
-        if TeamRequest.objects.filter(worker=worker, company=company).exists():
-            messages.warning(request, 'You have already applied to this company')
-            return redirect('worker_dashboard')
-
-        # Create new application
-        TeamRequest.objects.create(
-            worker=worker,
-            company=company,
-            status='pending'
-        )
+        return render(request, 'shome.html', context)
         
-        messages.success(request, f'Successfully applied to {company.company_name}')
-        return redirect('worker_dashboard')
+    except Seller.DoesNotExist:
+        messages.error(request, 'Seller not found.')
+        return redirect('slogin')
 
-    except ConstructionCompany.DoesNotExist:
-        messages.error(request, 'Company not found')
-    except Exception as e:
-        messages.error(request, f'Error applying to company: {str(e)}')
-    
-    return redirect('worker_dashboard')
-
-@login_required
-def handle_application(request, application_id, action):
-    try:
-        application = TeamRequest.objects.get(id=application_id, company=request.user.constructioncompany)
-        
-        if action == 'accept':
-            application.status = 'accepted'
-            messages.success(request, f'Application from {application.worker.full_name} accepted')
-        elif action == 'reject':
-            application.status = 'rejected'
-            messages.success(request, f'Application from {application.worker.full_name} rejected')
-            
-        application.save()
-        
-    except TeamRequest.DoesNotExist:
-        messages.error(request, 'Application not found')
-    except Exception as e:
-        messages.error(request, f'Error handling application: {str(e)}')
-    
-    return redirect('company_dashboard')
+def designer_logout(request):
+    # Clear designer-specific session data
+    request.session.pop('designer_id', None)
+    request.session.pop('role', None)
+    request.session.pop('is_designer', None)
+    messages.success(request, 'Logged out successfully')
+    return redirect('dlogin')

@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% comment %} {% extends 'base.html' %}
 {% load static %}
 
 {% block content %}
@@ -108,74 +108,55 @@
             </div>
         </div>
 
-        <!-- Worker Applications -->
-        <div class="applications card mt-4" id="applications">
-            <div class="card-header">
-                <h5><i class="fas fa-users"></i> Recent Applications</h5>
-            </div>
-            <div class="card-body">
-                {% if worker_applications %}
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Worker Name</th>
-                                    <th>Specialization</th>
-                                    <th>Experience</th>
-                                    <th>Applied Date</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for application in worker_applications %}
-                                <tr>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            {% if application.worker.profile_picture %}
-                                                <img src="{{ application.worker.profile_picture.url }}" class="worker-avatar">
-                                            {% else %}
-                                                <div class="worker-avatar-placeholder">
-                                                    <i class="fas fa-user"></i>
-                                                </div>
-                                            {% endif %}
-                                            <span class="ms-2">{{ application.worker.full_name }}</span>
-                                        </div>
-                                    </td>
-                                    <td>{{ application.worker.specialization }}</td>
-                                    <td>{{ application.worker.experience_years }} years</td>
-                                    <td>{{ application.created_at|date:"M d, Y" }}</td>
-                                    <td>
-                                        {% if application.status == 'pending' %}
-                                            <form method="POST" class="d-inline" action="{% url 'handle_application' application.id 'accept' %}">
-                                                {% csrf_token %}
-                                                <button type="submit" class="btn btn-sm btn-success">
-                                                    <i class="fas fa-check"></i> Accept
-                                                </button>
-                                            </form>
-                                            <form method="POST" class="d-inline" action="{% url 'handle_application' application.id 'reject' %}">
-                                                {% csrf_token %}
-                                                <button type="submit" class="btn btn-sm btn-danger">
-                                                    <i class="fas fa-times"></i> Reject
-                                                </button>
-                                            </form>
-                                        {% else %}
-                                            <span class="badge bg-{{ application.status|yesno:'success,danger' }}">
-                                                {{ application.status|title }}
-                                            </span>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+        <!-- Applications Section -->
+        <div class="applications-section">
+            <h2 class="section-title">Worker Applications</h2>
+            
+            <div class="applications-grid">
+                {% for application in worker_applications %}
+                {% if application.status == 'pending' %}
+                <div class="application-card" data-aos="fade-up">
+                    <div class="worker-info">
+                        {% if application.worker.profile_picture %}
+                            <img src="{{ application.worker.profile_picture.url }}" alt="{{ application.worker.full_name }}" class="worker-avatar">
+                        {% else %}
+                            <div class="worker-avatar-placeholder">
+                                <i class="fas fa-user"></i>
+                            </div>
+                        {% endif %}
+                        <div class="worker-details">
+                            <h4>{{ application.worker.full_name }}</h4>
+                            <p class="specialization">{{ application.worker.specialization }}</p>
+                            <div class="worker-stats">
+                                <span><i class="fas fa-star"></i> {{ application.worker.rating|default:"New" }}</span>
+                                <span><i class="fas fa-briefcase"></i> {{ application.worker.experience_years }} Years</span>
+                                <span><i class="fas fa-rupee-sign"></i> {{ application.worker.hourly_rate }}/hr</span>
+                            </div>
+                        </div>
                     </div>
-                {% else %}
-                    <div class="text-center py-4">
-                        <i class="fas fa-inbox fa-3x text-muted"></i>
-                        <p class="mt-3">No applications received yet</p>
+                    
+                    <div class="application-actions">
+                        <form method="POST" action="{% url 'handle_application' application.id 'accept' %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-accept">
+                                <i class="fas fa-check"></i> Accept
+                            </button>
+                        </form>
+                        <form method="POST" action="{% url 'handle_application' application.id 'reject' %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-reject">
+                                <i class="fas fa-times"></i> Reject
+                            </button>
+                        </form>
                     </div>
+                </div>
                 {% endif %}
+                {% empty %}
+                <div class="no-applications">
+                    <i class="fas fa-inbox fa-3x"></i>
+                    <p>No pending applications</p>
+                </div>
+                {% endfor %}
             </div>
         </div>
     </main>
@@ -350,5 +331,145 @@
     padding: 0.25rem 0.8rem;
     font-size: 0.875rem;
 }
+
+.applications-section {
+    padding: 2rem;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.section-title {
+    color: #2c3e50;
+    margin-bottom: 2rem;
+    font-weight: 600;
+}
+
+.applications-grid {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.application-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    border: 1px solid #eee;
+    transition: all 0.3s ease;
+}
+
+.application-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+}
+
+.worker-info {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.worker-avatar, .worker-avatar-placeholder {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.worker-avatar-placeholder {
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #adb5bd;
+    font-size: 2rem;
+}
+
+.worker-details h4 {
+    margin: 0;
+    color: #2c3e50;
+}
+
+.specialization {
+    color: #6c757d;
+    margin: 0.5rem 0;
+}
+
+.worker-stats {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+.worker-stats span {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.worker-stats i {
+    color: #3498db;
+}
+
+.application-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.btn-accept, .btn-reject {
+    padding: 0.8rem 2rem;
+    border: none;
+    border-radius: 25px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-accept {
+    background: linear-gradient(135deg, #2ecc71, #27ae60);
+    color: white;
+}
+
+.btn-reject {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    color: white;
+}
+
+.btn-accept:hover, .btn-reject:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.no-applications {
+    text-align: center;
+    padding: 3rem;
+    color: #6c757d;
+}
+
+.no-applications i {
+    margin-bottom: 1rem;
+    color: #dee2e6;
+}
 </style>
-{% endblock %} 
+
+<script>
+// Add smooth animations
+document.addEventListener('DOMContentLoaded', function() {
+    const cards = document.querySelectorAll('.application-card');
+    cards.forEach((card, index) => {
+        setTimeout(() => {
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+});
+</script>
+{% endblock %}  {% endcomment %}

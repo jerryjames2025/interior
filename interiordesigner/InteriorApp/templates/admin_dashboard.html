@@ -136,12 +136,7 @@
                     Users
                 </a>
             </li>
-            <li class="admin-menu-item">
-                <a href="#" class="admin-menu-link">
-                    <i class="fas fa-hard-hat admin-menu-icon"></i>
-                    Workers
-                </a>
-            </li>
+           
             <li class="admin-menu-item">
                 <a href="#" class="admin-menu-link">
                     <i class="fas fa-paint-brush admin-menu-icon"></i>
@@ -166,10 +161,16 @@
                     Settings
                 </a>
             </li>
-            <li class="admin-menu-item">
+            {% comment %} <li class="admin-menu-item">
                 <a href="{% url 'admin_logout' %}" class="admin-menu-link">
                     <i class="fas fa-sign-out-alt admin-menu-icon"></i>
                     Logout
+                </a>
+            </li> {% endcomment %}
+            <li class="admin-menu-item">
+                <a href="{% url 'admin_add_company' %}" class="admin-menu-link">
+                    <i class="fas fa-building admin-menu-icon"></i>
+                    Add Company
                 </a>
             </li>
         </ul>
@@ -200,6 +201,70 @@
                 <h3>Completed Projects</h3>
                 <h2>{{ completed_projects }}</h2>
                 <p class="mb-0 text-success">↑ 10% this month</p>
+            </div>
+        </div>
+
+        <!-- Add this after the stats grid section -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">Available Companies</h4>
+                        {% comment %} <a href="{% url 'admin_add_company' %}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Add New Company
+                        </a> {% endcomment %}
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Logo</th>
+                                        <th>Company Name</th>
+                                        <th>Location</th>
+                                        <th>Contact</th>
+                                        <th>Workers</th>
+                                        <th>Established</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for company in companies %}
+                                    <tr>
+                                        <td>
+                                            {% if company.logo %}
+                                                <img src="{{ company.logo.url }}" alt="{{ company.name }}" style="width: 50px; height: 50px; object-fit: cover;">
+                                            {% else %}
+                                                <div class="no-logo">No Logo</div>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ company.name }}</td>
+                                        <td>{{ company.address }}</td>
+                                        <td>
+                                            <div>{{ company.phone }}</div>
+                                            <small>{{ company.email }}</small>
+                                        </td>
+                                        <td>{{ company.workers.count }} workers</td>
+                                        <td>{{ company.established_year }}</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-info" onclick="viewCompanyDetails({{ company.id }})">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-danger" onclick="deleteCompany({{ company.id }})">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="7" class="text-center">No companies registered yet</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 

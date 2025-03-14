@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head %}
+<style>
+.company-form-container {
+    padding: 30px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.worker-section {
+    margin-top: 20px;
+    padding: 20px;
+    border: 1px solid #eee;
+    border-radius: 8px;
+}
+
+.worker-list {
+    margin-top: 15px;
+}
+
+.worker-item {
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="admin-dashboard">
+    <!-- Include your admin sidebar here -->
+    
+    <div class="admin-content">
+        <div class="container">
+            <h2 class="mb-4">Add New Company</h2>
+            
+            <div class="company-form-container">
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <!-- Company Details -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label>Company Name*</label>
+                                <input type="text" name="company_name" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label>Email*</label>
+                                <input type="email" name="email" class="form-control" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label>Contact Number*</label>
+                                <input type="tel" name="phone" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label>Started Year*</label>
+                                <input type="number" name="established_year" class="form-control" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label>Address*</label>
+                        <textarea name="address" class="form-control" rows="3" required></textarea>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label>Company Description*</label>
+                        <textarea name="description" class="form-control" rows="4" required></textarea>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label>Company Logo</label>
+                        <input type="file" name="logo" class="form-control" accept="image/*">
+                    </div>
+
+                    <!-- Workers Section -->
+                    <div class="worker-section">
+                        <h4>Add Workers</h4>
+                        <div id="workers-container">
+                            <div class="worker-item">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label>Worker Name*</label>
+                                            <input type="text" name="worker_names[]" class="form-control" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label>Skill/Expertise*</label>
+                                            <select name="worker_skills[]" class="form-control" required>
+                                                <option value="">Select Skill</option>
+                                                <option value="Carpenter">Carpenter</option>
+                                                <option value="Plumber">Plumber</option>
+                                                <option value="Electrician">Electrician</option>
+                                                <option value="Painter">Painter</option>
+                                                <option value="Mason">Mason</option>
+                                                <option value="HVAC Technician">HVAC Technician</option>
+                                                <option value="Interior Designer">Interior Designer</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Experience (Years)*</label>
+                                            <input type="number" name="worker_experience[]" class="form-control" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-1">
+                                        <button type="button" class="btn btn-danger mt-4" onclick="removeWorker(this)">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-secondary mt-3" onclick="addWorker()">
+                            Add Another Worker
+                        </button>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            Add Company
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function addWorker() {
+    const container = document.getElementById('workers-container');
+    const workerItem = container.querySelector('.worker-item').cloneNode(true);
+    
+    // Clear the inputs
+    workerItem.querySelectorAll('input').forEach(input => input.value = '');
+    workerItem.querySelector('select').value = '';
+    
+    container.appendChild(workerItem);
+}
+
+function removeWorker(button) {
+    const workersContainer = document.getElementById('workers-container');
+    if (workersContainer.children.length > 1) {
+        button.closest('.worker-item').remove();
+    }
+}
+</script>
+{% endblock %} 

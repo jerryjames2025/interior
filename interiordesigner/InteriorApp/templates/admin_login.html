@@ -1,99 +1,87 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block head %}
-<style>
-.admin-login-container {
-    min-height: 100vh;
-    background: linear-gradient(135deg, #1a1c20, #2c3e50);
-    padding: 50px 0;
-}
-
-.admin-login-card {
-    background: white;
-    border-radius: 15px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-    overflow: hidden;
-}
-
-.admin-login-header {
-    background: linear-gradient(135deg, #e67e22, #d35400);
-    padding: 30px;
-    text-align: center;
-    color: white;
-}
-
-.admin-login-header h2 {
-    margin: 0;
-    font-size: 2rem;
-    font-weight: 600;
-}
-
-.admin-login-body {
-    padding: 40px;
-}
-
-.admin-login-form input {
-    border-radius: 25px;
-    padding: 12px 20px;
-    border: 2px solid #eee;
-    transition: all 0.3s ease;
-}
-
-.admin-login-form input:focus {
-    border-color: #e67e22;
-    box-shadow: 0 0 10px rgba(230, 126, 34, 0.1);
-}
-
-.admin-login-btn {
-    background: linear-gradient(135deg, #e67e22, #d35400);
-    color: white;
-    border: none;
-    border-radius: 25px;
-    padding: 12px 30px;
-    width: 100%;
-    font-weight: 600;
-    transition: all 0.3s ease;
-}
-
-.admin-login-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(230, 126, 34, 0.3);
-}
-</style>
-{% endblock %}
-
 {% block body %}
-<div class="admin-login-container">
+<!-- Navbar Start -->
+{% comment %} <div class="container-fluid position-relative nav-bar p-0">
+    <div class="container position-relative" style="z-index: 9;">
+        <nav class="navbar navbar-expand-lg bg-secondary navbar-dark py-3 py-lg-0 pl-3 pl-lg-5">
+            <a href="" class="navbar-brand">
+                <h1 class="m-0 display-5 text-white"><span class="text-primary">AURA </span>DESIGNS</h1>
+            </a>
+            <div class="navbar-nav ml-auto py-0">
+                <a href="{% url 'logout' %}" class="btn btn-light ml-3">Logout</a>
+            </div>
+        </nav>
+    </div> {% endcomment %}
+</div>
+<!-- Navbar End -->
+
+<!-- Under Nav Start -->
+{% comment %} <div class="container-fluid bg-white py-3">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-4 text-left mb-3 mb-lg-0">
+                <div class="d-inline-flex text-left">
+                    <h1 class="flaticon-office font-weight-normal text-primary m-0 mr-3"></h1>
+                    <div class="d-flex flex-column">
+                        <h5>Our Office</h5>
+                        <p class="m-0">Kanjirappally,Kottayam</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 text-left text-lg-center mb-3 mb-lg-0">
+                <div class="d-inline-flex text-left">
+                    <h1 class="flaticon-email font-weight-normal text-primary m-0 mr-3"></h1>
+                    <div class="d-flex flex-column">
+                        <h5>Email Us</h5>
+                        <p class="m-0">auradesigns@gmail.com</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 text-left text-lg-right mb-3 mb-lg-0">
+                <div class="d-inline-flex text-left">
+                    <h1 class="flaticon-telephone font-weight-normal text-primary m-0 mr-3"></h1>
+                    <div class="d-flex flex-column">
+                        <h5>Call Us</h5>
+                        <p class="m-0">+91 9778163832</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> {% endcomment %}
+<!-- Under Nav End -->
+
+<!-- Login Form Start -->
+<div class="container-fluid py-5">
     <div class="container">
         <div class="row justify-content-center">
-            <div class="col-md-6">
-                <div class="admin-login-card">
-                    <div class="admin-login-header">
-                        <h2>AURA DESIGNS Admin</h2>
-                        <p class="mb-0">Platform Management System</p>
-                    </div>
-                    <div class="admin-login-body">
+            <div class="col-lg-6">
+                <div class="card shadow">
+                    <div class="card-body p-5">
+                        <h3 class="text-center mb-4">Admin Login</h3>
+                        
                         {% if messages %}
                             {% for message in messages %}
-                                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
                                     {{ message }}
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    <button type="button" class="close" data-dismiss="alert">&times;</button>
                                 </div>
                             {% endfor %}
                         {% endif %}
 
-                        <form method="POST" class="admin-login-form">
+                        <form method="POST">
                             {% csrf_token %}
-                            <div class="mb-4">
-                                <label class="form-label">Username</label>
+                            <div class="form-group">
+                                <label>Username</label>
                                 <input type="text" name="username" class="form-control" required>
                             </div>
-                            <div class="mb-4">
-                                <label class="form-label">Password</label>
+                            <div class="form-group">
+                                <label>Password</label>
                                 <input type="password" name="password" class="form-control" required>
                             </div>
-                            <button type="submit" class="admin-login-btn">Login to Dashboard</button>
+                            <button type="submit" class="btn btn-primary btn-block">Login</button>
                         </form>
                     </div>
                 </div>
@@ -101,4 +89,5 @@
         </div>
     </div>
 </div>
+<!-- Login Form End -->
 {% endblock %} 
