@@ -130,7 +130,8 @@
     /* Right Corner Cart and Favorites */
     .right-menu {
       display: flex;
-      gap: 15px;
+      align-items: center;
+      gap: 20px;
     }
     .right-menu a {
       color: white;
@@ -619,6 +620,76 @@
             padding: 1.5rem;
         }
     }
+
+    .user-profile-menu {
+        position: relative;
+        z-index: 1000;
+    }
+
+    .profile-toggle {
+        background: none;
+        border: none;
+        padding: 8px 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .profile-toggle:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+    }
+
+    .profile-dropdown {
+        position: absolute;
+        right: 0;
+        top: 100%;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        min-width: 220px;
+        display: none;
+        margin-top: 10px;
+    }
+
+    .profile-dropdown.show {
+        display: block;
+        animation: slideDown 0.3s ease;
+    }
+
+    .profile-dropdown a {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 20px;
+        color: #333;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .profile-dropdown a:hover {
+        background: #f8f9fa;
+        color: #007bff;
+    }
+
+    .profile-dropdown a i {
+        width: 20px;
+        text-align: center;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
   </style>
 </head>
 <body>
@@ -654,6 +725,17 @@
         <i class="fas fa-heart"></i> Favorites
         <span class="favorite-count">{{ user_favorites|length }}</span>
       </a>
+      
+      {% if user.is_authenticated %}
+      <a href="{% url 'user_dashboard' %}" class="user-dashboard-link">
+        <i class="fas fa-user-circle"></i>
+        <span>My Dashboard</span>
+      </a>
+      {% else %}
+      <a href="{% url 'login' %}" class="login-link">
+        <i class="fas fa-sign-in-alt"></i> Login
+      </a>
+      {% endif %}
     </div>
   </nav>
 
@@ -939,6 +1021,47 @@
         if (event.target == modal) {
             closeModal();
         }
+    }
+
+    function toggleProfileMenu(event) {
+        if (event) {
+            event.stopPropagation();
+        }
+        const dropdown = document.getElementById('profileDropdown');
+        dropdown.classList.toggle('show');
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(event) {
+        const dropdown = document.getElementById('profileDropdown');
+        const toggleButton = document.querySelector('.profile-toggle');
+        
+        if (!dropdown.contains(event.target) && !toggleButton.contains(event.target)) {
+            dropdown.classList.remove('show');
+        }
+    });
+
+    // Prevent dropdown from closing when clicking inside
+    document.getElementById('profileDropdown').addEventListener('click', function(event) {
+        event.stopPropagation();
+    });
+
+    // Check for notifications
+    function checkNotifications() {
+        fetch('{% url "get_notifications" %}')
+            .then(response => response.json())
+            .then(data => {
+                if (data.notifications.length > 0) {
+                    // Update notification badge if you have one
+                    document.getElementById('notificationCount').textContent = data.notifications.length;
+                }
+            });
+    }
+
+    // Check for notifications every 30 seconds
+    if (document.getElementById('notificationCount')) {
+        setInterval(checkNotifications, 30000);
+        checkNotifications(); // Check immediately
     }
   </script>
 

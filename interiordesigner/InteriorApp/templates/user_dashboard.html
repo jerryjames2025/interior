@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head %}
+<style>
+    .dashboard-stats {
+        margin-bottom: 30px;
+    }
+    .stat-card {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+    .stat-card i {
+        font-size: 2em;
+        color: #007bff;
+        margin-bottom: 10px;
+    }
+    .stat-card h3 {
+        margin: 0;
+        font-size: 1.8em;
+        color: #333;
+    }
+    .stat-card p {
+        margin: 5px 0 0;
+        color: #666;
+    }
+    .consultation-status {
+        padding: 5px 10px;
+        border-radius: 15px;
+        font-size: 0.9em;
+    }
+    .status-pending {
+        background: #ffd700;
+        color: #000;
+    }
+    .status-approved {
+        background: #28a745;
+        color: white;
+    }
+    .status-declined {
+        background: #dc3545;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <!-- User Profile Section -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card shadow">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 text-center">
+                            {% if user.profile_picture %}
+                                <img src="{{ user.profile_picture.url }}" alt="Profile" class="rounded-circle img-fluid" style="width: 150px; height: 150px; object-fit: cover;">
+                            {% else %}
+                                <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center" style="width: 150px; height: 150px; margin: 0 auto;">
+                                    <i class="fas fa-user fa-4x text-white"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-9">
+                            <h2>Welcome, {{ user.get_full_name|default:user.username }}!</h2>
+                            <p class="text-muted">{{ user.email }}</p>
+                            <a href="{% url 'edit_profile' %}" class="btn btn-primary">
+                                <i class="fas fa-edit"></i> Edit Profile
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row dashboard-stats">
+        <div class="col-md-4">
+            <div class="stat-card">
+                <i class="fas fa-clock"></i>
+                <h3>{{ pending_consultations }}</h3>
+                <p>Pending Consultations</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <i class="fas fa-check-circle"></i>
+                <h3>{{ approved_consultations }}</h3>
+                <p>Approved Consultations</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <i class="fas fa-shopping-cart"></i>
+                <h3>{{ total_orders }}</h3>
+                <p>Total Orders</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Consultations -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Recent Consultations</h5>
+        </div>
+        <div class="card-body">
+            {% if consultations %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Designer</th>
+                                <th>Design</th>
+                                <th>Date</th>
+                                <th>Method</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for consultation in consultations|slice:":5" %}
+                                <tr>
+                                    <td>{{ consultation.designer.full_name }}</td>
+                                    <td>{{ consultation.design.design_name }}</td>
+                                    <td>{{ consultation.preferred_date }}</td>
+                                    <td>{{ consultation.get_consultation_method_display }}</td>
+                                    <td>
+                                        <span class="consultation-status status-{{ consultation.status }}">
+                                            {{ consultation.status|title }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted text-center">No consultations yet.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Favorite Designs -->
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">Favorite Designs</h5>
+        </div>
+        <div class="card-body">
+            {% if favorite_designs %}
+                <div class="row">
+                    {% for design in favorite_designs %}
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100">
+                                {% if design.image %}
+                                    <img src="{{ design.image.url }}" class="card-img-top" alt="{{ design.design_name }}" style="height: 200px; object-fit: cover;">
+                                {% endif %}
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ design.design_name }}</h5>
+                                    <p class="card-text">{{ design.description|truncatechars:100 }}</p>
+                                    <p><strong>Designer:</strong> {{ design.designer.full_name }}</p>
+                                    <p><strong>Price:</strong> ₹{{ design.price }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted text-center">No favorite designs yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Notification System -->
+<div id="notification-container" style="position: fixed; top: 20px; right: 20px; z-index: 1000;"></div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+function checkNotifications() {
+    fetch('{% url "get_notifications" %}')
+        .then(response => response.json())
+        .then(data => {
+            data.notifications.forEach(notification => {
+                Swal.fire({
+                    title: notification.title,
+                    text: notification.message,
+                    icon: 'info',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 5000
+                });
+
+                // Mark notification as read
+                fetch(`/notifications/mark-read/${notification.id}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    }
+                });
+            });
+        });
+}
+
+// Check for notifications every 30 seconds
+setInterval(checkNotifications, 30000);
+// Check immediately on page load
+checkNotifications();
+</script>
+{% endblock %} 

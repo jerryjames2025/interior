@@ -337,3 +337,51 @@ class Worker(models.Model):
 
     def __str__(self):
         return f"{self.name} - {self.skill}"
+
+class Consultation(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('declined', 'Declined'),
+        ('completed', 'Completed')
+    ]
+    
+    METHOD_CHOICES = [
+        ('video', 'Video Call'),
+        ('voice', 'Voice Call'),
+        ('in_person', 'In Person')
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    designer = models.ForeignKey(Designer, on_delete=models.CASCADE)
+    design = models.ForeignKey(Design, on_delete=models.CASCADE)
+    preferred_date = models.DateField()
+    preferred_time = models.TimeField()
+    consultation_method = models.CharField(max_length=20, choices=METHOD_CHOICES)
+    notes = models.TextField(blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Consultation with {self.designer.full_name} - {self.status}"
+
+class Notification(models.Model):
+    NOTIFICATION_TYPES = [
+        ('consultation_update', 'Consultation Update'),
+        ('new_message', 'New Message'),
+        ('system', 'System Notification')
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    title = models.CharField(max_length=200)
+    message = models.TextField()
+    notification_type = models.CharField(max_length=50, choices=NOTIFICATION_TYPES)
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.title} - {self.user.username}"

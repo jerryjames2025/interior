@@ -125,6 +125,13 @@ urlpatterns = [
     # path('company/dashboard/', views.company_dashboard, name='company_dashboard'),
     # path('designer/submit-application/<int:designer_id>/', views.submit_company_application, name='submit_company_application'),
     path('admin/add-company/', views.admin_add_company, name='admin_add_company'),
+    path('user/dashboard/', views.user_dashboard, name='user_dashboard'),
+    path('user/consultations/', views.view_consultations, name='view_consultations'),
+    path('user/edit-profile/', views.edit_profile, name='edit_profile'),
+    path('book-consultation/<int:design_id>/', views.book_consultation, name='book_consultation'),
+    path('designer/handle-consultation/<int:consultation_id>/<str:action>/', views.handle_consultation, name='handle_consultation'),
+    path('notifications/', views.get_notifications, name='get_notifications'),
+    path('notifications/mark-read/<int:notification_id>/', views.mark_notification_read, name='mark_notification_read'),
 ]
 
 

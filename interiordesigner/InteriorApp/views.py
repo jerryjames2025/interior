@@ -462,19 +462,95 @@ def designer_dashboard(request):
         designer = Designer.objects.get(id=request.session.get('designer_id'))
         designs = Design.objects.filter(designer=designer)
         
+        # Get pending and recent consultations
+        pending_consultations = Consultation.objects.filter(
+            designer=designer,
+            status='pending'
+        ).order_by('-created_at')
+        
+        recent_consultations = Consultation.objects.filter(
+            designer=designer
+        ).exclude(status='pending').order_by('-updated_at')[:5]
+        
         context = {
             'designer': designer,
             'designs': designs,
             'total_views': designs.aggregate(Sum('views'))['views__sum'] or 0,
-            'total_likes': sum(design.favorited_by.count() for design in designs),  # Count favorites as likes
-            'total_comments': 0,
-            'companies': Company.objects.all().prefetch_related('workers')
+            'total_likes': sum(design.favorited_by.count() for design in designs),
+            'total_consultations': Consultation.objects.filter(designer=designer).count(),
+            'pending_consultations': pending_consultations,
+            'recent_consultations': recent_consultations
         }
         return render(request, 'designer_dashboard.html', context)
         
     except Designer.DoesNotExist:
         messages.error(request, 'Designer not found')
         return redirect('dlogin')
+
+@designer_login_required
+def handle_consultation(request, consultation_id, action):
+    if request.method == 'POST':
+        try:
+            consultation = Consultation.objects.get(id=consultation_id)
+            
+            if action == 'approve':
+                consultation.status = 'approved'
+                message = 'Consultation request approved successfully!'
+            elif action == 'decline':
+                consultation.status = 'declined'
+                message = 'Consultation request declined.'
+            else:
+                return JsonResponse({'success': False, 'error': 'Invalid action'})
+            
+            consultation.save()
+            
+            # Create notification for user
+            Notification.objects.create(
+                user=consultation.user,
+                title=f'Consultation {consultation.status}',
+                message=f'Your consultation request for {consultation.design.design_name} has been {consultation.status}.',
+                notification_type='consultation_update'
+            )
+            
+            return JsonResponse({
+                'success': True,
+                'message': message,
+                'consultation_id': consultation_id,
+                'new_status': consultation.status
+            })
+            
+        except Consultation.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'error': 'Consultation not found'
+            })
+    
+    return JsonResponse({
+        'success': False,
+        'error': 'Invalid request method'
+    })
+
+@login_required
+def get_notifications(request):
+    notifications = Notification.objects.filter(
+        user=request.user,
+        is_read=False
+    ).order_by('-created_at')
+    
+    return JsonResponse({
+        'notifications': list(notifications.values(
+            'id', 'title', 'message', 'created_at'
+        ))
+    })
+
+@login_required
+def mark_notification_read(request, notification_id):
+    if request.method == 'POST':
+        notification = get_object_or_404(Notification, id=notification_id, user=request.user)
+        notification.is_read = True
+        notification.save()
+        return JsonResponse({'success': True})
+    return JsonResponse({'success': False})
 
 def add_design(request):
     if request.method == 'POST':
@@ -1878,22 +1954,19 @@ def view_designs(request):
     # Get filter parameters
     style = request.GET.get('style')
     room_type = request.GET.get('room_type')
-    price_range = request.GET.get('price_range')
     
     # Apply filters if they exist
     if style:
         designs = designs.filter(style=style)
     if room_type:
         designs = designs.filter(room_type=room_type)
-    if price_range:
-        min_price, max_price = price_range.split('-')
-        designs = designs.filter(price__gte=min_price, price__lte=max_price)
     
     context = {
         'designs': designs,
-        'styles': Design.objects.values_list('style', flat=True).distinct(),
-        'room_types': Design.objects.values_list('room_type', flat=True).distinct(),
+        'room_types': Design.ROOM_TYPE_CHOICES,
+        'styles': Design.STYLE_CHOICES
     }
+    
     return render(request, 'view_designs.html', context)
 
 @login_required
@@ -2128,3 +2201,53 @@ def designer_logout(request):
     request.session.pop('is_designer', None)
     messages.success(request, 'Logged out successfully')
     return redirect('dlogin')
+
+@login_required
+def user_dashboard(request):
+    # Get user's consultations, favorites, and orders
+    consultations = Consultation.objects.filter(user=request.user).order_by('-created_at')
+    favorite_designs = Design.objects.filter(favorited_by=request.user)
+    orders = Order.objects.filter(user=request.user).order_by('-created_at')
+    
+    context = {
+        'consultations': consultations,
+        'favorite_designs': favorite_designs,
+        'orders': orders,
+        'pending_consultations': consultations.filter(status='pending').count(),
+        'approved_consultations': consultations.filter(status='approved').count(),
+        'total_orders': orders.count()
+    }
+    return render(request, 'user_dashboard.html', context)
+
+@login_required
+def book_consultation(request, design_id):
+    if request.method == 'POST':
+        try:
+            design = Design.objects.get(id=design_id)
+            consultation = Consultation.objects.create(
+                user=request.user,
+                designer=design.designer,
+                design=design,
+                preferred_date=request.POST.get('preferred_date'),
+                preferred_time=request.POST.get('preferred_time'),
+                consultation_method=request.POST.get('consultation_method'),
+                notes=request.POST.get('notes')
+            )
+            return JsonResponse({
+                'success': True,
+                'message': 'Consultation request submitted successfully!'
+            })
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            })
+    return JsonResponse({
+        'success': False,
+        'error': 'Invalid request method'
+    })
+
+@login_required
+def view_consultations(request):
+    consultations = Consultation.objects.filter(user=request.user).order_by('-created_at')
+    return render(request, 'user_consultations.html', {'consultations': consultations})

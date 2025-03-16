@@ -424,316 +424,207 @@
     background: #ffd700;
     color: #000;
 }
+
+.search-section {
+    margin: 20px 0;
+    text-align: center;
+}
+.search-section input {
+    padding: 10px;
+    width: 300px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+}
+.search-section button {
+    padding: 10px 20px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+.card {
+    transition: transform 0.3s;
+}
+.card:hover {
+    transform: translateY(-5px);
+}
 </style>
 {% endblock %}
 
 {% block body %}
+<div class="container mt-4">
+    <!-- Search Section -->
+    <div class="search-section">
+        <input type="text" id="searchInput" placeholder="Search designs...">
+        <button id="searchButton">
+            <i class="fas fa-search"></i> Search
+        </button>
+    </div>
 
-<nav class="navbar">
-    <div class="navbar-left">
-        <div class="navbar-logo">
-            <img src="{% static 'images/logo.jpeg' %}" alt="Logo" style="height: 50px;" />
+    <!-- Title Section -->
+    <div class="text-center mb-4">
+        <h2>Our Interior Designs</h2>
+        <p class="text-muted">Explore our collection of beautiful interior designs</p>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="mb-4">
+        <div class="row">
+            <div class="col-md-6">
+                <select class="form-select" id="roomTypeFilter">
+                    <option value="">All Room Types</option>
+                    {% for value, label in room_types %}
+                        <option value="{{ value }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-6">
+                <select class="form-select" id="styleFilter">
+                    <option value="">All Styles</option>
+                    {% for value, label in styles %}
+                        <option value="{{ value }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
         </div>
-        <ul class="nav-links">
-            <li>
-                <a href="#">Designs <i class="fas fa-chevron-down"></i></a>
-                <div class="dropdown">
-                    <a href="{% url 'view_designs' %}" {% if not selected_category %}class="active"{% endif %}>All Designs</a>
-                    <a href="{% url 'view_designs' %}?category=kitchen" {% if selected_category == 'kitchen' %}class="active"{% endif %}>Kitchen Designs</a>
-                    <a href="{% url 'view_designs' %}?category=living" {% if selected_category == 'living' %}class="active"{% endif %}>Living Room Designs</a>
-                    <a href="{% url 'view_designs' %}?category=bedroom" {% if selected_category == 'bedroom' %}class="active"{% endif %}>Bedroom Designs</a>
-                    <a href="{% url 'view_designs' %}?category=bathroom" {% if selected_category == 'bathroom' %}class="active"{% endif %}>Bathroom Designs</a>
-                    <a href="{% url 'view_designs' %}?category=dining" {% if selected_category == 'dining' %}class="active"{% endif %}>Dining Room Designs</a>
-                    <a href="{% url 'view_designs' %}?category=office" {% if selected_category == 'office' %}class="active"{% endif %}>Business/Office Designs</a>
-                    <a href="{% url 'view_designs' %}?category=hallway" {% if selected_category == 'hallway' %}class="active"{% endif %}>Hallway/Entry Designs</a>
+    </div>
+
+    <!-- Designs Grid -->
+    <div class="row">
+        {% if designs %}
+            {% for design in designs %}
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow">
+                    {% if design.image %}
+                        <img src="{{ design.image.url }}" class="card-img-top" alt="{{ design.design_name }}" style="height: 200px; object-fit: cover;">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ design.design_name }}</h5>
+                        <p class="card-text">{{ design.description|truncatechars:100 }}</p>
+                        <p><strong>Price:</strong> ₹{{ design.price }}</p>
+                        <p><strong>Style:</strong> {{ design.get_style_display }}</p>
+                        <p><strong>Room Type:</strong> {{ design.get_room_type_display }}</p>
+                        <button class="btn btn-primary w-100" onclick="bookConsultation({{ design.id }})">
+                            Book Consultation
+                        </button>
+                    </div>
                 </div>
-            </li>
-            <li>
-                {% comment %} <a href="{% url 'meet_workers' %}">Meet Workers</a> {% endcomment %}
-            </li>
-        </ul>
-    </div>
-
-    <div class="search-container">
-        <div class="search-bar">
-            <input type="text" placeholder="Search designs..." id="searchInput">
-            <button type="submit" id="searchButton"><i class="fas fa-search"></i></button>
-        </div>
-    </div>
-
-    <div class="navbar-right">
-       
-        </a>
-        {% if request.session.id %}
-            
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="alert alert-info text-center">
+                    No designs found. Please try different filters.
+                </div>
+            </div>
         {% endif %}
     </div>
-</nav>
-
-<style>
-    .navbar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background: linear-gradient(145deg, #000000, #333333);
-        padding: 15px 30px;
-        box-shadow: 0 2px 15px rgba(0,0,0,0.1);
-    }
-
-    .navbar-left, .navbar-right {
-        display: flex;
-        align-items: center;
-        gap: 20px;
-    }
-
-    .dropdown-container {
-        position: relative;
-    }
-
-    .dropdown-trigger {
-        background: rgba(255, 255, 255, 0.1);
-        color: white;
-        padding: 12px 24px;
-        border-radius: 25px;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        font-weight: 500;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-    .dropdown-trigger:hover {
-        background: rgba(255, 255, 255, 0.2);
-    }
-
-    .dropdown-menu {
-        position: absolute;
-        top: 100%;
-        left: 0;
-        background: white;
-        min-width: 250px;
-        border-radius: 12px;
-        box-shadow: 0 8px 30px rgba(0,0,0,0.1);
-        margin-top: 10px;
-        display: none;
-        z-index: 1000;
-    }
-
-    .dropdown-container:hover .dropdown-menu {
-        display: block;
-        animation: fadeInUp 0.3s ease;
-    }
-
-    .dropdown-menu a {
-        display: block;
-        padding: 12px 20px;
-        color: #2c3e50;
-        text-decoration: none;
-        transition: all 0.3s ease;
-    }
-
-    .dropdown-menu a:hover {
-        background: #f8f9fa;
-        color: #3498db;
-    }
-
-    .search-container {
-        flex: 0 1 500px;
-    }
-
-    .search-bar {
-        display: flex;
-        align-items: center;
-        background: rgba(255, 255, 255, 0.95);
-        border-radius: 25px;
-        padding: 5px 15px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
-
-    .search-bar input {
-        border: none;
-        outline: none;
-        padding: 8px;
-        width: 100%;
-        background: transparent;
-    }
-
-    .search-bar button {
-        background: none;
-        border: none;
-        color: #3498db;
-        cursor: pointer;
-        padding: 8px;
-    }
-
-    .cart-button {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        background: rgba(255, 255, 255, 0.1);
-        color: white;
-        padding: 12px 24px;
-        border-radius: 25px;
-        text-decoration: none;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        transition: all 0.3s ease;
-    }
-
-    .cart-button:hover {
-        background: rgba(255, 255, 255, 0.2);
-        transform: translateY(-2px);
-    }
-
-    .cart-count {
-        background: #e74c3c;
-        color: white;
-        padding: 2px 6px;
-        border-radius: 50%;
-        font-size: 0.8em;
-    }
-
-    .nav-button {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        background: rgba(255, 255, 255, 0.1);
-        color: white;
-        padding: 12px 24px;
-        border-radius: 25px;
-        text-decoration: none;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        transition: all 0.3s ease;
-    }
-
-    .nav-button:hover {
-        background: rgba(255, 255, 255, 0.2);
-        transform: translateY(-2px);
-    }
-
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(10px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-</style>
-
-<div class="product-page-container">
-    <!-- Main Content -->
-    <main class="products-main">
-        <!-- Top Bar with Sort -->
-       
-
-        <!-- Products Grid -->
-        <div class="products-grid">
-            {% for product in products %}
-            <div class="product-card" data-category="{{ product.category }}" data-price="{{ product.price }}">
-                <div class="product-image">
-                    <img src="{{ product.image.url }}" alt="{{ product.product_name }}">
-                    <button class="quick-view-btn" onclick="showQuickView({{ product.id }})">
-                        Quick View
-                    </button>
-                </div>
-                <div class="product-info">
-                    <h3 class="product-name">{{ product.product_name }}</h3>
-                    <p class="product-description">{{ product.description|truncatechars:100 }}</p>
-                    <div class="product-price">₹{{ product.price }}</div>
-                    <button class="add-to-cart-btn" onclick="addToCart({{ product.id }})">
-                        <i class="fas fa-shopping-cart"></i> Add to Cart
-                    </button>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </main>
 </div>
 
-
-
-<script>
-    document.getElementById('searchButton').addEventListener('click', function() {
-        const query = document.getElementById('searchInput').value;
-        if (query) {
-            // Redirect to the products page with the search query
-            window.location.href = "{% url 'products' %}?search=" + encodeURIComponent(query);
-        }
-    });
-
-    // Optional: Allow pressing 'Enter' to submit the search
-    document.getElementById('searchInput').addEventListener('keypress', function(event) {
-        if (event.key === 'Enter') {
-            document.getElementById('searchButton').click();
-        }
-    });
-</script>
-
-
-<div class="designs-container">
-    <div class="container">
-        <div class="section-title">
-            <h2>
-                {% if selected_category %}
-                    {{ selected_category|title }} Designs
-                {% else %}
-                    Our Interior Designs
-                {% endif %}
-            </h2>
-            <p>
-                {% if selected_category %}
-                    Explore our collection of beautiful {{ selected_category|lower }} designs
-                {% else %}
-                    Explore our collection of beautiful interior designs
-                {% endif %}
-            </p>
-        </div>
-
-        <!-- Debug information -->
-        <div class="alert alert-info">
-            Number of designs: {{ designs|length }}
-        </div>
-
-        <!-- Designs Grid -->
-        <div class="row">
-            {% for design in designs %}
-            <div class="col-md-4">
-                <div class="design-card">
-                    <div class="design-image">
-                        {% if design.image %}
-                            <img src="{{ design.image.url }}" alt="{{ design.design_name }}">
-                        {% else %}
-                            <img src="{% static 'images/default-design.jpg' %}" alt="Default Design">
-                        {% endif %}
-                    </div>
-                    <div class="design-info">
-                        <h3 class="design-name">{{ design.design_name }}</h3>
-                        <div class="design-category">{{ design.room_type }}</div>
-                        <p class="design-description">{{ design.description|truncatechars:100 }}</p>
-                        <div class="design-meta">
-                            <div class="design-price">₹{{ design.price }}</div>
-                            <a href="#" class="btn-view-details">View Details</a>
-                        </div>
-                    </div>
-                </div>
+<!-- Consultation Modal -->
+<div class="modal fade" id="consultationModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Book Consultation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            {% empty %}
-            <div class="col-12 text-center">
-                <p>No designs available at the moment.</p>
+            <div class="modal-body">
+                <form id="consultationForm">
+                    {% csrf_token %}
+                    <input type="hidden" id="designId" name="design_id">
+                    <div class="mb-3">
+                        <label>Preferred Date</label>
+                        <input type="date" name="preferred_date" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label>Preferred Time</label>
+                        <input type="time" name="preferred_time" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label>Consultation Method</label>
+                        <select name="consultation_method" class="form-control" required>
+                            <option value="video">Video Call</option>
+                            <option value="voice">Voice Call</option>
+                            <option value="in_person">In Person</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label>Notes</label>
+                        <textarea name="notes" class="form-control" rows="3"></textarea>
+                    </div>
+                </form>
             </div>
-            {% endfor %}
-        </div>
-
-        <!-- Meet Workers Banner -->
-        <div class="meet-workers-banner">
-            <h3 class="mb-3">Looking for Professional Help?</h3>
-            <p class="mb-4">Connect with our skilled designers to bring your design dreams to life</p>
-            {% comment %} <a href="{% url 'meet_workers' %}" class="btn btn-light btn-lg">Meet Our Workers</a> {% endcomment %}
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="submitConsultation()">Book Now</button>
+            </div>
         </div>
     </div>
 </div>
+
+<!-- Scripts -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+let currentDesignId;
+
+function bookConsultation(designId) {
+    console.log('bookConsultation called with designId:', designId);
+    currentDesignId = designId;
+    document.getElementById('designId').value = designId;
+    $('#consultationModal').modal('show');
+}
+
+function submitConsultation() {
+    const form = document.getElementById('consultationForm');
+    const formData = new FormData(form);
+    
+    fetch(`/book-consultation/${currentDesignId}/`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            $('#consultationModal').modal('hide');
+            Swal.fire({
+                title: 'Success!',
+                text: data.message || 'Consultation request submitted successfully!',
+                icon: 'success',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000
+            });
+            form.reset();
+        } else {
+            Swal.fire({
+                title: 'Error!',
+                text: data.error || 'Something went wrong!',
+                icon: 'error',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000
+            });
+        }
+    });
+}
+
+// Filter functionality
+$(document).ready(function() {
+    $('#roomTypeFilter, #styleFilter').change(function() {
+        const roomType = $('#roomTypeFilter').val();
+        const style = $('#styleFilter').val();
+        window.location.href = `{% url 'view_designs' %}?room_type=${roomType}&style=${style}`;
+    });
+});
+</script>
 {% endblock %} 
