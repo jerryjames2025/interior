@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django.contrib.auth.hashers import make_password, check_password
+from django.db.models import Sum
 
 
 class UserProfile(models.Model):
@@ -91,6 +92,7 @@ from django.contrib.auth.models import User
 
 # Define Designer model first
 class Designer(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='designer', null=True)
     username = models.CharField(max_length=150, unique=True)
     password = models.CharField(max_length=128)
     email = models.EmailField(unique=True)
@@ -150,16 +152,16 @@ class Design(models.Model):
 
 # Model to represent an entire shopping cart for a user
 class Cart(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='carts')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-    def get_cart_total(self):
-        # Calculate total price of the cart using the items directly
-        return sum(item.quantity * item.product.price for item in self.items.all())
-
+    
     def __str__(self):
         return f"Cart for {self.user.username}"
+    
+    def get_total_items(self):
+        """Return the total number of items in the cart"""
+        return self.cartitem_set.aggregate(Sum('quantity'))['quantity__sum'] or 0
 
 # Model to represent a single item within a cart
 class CartItem(models.Model):
@@ -316,17 +318,24 @@ class ConstructionCompany(models.Model):
         return self.company_name
 
 class Company(models.Model):
-    name = models.CharField(max_length=200)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='company')
+    company_name = models.CharField(max_length=100)
     email = models.EmailField()
     phone = models.CharField(max_length=20)
     address = models.TextField()
-    established_year = models.IntegerField()
     description = models.TextField()
+    license_number = models.CharField(max_length=50)
     logo = models.ImageField(upload_to='company_logos/', null=True, blank=True)
+    status = models.CharField(max_length=20, choices=[
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected')
+    ], default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
-
+    updated_at = models.DateTimeField(auto_now=True)
+    
     def __str__(self):
-        return self.name
+        return self.company_name
 
 class Worker(models.Model):
     company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='workers')
@@ -413,4 +422,60 @@ class CompanyAssignment(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     
     def __str__(self):
-        return f"{self.design_name} - {self.company.name}"
+        return f"{self.design_name} - {self.company.company_name}"
+
+class CompanyWorker(models.Model):
+    SPECIALIZATION_CHOICES = [
+        ('carpentry', 'Carpentry'),
+        ('plumbing', 'Plumbing'),
+        ('electrical', 'Electrical'),
+        ('painting', 'Painting'),
+        ('tiling', 'Tiling'),
+        ('masonry', 'Masonry'),
+        ('woodwork', 'Woodwork'),
+        ('metalwork', 'Metalwork'),
+        ('flooring', 'Flooring'),
+        ('roofing', 'Roofing'),
+        ('hvac', 'HVAC'),
+        ('landscaping', 'Landscaping'),
+        ('other', 'Other')
+    ]
+    
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='company_workers')
+    full_name = models.CharField(max_length=100)
+    age = models.IntegerField()
+    experience = models.IntegerField(help_text="Experience in years")
+    phone = models.CharField(max_length=20)
+    email = models.EmailField()
+    specialization = models.CharField(max_length=20, choices=SPECIALIZATION_CHOICES)
+    image = models.ImageField(upload_to='worker_images/', null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.full_name} - {self.get_specialization_display()}"
+
+class DesignerConsultationRequest(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('accepted', 'Accepted'),
+        ('declined', 'Declined'),
+        ('completed', 'Completed')
+    ]
+    
+    designer = models.ForeignKey(Designer, on_delete=models.CASCADE, related_name='consultation_requests')
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='consultation_requests')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='designer_consultations')
+    design_name = models.CharField(max_length=100)
+    client_name = models.CharField(max_length=100)
+    description = models.TextField()
+    room_type = models.CharField(max_length=50)
+    budget = models.DecimalField(max_digits=10, decimal_places=2)
+    preferred_date = models.DateField()
+    preferred_time = models.TimeField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    completion_percentage = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"Consultation: {self.design_name} - {self.get_status_display()}"

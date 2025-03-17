@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Consultation | AURA DESIGNS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #7e3af2;
+            --secondary-color: #a0aec0;
+            --success-color: #0e9f6e;
+            --danger-color: #e02424;
+            --warning-color: #ff5a1f;
+            --info-color: #3f83f8;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f9fafb;
+        }
+        
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            width: 260px;
+            background-color: #1a1c23;
+            color: #f7fafc;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            z-index: 10;
+            overflow-y: auto;
+        }
+        
+        .sidebar-logo {
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .sidebar-logo img {
+            width: 40px;
+            height: 40px;
+            margin-right: 1rem;
+            border-radius: 50%;
+        }
+        
+        .nav-menu {
+            list-style: none;
+            padding: 1.5rem 0;
+            margin: 0;
+        }
+        
+        .nav-item {
+            margin-bottom: 0.25rem;
+        }
+        
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        
+        .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        
+        .nav-link.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .nav-link i {
+            margin-right: 0.75rem;
+            font-size: 1rem;
+        }
+        
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            padding: 2rem;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+        }
+        
+        .consultation-card {
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .consultation-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .consultation-body {
+            padding: 1.5rem;
+        }
+        
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .status-pending {
+            background-color: #feecdc;
+            color: #ff5a1f;
+        }
+        
+        .status-accepted {
+            background-color: #def7ec;
+            color: #0e9f6e;
+        }
+        
+        .status-declined {
+            background-color: #fde8e8;
+            color: #e02424;
+        }
+        
+        .status-completed {
+            background-color: #e1effe;
+            color: #3f83f8;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .info-item {
+            margin-bottom: 1rem;
+        }
+        
+        .info-label {
+            font-size: 0.875rem;
+            color: #718096;
+            margin-bottom: 0.25rem;
+        }
+        
+        .info-value {
+            font-weight: 500;
+        }
+        
+        .progress-container {
+            margin-top: 2rem;
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <img src="/static/images/logo.jpeg" alt="Logo">
+                <h2>AURA DESIGNS</h2>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="{% url 'designer_dashboard' %}" class="nav-link">
+                        <i class="fas fa-th-large"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'add_design' %}" class="nav-link">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>Add Design</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'edit_profile' %}" class="nav-link">
+                        <i class="fas fa-user-edit"></i>
+                        <span>Edit Profile</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'logout' %}" class="nav-link">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'assign_company_work' %}" class="nav-link">
+                        <i class="fas fa-building"></i>
+                        Proceed to Company
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <h1 class="page-title">Consultation Details</h1>
+                <div class="header-actions">
+                    <a href="{% url 'designer_dashboard' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>
+                        Back to Dashboard
+                    </a>
+                </div>
+            </header>
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} mb-4">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <div class="consultation-card">
+                <div class="consultation-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h2 class="mb-0">{{ consultation.design_name }}</h2>
+                        <span class="status-badge status-{{ consultation.status }}">
+                            {{ consultation.status|title }}
+                        </span>
+                    </div>
+                </div>
+                <div class="consultation-body">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">Company</div>
+                            <div class="info-value">{{ consultation.company.company_name }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Client</div>
+                            <div class="info-value">{{ consultation.client_name }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Room Type</div>
+                            <div class="info-value">{{ consultation.room_type|title }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Budget</div>
+                            <div class="info-value">${{ consultation.budget }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Preferred Date</div>
+                            <div class="info-value">{{ consultation.preferred_date|date:"F d, Y" }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Preferred Time</div>
+                            <div class="info-value">{{ consultation.preferred_time|time:"g:i A" }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Created</div>
+                            <div class="info-value">{{ consultation.created_at|date:"F d, Y" }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Last Updated</div>
+                            <div class="info-value">{{ consultation.updated_at|date:"F d, Y" }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="info-item" style="grid-column: 1 / -1;">
+                        <div class="info-label">Description</div>
+                        <div class="info-value">{{ consultation.description }}</div>
+                    </div>
+                    
+                    {% if consultation.status == 'accepted' or consultation.status == 'completed' %}
+                    <div class="progress-container">
+                        <h3 class="mb-3">Project Progress</h3>
+                        <div class="progress mb-3" style="height: 20px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: {{ consultation.completion_percentage }}%;" aria-valuenow="{{ consultation.completion_percentage }}" aria-valuemin="0" aria-valuemax="100">{{ consultation.completion_percentage }}%</div>
+                        </div>
+                        <div class="d-flex justify-content-between text-muted small">
+                            <span>0%</span>
+                            <span>{{ consultation.completion_percentage }}% Complete</span>
+                            <span>100%</span>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 

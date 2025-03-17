@@ -459,32 +459,56 @@ def designer_login_required(view_func):
 @designer_login_required
 def designer_dashboard(request):
     try:
-        designer = Designer.objects.get(id=request.session.get('designer_id'))
+        # Get the designer ID from the session
+        designer_id = request.session.get('designer_id')
+        if not designer_id:
+            messages.error(request, 'Designer session not found.')
+            return redirect('dlogin')
+            
+        designer = Designer.objects.get(id=designer_id)
+        
+        # Get designs by this designer
         designs = Design.objects.filter(designer=designer)
         
-        # Get pending and recent consultations
-        pending_consultations = Consultation.objects.filter(
-            designer=designer,
-            status='pending'
-        ).order_by('-created_at')
+        # Get consultation requests by this designer
+        consultation_requests = DesignerConsultationRequest.objects.filter(designer=designer).order_by('-created_at')
         
-        recent_consultations = Consultation.objects.filter(
-            designer=designer
-        ).exclude(status='pending').order_by('-updated_at')[:5]
+        # Get pending consultations as a queryset, not just a count
+        pending_consultations = consultation_requests.filter(status='pending')
+        
+        # Get all companies - don't filter by status to see if any exist
+        companies = Company.objects.all()
+        
+        # Get all regular users (not staff, not companies)
+        # This ensures we only get actual clients
+        company_user_ids = Company.objects.values_list('user_id', flat=True)
+        clients = User.objects.filter(is_staff=False).exclude(id__in=company_user_ids)
+        
+        # Calculate total likes safely
+        total_likes = 0
+        if hasattr(Design, 'favorited_by'):
+            for design in designs:
+                total_likes += design.favorited_by.count()
         
         context = {
             'designer': designer,
             'designs': designs,
+            'consultation_requests': consultation_requests,
+            'pending_consultations': pending_consultations,  # Now this is a queryset, not a count
+            'companies': companies,
+            'clients': clients,
+            'total_designs': designs.count(),
+            'pending_consultations_count': pending_consultations.count(),  # Add this for stats
+            'completed_consultations': consultation_requests.filter(status='completed').count(),
             'total_views': designs.aggregate(Sum('views'))['views__sum'] or 0,
-            'total_likes': sum(design.favorited_by.count() for design in designs),
-            'total_consultations': Consultation.objects.filter(designer=designer).count(),
-            'pending_consultations': pending_consultations,
-            'recent_consultations': recent_consultations
+            'total_likes': total_likes,
+            'total_consultations': consultation_requests.count(),
         }
+        
         return render(request, 'designer_dashboard.html', context)
         
     except Designer.DoesNotExist:
-        messages.error(request, 'Designer not found')
+        messages.error(request, 'Designer not found.')
         return redirect('dlogin')
 
 @designer_login_required
@@ -612,10 +636,18 @@ def uphome(request):
     featured_products = Product.objects.all()[:6]  # Fetch top 6 products as featured
     return render(request, 'uphome.html', {'featured_products': featured_products})
 
-@login_required
+
 def add_to_cart(request, product_id):
     if request.method == 'POST':
         try:
+            # Check if user is authenticated
+            if not request.user.is_authenticated:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Please log in to add items to your cart',
+                    'redirect': '/login/'  # URL to redirect to login page
+                })
+            
             product = get_object_or_404(Product, id=product_id)
             quantity = int(request.POST.get('quantity', 1))
             
@@ -623,7 +655,7 @@ def add_to_cart(request, product_id):
             if quantity <= 0:
                 return JsonResponse({
                     'success': False,
-                    'error': 'Invalid quantity'
+                    'message': 'Invalid quantity'
                 })
             
             # Get or create cart
@@ -641,20 +673,24 @@ def add_to_cart(request, product_id):
                 cart_item.quantity += quantity
                 cart_item.save()
             
+            # Calculate cart count directly
+            cart_count = CartItem.objects.filter(cart=cart).aggregate(
+                total_items=Sum('quantity'))['total_items'] or 0
+            
             return JsonResponse({
                 'success': True,
-                'cart_count': cart.get_total_items()
+                'cartCount': cart_count
             })
             
         except Exception as e:
             return JsonResponse({
                 'success': False,
-                'error': str(e)
+                'message': str(e)
             })
     
     return JsonResponse({
         'success': False,
-        'error': 'Invalid request method'
+        'message': 'Invalid request method'
     })
 
 
@@ -687,11 +723,18 @@ def remove_from_cart(request, product_id):
 
 
 def cart_view(request):
+    # Check if user is authenticated
+    if not request.user.is_authenticated:
+        # For anonymous users, either redirect to login or show empty cart
+        messages.warning(request, "Please log in to view your cart.")
+        return redirect('login')  # Redirect to your login page
+    
     try:
-        cart = Cart.objects.get(user=request.user)
-        cart_items = CartItem.objects.filter(cart=cart).select_related('product')
+        # Get or create cart for authenticated user
+        cart, created = Cart.objects.get_or_create(user=request.user)
+        cart_items = CartItem.objects.filter(cart=cart)
         
-        # Calculate subtotal
+        # Calculate totals
         subtotal = sum(item.product.price * item.quantity for item in cart_items)
         delivery_charges = 50 if subtotal > 0 else 0
         total = subtotal + delivery_charges
@@ -701,21 +744,14 @@ def cart_view(request):
             'subtotal': subtotal,
             'delivery_charges': delivery_charges,
             'total': total,
-            'razorpay_key': settings.RAZORPAY_API_KEY,
+            'razorpay_key': settings.RAZORPAY_API_KEY
         }
+        
         return render(request, 'cart.html', context)
-    except Cart.DoesNotExist:
-        context = {
-            'cart_items': [],
-            'subtotal': 0,
-            'delivery_charges': 0,
-            'total': 0,
-            'razorpay_key': settings.RAZORPAY_API_KEY,
-        }
-        return render(request, 'cart.html', context)
+        
     except Exception as e:
         messages.error(request, f"Error loading cart: {str(e)}")
-        return redirect('home')
+        return redirect('products')
 
 
 def update_cart(request, item_id):
@@ -826,7 +862,7 @@ def remove_design(request, id):
         return redirect('dhome')
     return HttpResponseForbidden("Only POST requests allowed for delete.")
 
-@login_required
+
 def designer_cart_view(request):
     # Fetch designer's cart items
     designer_cart_items = DesignerCartItem.objects.filter(user=request.user)
@@ -1268,7 +1304,7 @@ def filter_products(request):
         'total_count': products.count()
     })
 
-@login_required
+
 def create_order(request):
     try:
         cart = Cart.objects.get(user=request.user)
@@ -1315,7 +1351,7 @@ def create_order(request):
             'message': str(e)
         }, status=400)
 
-@login_required
+
 def payment_success(request, order_id):
     try:
         # Get the order
@@ -1350,7 +1386,6 @@ def payment_success(request, order_id):
         messages.error(request, f"Error processing payment: {str(e)}")
         return redirect('cart')
 
-@login_required
 def get_cart_count(request):
     try:
         cart = Cart.objects.get(user_id=request.session.get('seller_id'))
@@ -1359,7 +1394,7 @@ def get_cart_count(request):
         cart_count = 0
     return JsonResponse({'cart_count': cart_count})
 
-@login_required
+
 def view_orders(request):
     try:
         # Get user ID from session
@@ -2029,13 +2064,23 @@ def admin_required(view_func):
 
 @admin_required
 def admin_dashboard(request):
+    # Check if user is admin
+    if not request.user.is_staff:
+        messages.error(request, 'You do not have permission to access this page.')
+        return redirect('home')
+    
+    # Get all companies for the admin dashboard
+    companies = Company.objects.all().order_by('-created_at')
+    
+    # Add companies to the context
     context = {
         'total_users': User.objects.count(),
-        'total_products': Product.objects.count(),
-        'total_orders': Order.objects.count() if 'Order' in globals() else 0,
-        'recent_activities': [],
-        'companies': Company.objects.all().prefetch_related('workers')
+        'total_workers': Worker.objects.count(),
+        'total_designs': Design.objects.count(),
+        'completed_projects': CompanyAssignment.objects.filter(status='completed').count(),
+        'companies': companies,
     }
+    
     return render(request, 'admin_dashboard.html', context)
 
 @login_required
@@ -2288,3 +2333,587 @@ def assign_company_work(request):
         'companies': companies
     }
     return render(request, 'assign_company_work.html', context)
+
+# Company views
+def company_register(request):
+    if request.method == 'POST':
+        company_name = request.POST.get('company_name')
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        confirm_password = request.POST.get('confirm_password')
+        phone = request.POST.get('phone')
+        address = request.POST.get('address')
+        description = request.POST.get('description')
+        license_number = request.POST.get('license_number')
+        logo = request.FILES.get('logo')
+        
+        # Validate form data
+        if password != confirm_password:
+            messages.error(request, 'Passwords do not match')
+            return redirect('company_register')
+        
+        # Check if email already exists
+        if User.objects.filter(email=email).exists():
+            messages.error(request, 'Email already registered')
+            return redirect('company_register')
+        
+        # Create user account
+        user = User.objects.create_user(
+            username=email,
+            email=email,
+            password=password
+        )
+        
+        # Create company profile
+        company = Company.objects.create(
+            user=user,
+            company_name=company_name,
+            email=email,
+            phone=phone,
+            address=address,
+            description=description,
+            license_number=license_number,
+            logo=logo,
+            status='pending'  # Pending admin approval
+        )
+        
+        messages.success(request, 'Registration successful! Your account is pending approval.')
+        return redirect('company_login')
+    
+    return render(request, 'company_register.html')
+
+def company_login(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        remember = request.POST.get('remember')
+        
+        # Authenticate user
+        user = authenticate(request, username=email, password=password)
+        
+        if user is not None:
+            # Check if user has a company profile
+            try:
+                company = Company.objects.get(user=user)
+                
+                # Log in the user
+                login(request, user)
+                
+                # Set session expiry if remember me is checked
+                if not remember:
+                    request.session.set_expiry(0)
+                
+                return redirect('company_dashboard')
+            except Company.DoesNotExist:
+                messages.error(request, 'No company profile found for this account.')
+                return redirect('company_login')
+        else:
+            messages.error(request, 'Invalid email or password')
+            return redirect('company_login')
+    
+    return render(request, 'company_login.html')
+
+
+@login_required
+def company_dashboard(request):
+    try:
+        company = Company.objects.get(user=request.user)
+    except Company.DoesNotExist:
+        messages.error(request, 'No company profile found for this account.')
+        return redirect('home')
+    
+    # Get company assignments
+    assignments = CompanyAssignment.objects.filter(company=company)
+    
+    # Get consultation requests
+    consultation_requests = DesignerConsultationRequest.objects.filter(company=company).order_by('-created_at')
+    
+    # Count assignments by status
+    pending_assignments = assignments.filter(status='pending').count()
+    in_progress_assignments = assignments.filter(status='in_progress').count()
+    completed_assignments = assignments.filter(status='completed').count()
+    
+    # Get recent assignments
+    recent_assignments = assignments.order_by('-created_at')[:5]
+    
+    context = {
+        'company': company,
+        'total_assignments': assignments.count(),
+        'pending_assignments': pending_assignments,
+        'in_progress_assignments': in_progress_assignments,
+        'completed_assignments': completed_assignments,
+        'recent_assignments': recent_assignments,
+        'consultation_requests': consultation_requests
+    }
+    
+    return render(request, 'company_dashboard.html', context)
+
+@login_required
+def company_projects(request):
+    try:
+        company = Company.objects.get(user=request.user)
+    except Company.DoesNotExist:
+        messages.error(request, 'No company profile found for this account.')
+        return redirect('home')
+    
+    # Get all company assignments
+    assignments = CompanyAssignment.objects.filter(company=company).order_by('-created_at')
+    
+    context = {
+        'company': company,
+        'assignments': assignments
+    }
+    
+    return render(request, 'company_projects.html', context)
+
+@login_required
+def company_project_detail(request, assignment_id):
+    try:
+        company = Company.objects.get(user=request.user)
+        assignment = CompanyAssignment.objects.get(id=assignment_id, company=company)
+    except (Company.DoesNotExist, CompanyAssignment.DoesNotExist):
+        messages.error(request, 'Project not found.')
+        return redirect('company_dashboard')
+    
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        
+        if action == 'accept':
+            assignment.status = 'in_progress'
+            assignment.save()
+            messages.success(request, 'Project accepted successfully.')
+        elif action == 'complete':
+            assignment.status = 'completed'
+            assignment.save()
+            messages.success(request, 'Project marked as completed.')
+        elif action == 'reject':
+            assignment.status = 'rejected'
+            assignment.save()
+            messages.warning(request, 'Project rejected.')
+    
+    context = {
+        'company': company,
+        'assignment': assignment
+    }
+    
+    return render(request, 'company_project_detail.html', context)
+
+@login_required
+def company_profile(request):
+    try:
+        company = Company.objects.get(user=request.user)
+    except Company.DoesNotExist:
+        messages.error(request, 'No company profile found for this account.')
+        return redirect('home')
+    
+    if request.method == 'POST':
+        company.company_name = request.POST.get('company_name')
+        company.phone = request.POST.get('phone')
+        company.address = request.POST.get('address')
+        company.description = request.POST.get('description')
+        
+        if 'logo' in request.FILES:
+            company.logo = request.FILES['logo']
+        
+        company.save()
+        messages.success(request, 'Profile updated successfully.')
+        return redirect('company_profile')
+    
+    context = {
+        'company': company
+    }
+    
+    return render(request, 'company_profile.html', context)
+
+@login_required
+def company_change_password(request):
+    if request.method == 'POST':
+        current_password = request.POST.get('current_password')
+        new_password = request.POST.get('new_password')
+        confirm_password = request.POST.get('confirm_password')
+        
+        # Check if current password is correct
+        if not request.user.check_password(current_password):
+            messages.error(request, 'Current password is incorrect.')
+            return redirect('company_change_password')
+        
+        # Check if new passwords match
+        if new_password != confirm_password:
+            messages.error(request, 'New passwords do not match.')
+            return redirect('company_change_password')
+        
+        # Update password
+        request.user.set_password(new_password)
+        request.user.save()
+        
+        # Update session to prevent logout
+        update_session_auth_hash(request, request.user)
+        
+        messages.success(request, 'Password changed successfully.')
+        return redirect('company_dashboard')
+    
+    return render(request, 'company_change_password.html')
+
+@login_required
+def admin_view_company(request, company_id):
+    # Check if user is admin
+    if not request.user.is_staff:
+        messages.error(request, 'You do not have permission to access this page.')
+        return redirect('home')
+    
+    try:
+        company = Company.objects.get(id=company_id)
+    except Company.DoesNotExist:
+        messages.error(request, 'Company not found.')
+        return redirect('admin_dashboard')
+    
+    # Get company assignments
+    assignments = CompanyAssignment.objects.filter(company=company).order_by('-created_at')
+    
+    context = {
+        'company': company,
+        'assignments': assignments
+    }
+    
+    return render(request, 'admin_view_company.html', context)
+
+@login_required
+def admin_delete_company(request, company_id):
+    # Check if user is admin
+    if not request.user.is_staff:
+        messages.error(request, 'You do not have permission to access this page.')
+        return redirect('home')
+    
+    try:
+        company = Company.objects.get(id=company_id)
+        user = company.user
+        
+        # Delete the company and associated user
+        company.delete()
+        user.delete()
+        
+        messages.success(request, f'Company "{company.company_name}" has been deleted successfully.')
+    except Company.DoesNotExist:
+        messages.error(request, 'Company not found.')
+    
+    return redirect('admin_dashboard')
+
+def customer_dashboard(request):
+    # Your customer dashboard logic here
+    return render(request, 'customer_dashboard.html')
+
+@login_required
+def company_workers(request):
+    try:
+        company = Company.objects.get(user=request.user)
+    except Company.DoesNotExist:
+        messages.error(request, 'No company profile found for this account.')
+        return redirect('home')
+    
+    # Get all workers for this company - updated to use company_workers
+    workers = CompanyWorker.objects.filter(company=company).order_by('-created_at')
+    
+    context = {
+        'company': company,
+        'workers': workers
+    }
+    
+    return render(request, 'company_workers.html', context)
+
+@login_required
+def add_worker(request):
+    try:
+        company = Company.objects.get(user=request.user)
+    except Company.DoesNotExist:
+        messages.error(request, 'No company profile found for this account.')
+        return redirect('home')
+    
+    if request.method == 'POST':
+        full_name = request.POST.get('full_name')
+        age = request.POST.get('age')
+        experience = request.POST.get('experience')
+        phone = request.POST.get('phone')
+        email = request.POST.get('email')
+        specialization = request.POST.get('specialization')
+        image = request.FILES.get('image')
+        
+        # Create new worker
+        worker = CompanyWorker.objects.create(
+            company=company,
+            full_name=full_name,
+            age=age,
+            experience=experience,
+            phone=phone,
+            email=email,
+            specialization=specialization,
+            image=image
+        )
+        
+        messages.success(request, 'Worker added successfully!')
+        return redirect('company_workers')
+    
+    context = {
+        'company': company,
+        'specialization_choices': CompanyWorker.SPECIALIZATION_CHOICES
+    }
+    
+    return render(request, 'add_worker.html', context)
+
+@login_required
+def edit_worker(request, worker_id):
+    try:
+        company = Company.objects.get(user=request.user)
+        worker = CompanyWorker.objects.get(id=worker_id, company=company)
+    except (Company.DoesNotExist, CompanyWorker.DoesNotExist):
+        messages.error(request, 'Worker not found.')
+        return redirect('company_workers')
+    
+    if request.method == 'POST':
+        worker.full_name = request.POST.get('full_name')
+        worker.age = request.POST.get('age')
+        worker.experience = request.POST.get('experience')
+        worker.phone = request.POST.get('phone')
+        worker.email = request.POST.get('email')
+        worker.specialization = request.POST.get('specialization')
+        
+        if 'image' in request.FILES:
+            worker.image = request.FILES['image']
+        
+        worker.save()
+        messages.success(request, 'Worker updated successfully!')
+        return redirect('company_workers')
+    
+    context = {
+        'company': company,
+        'worker': worker,
+        'specialization_choices': CompanyWorker.SPECIALIZATION_CHOICES
+    }
+    
+    return render(request, 'edit_worker.html', context)
+
+@login_required
+def delete_worker(request, worker_id):
+    try:
+        company = Company.objects.get(user=request.user)
+        worker = CompanyWorker.objects.get(id=worker_id, company=company)
+    except (Company.DoesNotExist, CompanyWorker.DoesNotExist):
+        messages.error(request, 'Worker not found.')
+        return redirect('company_workers')
+    
+    worker.delete()
+    messages.success(request, 'Worker deleted successfully!')
+    return redirect('company_workers')
+
+@designer_login_required  # Use designer_login_required instead of login_required
+def designer_request_consultation(request):
+    if request.method == 'POST':
+        try:
+            # Get designer from session instead of request.user
+            designer_id = request.session.get('designer_id')
+            if not designer_id:
+                messages.error(request, 'Designer session not found.')
+                return redirect('dlogin')
+                
+            designer = Designer.objects.get(id=designer_id)
+            
+            company_id = request.POST.get('company_id')
+            user_id = request.POST.get('user_id')
+            design_name = request.POST.get('design_name')
+            # client_name is commented out in the form, so we'll use the user's name
+            room_type = request.POST.get('room_type')
+            budget = request.POST.get('budget')
+            preferred_date = request.POST.get('preferred_date')
+            preferred_time = request.POST.get('preferred_time')
+            
+            # Get company and user
+            company = Company.objects.get(id=company_id)
+            user = User.objects.get(id=user_id)
+            
+            # Create consultation request
+            consultation = DesignerConsultationRequest.objects.create(
+                designer=designer,
+                company=company,
+                user=user,
+                design_name=design_name,
+                client_name=user.get_full_name() or user.username,  # Use user's name
+                room_type=room_type,
+                budget=budget,
+                preferred_date=preferred_date,
+                preferred_time=preferred_time
+            )
+            
+            # Create notification for company
+            Notification.objects.create(
+                user=company.user,
+                title="New Consultation Request",
+                message=f"Designer {designer.full_name} has requested a consultation for project '{design_name}'.",
+                notification_type="consultation_request"
+            )
+            
+            messages.success(request, "Consultation request sent successfully!")
+            return redirect('designer_dashboard')
+            
+        except (Designer.DoesNotExist, Company.DoesNotExist, User.DoesNotExist) as e:
+            messages.error(request, f"Error: {str(e)}")
+            return redirect('designer_dashboard')
+    
+    return redirect('designer_dashboard')
+
+@login_required
+def company_respond_consultation(request, consultation_id, action):
+    if request.method == 'POST':
+        try:
+            company = Company.objects.get(user=request.user)
+            consultation = DesignerConsultationRequest.objects.get(id=consultation_id, company=company)
+            
+            if action == 'accept':
+                consultation.status = 'accepted'
+                status_text = 'accepted'
+            elif action == 'decline':
+                consultation.status = 'declined'
+                status_text = 'declined'
+            else:
+                messages.error(request, "Invalid action.")
+                return redirect('company_dashboard')
+            
+            consultation.save()
+            
+            # Create notification for designer - but don't try to access designer.user
+            # Instead, store notifications in a different way or check if the attribute exists
+            
+            # For now, we'll skip the designer notification since Designer doesn't have user
+            
+            # Create notification for user (client) if user is not None
+            if consultation.user:
+                Notification.objects.create(
+                    user=consultation.user,
+                    title=f"Consultation Update",
+                    message=f"Your consultation request for '{consultation.design_name}' has been {status_text} by {company.company_name}.",
+                    notification_type="consultation_update"
+                )
+            
+            messages.success(request, f"Consultation request {status_text} successfully.")
+            
+        except (Company.DoesNotExist, DesignerConsultationRequest.DoesNotExist) as e:
+            messages.error(request, f"Error: {str(e)}")
+    
+    return redirect('company_dashboard')
+
+@login_required
+def company_view_consultation(request, consultation_id):
+    try:
+        company = Company.objects.get(user=request.user)
+        consultation = DesignerConsultationRequest.objects.get(id=consultation_id, company=company)
+        
+        if request.method == 'POST':
+            completion_percentage = request.POST.get('completion_percentage')
+            if completion_percentage:
+                consultation.completion_percentage = int(completion_percentage)
+                if consultation.completion_percentage == 100:
+                    consultation.status = 'completed'
+                consultation.save()
+                
+                # Create notification for designer and user
+                Notification.objects.create(
+                    user=consultation.designer.user,
+                    title="Project Progress Update",
+                    message=f"Project '{consultation.design_name}' is now {consultation.completion_percentage}% complete.",
+                    notification_type="project_update"
+                )
+                
+                Notification.objects.create(
+                    user=consultation.user,
+                    title="Project Progress Update",
+                    message=f"Your project '{consultation.design_name}' is now {consultation.completion_percentage}% complete.",
+                    notification_type="project_update"
+                )
+                
+                messages.success(request, "Progress updated successfully.")
+                return redirect('company_view_consultation', consultation_id=consultation.id)
+        
+        context = {
+            'company': company,
+            'consultation': consultation
+        }
+        
+        return render(request, 'company_view_consultation.html', context)
+        
+    except (Company.DoesNotExist, DesignerConsultationRequest.DoesNotExist) as e:
+        messages.error(request, f"Error: {str(e)}")
+        return redirect('company_dashboard')
+
+def designer_view_consultation(request, consultation_id):
+    try:
+        designer = Designer.objects.get(user=request.user)
+        consultation = DesignerConsultationRequest.objects.get(id=consultation_id, designer=designer)
+        
+        context = {
+            'designer': designer,
+            'consultation': consultation
+        }
+        
+        return render(request, 'designer_view_consultation.html', context)
+        
+    except (Designer.DoesNotExist, DesignerConsultationRequest.DoesNotExist) as e:
+        messages.error(request, f"Error: {str(e)}")
+        return redirect('designer_dashboard')
+
+@designer_login_required
+def assign_company_work(request):
+    if request.method == 'POST':
+        try:
+            # Get designer from session instead of request.user
+            designer_id = request.session.get('designer_id')
+            if not designer_id:
+                messages.error(request, 'Designer session not found.')
+                return redirect('dlogin')
+                
+            designer = Designer.objects.get(id=designer_id)
+            
+            company_id = request.POST.get('company_id')
+            project_name = request.POST.get('project_name')
+            description = request.POST.get('description')
+            budget = request.POST.get('budget')
+            deadline = request.POST.get('deadline')
+            
+            # Get company
+            company = Company.objects.get(id=company_id)
+            
+            # Create assignment
+            assignment = CompanyAssignment.objects.create(
+                designer=designer,  # Use designer object, not request.user
+                company=company,
+                project_name=project_name,
+                description=description,
+                budget=budget,
+                deadline=deadline
+            )
+            
+            # Create notification for company
+            Notification.objects.create(
+                user=company.user,
+                title="New Project Assignment",
+                message=f"Designer {designer.full_name} has assigned a new project '{project_name}' to your company.",
+                notification_type="project_assignment"
+            )
+            
+            messages.success(request, "Project assigned successfully!")
+            return redirect('designer_dashboard')
+            
+        except (Designer.DoesNotExist, Company.DoesNotExist) as e:
+            messages.error(request, f"Error: {str(e)}")
+            return redirect('designer_dashboard')
+    
+    # GET request - show form
+    # Make sure we're getting ALL companies that are approved
+    companies = Company.objects.filter(status='approved')
+    
+    # Add debug information to check if companies are being fetched
+    print(f"Found {companies.count()} approved companies")
+    
+    # Pass companies to the template
+    return render(request, 'assign_company_work.html', {'companies': companies})
+
+# Try getting all companies without filtering by status
+companies = Company.objects.all()
+print(f"Found {companies.count()} total companies")

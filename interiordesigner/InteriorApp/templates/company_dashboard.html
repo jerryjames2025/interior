@@ -1,475 +1,726 @@
-{% comment %} {% extends 'base.html' %}
-{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Company Dashboard | AURA DESIGNS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --color-bg-primary: #ffffff;
+            --color-bg-secondary: #f9fafb;
+            --color-bg-sidebar: #1a1c23;
+            --color-text-primary: #2d3748;
+            --color-text-secondary: #718096;
+            --color-text-sidebar: #f7fafc;
+            --color-purple: #7e3af2;
+            --color-purple-light: #e9d8fd;
+            --color-green: #0e9f6e;
+            --color-green-light: #def7ec;
+            --color-red: #e02424;
+            --color-red-light: #fde8e8;
+            --color-orange: #ff5a1f;
+            --color-orange-light: #feecdc;
+            --color-blue: #3f83f8;
+            --color-blue-light: #e1effe;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
 
-{% block content %}
-<div class="dashboard-container">
-    <!-- Sidebar -->
-    <nav class="sidebar">
-        <div class="company-info text-center">
-            {% if company.logo %}
-                <img src="{{ company.logo.url }}" alt="{{ company.company_name }}" class="company-logo">
-            {% else %}
-                <div class="company-logo-placeholder">
-                    <i class="fas fa-building"></i>
-                </div>
-            {% endif %}
-            <h4 class="mt-3">{{ company.company_name }}</h4>
-            <p class="text-muted">{{ company.company_size }} Company</p>
-        </div>
-        
-        <ul class="nav-links">
-            <li class="active">
-                <a href="#"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
-            </li>
-            <li>
-                <a href="#applications"><i class="fas fa-users"></i> Applications</a>
-            </li>
-            <li>
-                <a href="#"><i class="fas fa-project-diagram"></i> Projects</a>
-            </li>
-            <li>
-                <a href="{% url 'company_change_password' %}"><i class="fas fa-key"></i> Change Password</a>
-            </li>
-            <li>
-                <a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Logout</a>
-            </li>
-        </ul>
-    </nav>
+        .dark-mode {
+            --color-bg-primary: #1a1c23;
+            --color-bg-secondary: #24262d;
+            --color-bg-sidebar: #0e141b;
+            --color-text-primary: #f7fafc;
+            --color-text-secondary: #a0aec0;
+        }
 
-    <!-- Main Content -->
-    <main class="main-content">
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            {% endfor %}
-        {% endif %}
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-        <!-- Stats Cards -->
-        <div class="stats-container">
-            <div class="stat-card">
-                <div class="stat-icon bg-primary">
-                    <i class="fas fa-file-alt"></i>
-                </div>
-                <div class="stat-details">
-                    <h3>{{ total_applications }}</h3>
-                    <p>Total Applications</p>
-                </div>
-            </div>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--color-bg-secondary);
+            color: var(--color-text-primary);
+            line-height: 1.5;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 256px;
+            background-color: var(--color-bg-sidebar);
+            color: var(--color-text-sidebar);
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            z-index: 20;
+            transition: all 0.3s;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            font-weight: 700;
+            font-size: 1.25rem;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background-color: var(--color-purple);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 0.75rem;
+        }
+
+        .sidebar-content {
+            padding: 1.5rem;
+        }
+
+        .nav-heading {
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            color: rgba(255, 255, 255, 0.4);
+            margin-bottom: 0.75rem;
+        }
+
+        .nav-links {
+            list-style: none;
+            margin-bottom: 2rem;
+        }
+
+        .nav-item {
+            margin-bottom: 0.25rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            border-radius: 0.375rem;
+            transition: all 0.2s;
+        }
+
+        .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .nav-link.active {
+            background-color: var(--color-purple);
+            color: white;
+        }
+
+        .nav-link i {
+            margin-right: 0.75rem;
+            font-size: 1rem;
+            width: 1.25rem;
+            text-align: center;
+        }
+
+        /* Main Content */
+        .main {
+            flex: 1;
+            margin-left: 256px;
+            padding: 2rem;
+            transition: all 0.3s;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 1.875rem;
+            font-weight: 700;
+            color: var(--color-text-primary);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            color: var(--color-text-secondary);
+            font-size: 1.25rem;
+            cursor: pointer;
+            margin-right: 1rem;
+        }
+
+        .user-menu {
+            position: relative;
+        }
+
+        .user-button {
+            display: flex;
+            align-items: center;
+            background: none;
+            border: none;
+            color: var(--color-text-primary);
+            cursor: pointer;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--color-purple);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            margin-right: 0.75rem;
+        }
+
+        /* Cards Grid */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background-color: var(--color-bg-primary);
+            border-radius: 0.5rem;
+            box-shadow: var(--shadow);
+            padding: 1.5rem;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .card-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--color-text-secondary);
+            text-transform: uppercase;
+        }
+
+        .card-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .card-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .card-label {
+            font-size: 0.875rem;
+            color: var(--color-text-secondary);
+        }
+
+        .bg-purple {
+            background-color: var(--color-purple);
+        }
+
+        .bg-green {
+            background-color: var(--color-green);
+        }
+
+        .bg-red {
+            background-color: var(--color-red);
+        }
+
+        .bg-orange {
+            background-color: var(--color-orange);
+        }
+
+        .bg-blue {
+            background-color: var(--color-blue);
+        }
+
+        /* Tables */
+        .table-container {
+            background-color: var(--color-bg-primary);
+            border-radius: 0.5rem;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        .table-header {
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--color-bg-secondary);
+        }
+
+        .table-title {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th {
+            background-color: var(--color-bg-secondary);
+            padding: 0.75rem 1.5rem;
+            text-align: left;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--color-text-secondary);
+        }
+
+        .table td {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--color-bg-secondary);
+            font-size: 0.875rem;
+        }
+
+        .table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .status {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-pending {
+            background-color: var(--color-orange-light);
+            color: var(--color-orange);
+        }
+
+        .status-in-progress {
+            background-color: var(--color-blue-light);
+            color: var(--color-blue);
+        }
+
+        .status-completed {
+            background-color: var(--color-green-light);
+            color: var(--color-green);
+        }
+
+        .status-rejected {
+            background-color: var(--color-red-light);
+            color: var(--color-red);
+        }
+
+        .action-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 0.375rem;
+            background-color: var(--color-bg-secondary);
+            color: var(--color-text-secondary);
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-button:hover {
+            background-color: var(--color-purple-light);
+            color: var(--color-purple);
+        }
+
+        .empty-state {
+            padding: 3rem;
+            text-align: center;
+        }
+
+        .empty-icon {
+            font-size: 3rem;
+            color: var(--color-text-secondary);
+            opacity: 0.5;
+            margin-bottom: 1rem;
+        }
+
+        .empty-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-description {
+            color: var(--color-text-secondary);
+            max-width: 20rem;
+            margin: 0 auto;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .cards-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
             
-            <div class="stat-card">
-                <div class="stat-icon bg-warning">
-                    <i class="fas fa-clock"></i>
-                </div>
-                <div class="stat-details">
-                    <h3>{{ pending_applications }}</h3>
-                    <p>Pending Applications</p>
-                </div>
-            </div>
+            .sidebar.open {
+                transform: translateX(0);
+            }
             
-            <div class="stat-card">
-                <div class="stat-icon bg-success">
-                    <i class="fas fa-users"></i>
-                </div>
-                <div class="stat-details">
-                    <h3>{{ accepted_applications|default:"0" }}</h3>
-                    <p>Accepted Workers</p>
-                </div>
-            </div>
-        </div>
+            .main {
+                margin-left: 0;
+            }
+            
+            .menu-toggle {
+                display: block;
+            }
+        }
 
-        <!-- Company Details -->
-        <div class="company-details card">
-            <div class="card-header">
-                <h5><i class="fas fa-info-circle"></i> Company Information</h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <p><strong>Registration Number:</strong> {{ company.registration_number }}</p>
-                        <p><strong>Established:</strong> {{ company.established_year }}</p>
-                        <p><strong>Email:</strong> {{ company.email }}</p>
+        @media (max-width: 640px) {
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .table-responsive {
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <i class="fas fa-building"></i>
                     </div>
-                    <div class="col-md-6">
-                        <p><strong>Phone:</strong> {{ company.phone }}</p>
-                        <p><strong>Address:</strong> {{ company.address }}</p>
-                        <p><strong>Website:</strong> <a href="{{ company.website }}" target="_blank">{{ company.website }}</a></p>
-                    </div>
+                    <span>{{ company.company_name|default:"AURA DESIGNS" }}</span>
                 </div>
+            </div>
+            <div class="sidebar-content">
+                <p class="nav-heading">Main</p>
+                <ul class="nav-links">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link active">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="fas fa-project-diagram"></i>
+                            <span>Projects</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'company_workers' %}" class="nav-link">
+                            <i class="fas fa-users"></i>
+                            <span>Workers</span>
+                        </a>
+                    </li>
+                </ul>
                 
-                <div class="specializations mt-3">
-                    <strong>Specializations:</strong><br>
-                    {% for spec in company.specializations %}
-                        <span class="badge bg-primary">{{ spec }}</span>
-                    {% endfor %}
-                </div>
+                <p class="nav-heading">Settings</p>
+                <ul class="nav-links">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="fas fa-user-circle"></i>
+                            <span>Profile</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="fas fa-key"></i>
+                            <span>Change Password</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        
+                        <a href="{% url 'logout' %}" class="nav-link">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </a>
+                    </li>
+                </ul>
             </div>
-        </div>
+        </aside>
 
-        <!-- Applications Section -->
-        <div class="applications-section">
-            <h2 class="section-title">Worker Applications</h2>
-            
-            <div class="applications-grid">
-                {% for application in worker_applications %}
-                {% if application.status == 'pending' %}
-                <div class="application-card" data-aos="fade-up">
-                    <div class="worker-info">
-                        {% if application.worker.profile_picture %}
-                            <img src="{{ application.worker.profile_picture.url }}" alt="{{ application.worker.full_name }}" class="worker-avatar">
-                        {% else %}
-                            <div class="worker-avatar-placeholder">
+        <!-- Main Content -->
+        <main class="main">
+            <div class="header">
+                <h1 class="page-title">Dashboard</h1>
+                <div class="header-actions">
+                    <button class="theme-toggle" id="themeToggle">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <div class="user-menu">
+                        <button class="user-button">
+                            <div class="user-avatar">
                                 <i class="fas fa-user"></i>
                             </div>
-                        {% endif %}
-                        <div class="worker-details">
-                            <h4>{{ application.worker.full_name }}</h4>
-                            <p class="specialization">{{ application.worker.specialization }}</p>
-                            <div class="worker-stats">
-                                <span><i class="fas fa-star"></i> {{ application.worker.rating|default:"New" }}</span>
-                                <span><i class="fas fa-briefcase"></i> {{ application.worker.experience_years }} Years</span>
-                                <span><i class="fas fa-rupee-sign"></i> {{ application.worker.hourly_rate }}/hr</span>
-                            </div>
+                            <span>{{ company.company_name|default:"Company" }}</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="cards-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Total Projects</h3>
+                        <div class="card-icon bg-purple">
+                            <i class="fas fa-file-alt"></i>
                         </div>
                     </div>
-                    
-                    <div class="application-actions">
-                        <form method="POST" action="{% url 'handle_application' application.id 'accept' %}" class="d-inline">
-                            {% csrf_token %}
-                            <button type="submit" class="btn-accept">
-                                <i class="fas fa-check"></i> Accept
-                            </button>
-                        </form>
-                        <form method="POST" action="{% url 'handle_application' application.id 'reject' %}" class="d-inline">
-                            {% csrf_token %}
-                            <button type="submit" class="btn-reject">
-                                <i class="fas fa-times"></i> Reject
-                            </button>
-                        </form>
+                    <div class="card-value">{{ total_assignments|default:"0" }}</div>
+                    <div class="card-label">All time projects</div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Pending</h3>
+                        <div class="card-icon bg-orange">
+                            <i class="fas fa-clock"></i>
+                        </div>
                     </div>
+                    <div class="card-value">{{ pending_assignments|default:"0" }}</div>
+                    <div class="card-label">Awaiting action</div>
                 </div>
-                {% endif %}
-                {% empty %}
-                <div class="no-applications">
-                    <i class="fas fa-inbox fa-3x"></i>
-                    <p>No pending applications</p>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">In Progress</h3>
+                        <div class="card-icon bg-blue">
+                            <i class="fas fa-spinner"></i>
+                        </div>
+                    </div>
+                    <div class="card-value">{{ in_progress_assignments|default:"0" }}</div>
+                    <div class="card-label">Active projects</div>
                 </div>
-                {% endfor %}
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Completed</h3>
+                        <div class="card-icon bg-green">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                    </div>
+                    <div class="card-value">{{ completed_assignments|default:"0" }}</div>
+                    <div class="card-label">Finished projects</div>
+                </div>
             </div>
-        </div>
-    </main>
-</div>
 
-<style>
-.dashboard-container {
-    display: flex;
-    min-height: 100vh;
-    background-color: #f8f9fa;
-}
+            <!-- Recent Projects Table -->
+            <div class="table-container">
+                <div class="table-header">
+                    <h2 class="table-title">Recent Projects</h2>
+                    <a href="#" class="action-button">
+                        <i class="fas fa-external-link-alt"></i>
+                    </a>
+                </div>
+                
+                <div class="table-responsive">
+                    {% if recent_assignments %}
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Project</th>
+                                <th>Client</th>
+                                <th>Room Type</th>
+                                <th>Timeline</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for assignment in recent_assignments %}
+                            <tr>
+                                <td>{{ assignment.design_name }}</td>
+                                <td>{{ assignment.client_name }}</td>
+                                <td>{{ assignment.room_type }}</td>
+                                <td>{{ assignment.start_date|date:"M d" }} - {{ assignment.end_date|date:"M d, Y" }}</td>
+                                <td>
+                                    <span class="status status-{{ assignment.status }}">
+                                        {{ assignment.status|title }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="action-button">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    
+                                    {% if assignment.status == 'pending' %}
+                                    <button class="action-button">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-folder-open empty-icon"></i>
+                        <h3 class="empty-title">No projects yet</h3>
+                        <p class="empty-description">New project assignments will appear here once designers assign work to your company.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
 
-.sidebar {
-    width: 280px;
-    background: linear-gradient(135deg, #2c3e50, #3498db);
-    color: white;
-    padding: 2rem;
-    position: fixed;
-    height: 100vh;
-    overflow-y: auto;
-}
+            <!-- Consultation Requests Table -->
+            <div class="table-container mt-6">
+                <div class="table-header">
+                    <h2 class="table-title">Consultation Requests</h2>
+                </div>
+                
+                <div class="table-responsive">
+                    {% if consultation_requests %}
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Designer</th>
+                                <th>Client</th>
+                                <th>Project</th>
+                                <th>Date Requested</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for request in consultation_requests %}
+                            <tr>
+                                <td>
+                                    <div class="flex items-center">
+                                        {% if request.designer.profile_picture %}
+                                            <img src="{{ request.designer.profile_picture.url }}" alt="{{ request.designer.full_name }}" class="w-8 h-8 rounded-full mr-2">
+                                        {% else %}
+                                            <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center mr-2">
+                                                <i class="fas fa-user text-purple-500"></i>
+                                            </div>
+                                        {% endif %}
+                                        <span>{{ request.designer.full_name }}</span>
+                                    </div>
+                                </td>
+                                <td>{{ request.client_name }}</td>
+                                <td>{{ request.design_name }}</td>
+                                <td>{{ request.created_at|date:"M d, Y" }}</td>
+                                <td>
+                                    <span class="status status-{{ request.status }}">
+                                        {{ request.status|title }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if request.status == 'pending' %}
+                                    <div class="flex space-x-2">
+                                        <form method="POST" action="{% url 'company_respond_consultation' request.id 'accept' %}">
+                                            {% csrf_token %}
+                                            <button type="submit" class="action-button bg-green-500 text-white">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                        </form>
+                                        <form method="POST" action="{% url 'company_respond_consultation' request.id 'decline' %}">
+                                            {% csrf_token %}
+                                            <button type="submit" class="action-button bg-red-500 text-white">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                    {% else %}
+                                    <a href="{% url 'company_view_consultation' request.id %}" class="action-button">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-calendar-check empty-icon"></i>
+                        <h3 class="empty-title">No consultation requests</h3>
+                        <p class="empty-description">New consultation requests from designers will appear here.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </main>
+    </div>
 
-.company-logo, .company-logo-placeholder {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    margin: 0 auto;
-    background: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-}
-
-.company-logo img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.company-logo-placeholder i {
-    font-size: 3rem;
-    color: #2c3e50;
-}
-
-.nav-links {
-    list-style: none;
-    padding: 0;
-    margin-top: 2rem;
-}
-
-.nav-links li {
-    margin-bottom: 0.5rem;
-}
-
-.nav-links a {
-    color: white;
-    text-decoration: none;
-    padding: 0.8rem 1rem;
-    display: block;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-}
-
-.nav-links a:hover, .nav-links li.active a {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.nav-links i {
-    margin-right: 10px;
-}
-
-.main-content {
-    flex: 1;
-    margin-left: 280px;
-    padding: 2rem;
-}
-
-.stats-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-}
-
-.stat-card {
-    background: white;
-    border-radius: 15px;
-    padding: 1.5rem;
-    display: flex;
-    align-items: center;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.stat-icon {
-    width: 60px;
-    height: 60px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 1rem;
-}
-
-.stat-icon i {
-    font-size: 1.5rem;
-    color: white;
-}
-
-.stat-details h3 {
-    margin: 0;
-    font-size: 1.8rem;
-    font-weight: 600;
-}
-
-.stat-details p {
-    margin: 0;
-    color: #6c757d;
-}
-
-.card {
-    border: none;
-    border-radius: 15px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.card-header {
-    background: white;
-    border-bottom: 1px solid #e9ecef;
-    padding: 1.5rem;
-}
-
-.card-header h5 {
-    margin: 0;
-    color: #2c3e50;
-}
-
-.specializations .badge {
-    margin: 0.2rem;
-    padding: 0.5rem 1rem;
-    font-size: 0.9rem;
-}
-
-.worker-avatar, .worker-avatar-placeholder {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    overflow: hidden;
-}
-
-.worker-avatar-placeholder {
-    background: #e9ecef;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.worker-avatar-placeholder i {
-    color: #6c757d;
-}
-
-.table {
-    margin-bottom: 0;
-}
-
-.table th {
-    border-top: none;
-    font-weight: 600;
-}
-
-.btn-sm {
-    padding: 0.25rem 0.8rem;
-    font-size: 0.875rem;
-}
-
-.applications-section {
-    padding: 2rem;
-    background: white;
-    border-radius: 15px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-}
-
-.section-title {
-    color: #2c3e50;
-    margin-bottom: 2rem;
-    font-weight: 600;
-}
-
-.applications-grid {
-    display: grid;
-    gap: 1.5rem;
-}
-
-.application-card {
-    background: white;
-    border-radius: 12px;
-    padding: 1.5rem;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-    border: 1px solid #eee;
-    transition: all 0.3s ease;
-}
-
-.application-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 15px rgba(0,0,0,0.1);
-}
-
-.worker-info {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-    margin-bottom: 1.5rem;
-}
-
-.worker-avatar, .worker-avatar-placeholder {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    object-fit: cover;
-}
-
-.worker-avatar-placeholder {
-    background: #f8f9fa;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #adb5bd;
-    font-size: 2rem;
-}
-
-.worker-details h4 {
-    margin: 0;
-    color: #2c3e50;
-}
-
-.specialization {
-    color: #6c757d;
-    margin: 0.5rem 0;
-}
-
-.worker-stats {
-    display: flex;
-    gap: 1rem;
-    margin-top: 0.5rem;
-}
-
-.worker-stats span {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: #6c757d;
-    font-size: 0.9rem;
-}
-
-.worker-stats i {
-    color: #3498db;
-}
-
-.application-actions {
-    display: flex;
-    gap: 1rem;
-    margin-top: 1rem;
-}
-
-.btn-accept, .btn-reject {
-    padding: 0.8rem 2rem;
-    border: none;
-    border-radius: 25px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.btn-accept {
-    background: linear-gradient(135deg, #2ecc71, #27ae60);
-    color: white;
-}
-
-.btn-reject {
-    background: linear-gradient(135deg, #e74c3c, #c0392b);
-    color: white;
-}
-
-.btn-accept:hover, .btn-reject:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-}
-
-.no-applications {
-    text-align: center;
-    padding: 3rem;
-    color: #6c757d;
-}
-
-.no-applications i {
-    margin-bottom: 1rem;
-    color: #dee2e6;
-}
-</style>
-
-<script>
-// Add smooth animations
-document.addEventListener('DOMContentLoaded', function() {
-    const cards = document.querySelectorAll('.application-card');
-    cards.forEach((card, index) => {
-        setTimeout(() => {
-            card.style.opacity = '1';
-            card.style.transform = 'translateY(0)';
-        }, index * 100);
-    });
-});
-</script>
-{% endblock %}  {% endcomment %}
+    <script>
+        // Theme toggle functionality
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.body;
+        
+        themeToggle.addEventListener('click', () => {
+            body.classList.toggle('dark-mode');
+            
+            if (body.classList.contains('dark-mode')) {
+                themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+            } else {
+                themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+            }
+        });
+        
+        // Mobile menu toggle
+        const menuToggle = document.querySelector('.menu-toggle');
+        const sidebar = document.querySelector('.sidebar');
+        
+        if (menuToggle) {
+            menuToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+            });
+        }
+    </script>
+</body>
+</html>

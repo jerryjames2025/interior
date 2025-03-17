@@ -301,6 +301,16 @@
                     <p class="form-subtitle">Fill out the form below to assign a project to a company</p>
                 </div>
 
+                <!-- Add this debugging section at the top of your form -->
+                <div style="display: none;">
+                    <p>Debug: Found {{ companies|length }} companies</p>
+                    <ul>
+                    {% for company in companies %}
+                        <li>{{ company.id }} - {{ company.company_name }}</li>
+                    {% endfor %}
+                    </ul>
+                </div>
+
                 <form method="POST" action="{% url 'assign_company_work' %}">
                     {% csrf_token %}
                     
@@ -329,12 +339,12 @@
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <div class="form-group">
-                                    <label class="form-label">Company</label>
-                                    <select name="company" class="form-select" required>
-                                        <option value="">Select Company</option>
+                                <div class="form-group mb-3">
+                                    <label for="company_id">Select Company</label>
+                                    <select class="form-control" id="company_id" name="company_id" required>
+                                        <option value="">Select a company</option>
                                         {% for company in companies %}
-                                            <option value="{{ company.id }}">{{ company.name }}</option>
+                                            <option value="{{ company.id }}">{{ company.company_name }}</option>
                                         {% endfor %}
                                     </select>
                                 </div>

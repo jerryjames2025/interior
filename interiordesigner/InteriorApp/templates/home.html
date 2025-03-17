@@ -288,18 +288,19 @@
             <a href="{% url 'admin_login' %}" class="logo" title="Admin Login">AURA DESIGNS</a>
             <nav class="nav-links">
                 <a href="{% url 'slogin' %}">Seller's Corner</a>
-                {% if not user.is_authenticated %}
+                {% comment %} {% if not user.is_authenticated %} {% endcomment %}
                     {% comment %} <a href="{% url 'login' %}">Login</a>
                     <a href="{% url 'register' %}">Register</a> {% endcomment %}
                     <a href="{% url 'dlogin' %}">Designer Corner</a>
-                {% else %}
+                    <a href="{% url 'company_login' %}">Company Login </a>
+                {% comment %} {% else %}
                     {% if is_designer %}
                         <a href="{% url 'designer_dashboard' %}">Dashboard</a>
                     {% else %}
                         <a href="{% url 'customer_dashboard' %}">Dashboard</a>
                     {% endif %}
                     <a href="{% url 'logout' %}">Logout</a>
-                {% endif %}
+                {% endif %} {% endcomment %}
             </nav>
         </div>
     </header>

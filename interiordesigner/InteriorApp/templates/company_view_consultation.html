@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consultation Details - {{ consultation.design_name }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    {% load static %}
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3a0ca3;
+            --success: #00a86b;
+            --warning: #ffa000;
+            --danger: #ff4d4f;
+            --info: #1890ff;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+        
+        .navbar {
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .consultation-container {
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .consultation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .consultation-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #333;
+        }
+        
+        .consultation-status {
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+        
+        .status-pending {
+            background-color: #fff8e6;
+            color: #ffa000;
+        }
+        
+        .status-accepted {
+            background-color: #e6f7ee;
+            color: #00a86b;
+        }
+        
+        .status-declined {
+            background-color: #ffeaea;
+            color: #ff4d4f;
+        }
+        
+        .status-completed {
+            background-color: #e6f0ff;
+            color: #1890ff;
+        }
+        
+        .consultation-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .info-card {
+            background-color: #f9fafc;
+            border-radius: 8px;
+            padding: 1.25rem;
+        }
+        
+        .info-label {
+            font-size: 0.875rem;
+            color: #6c757d;
+            margin-bottom: 0.5rem;
+        }
+        
+        .info-value {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .progress-section {
+            margin-bottom: 2rem;
+        }
+        
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .progress-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .progress-percentage {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #00a86b;
+        }
+        
+        .progress-bar-container {
+            height: 12px;
+            background-color: #f0f0f0;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4361ee, #3a0ca3);
+            border-radius: 6px;
+            transition: width 0.5s ease;
+        }
+        
+        .progress-milestones {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+        }
+        
+        .milestone {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            width: 25%;
+        }
+        
+        .milestone-dot {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: #f0f0f0;
+            border: 2px solid #fff;
+            box-shadow: 0 0 0 2px #ddd;
+            margin-bottom: 0.5rem;
+            z-index: 1;
+        }
+        
+        .milestone.active .milestone-dot {
+            background-color: #4361ee;
+            box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.3);
+        }
+        
+        .milestone-label {
+            font-size: 0.75rem;
+            color: #6c757d;
+            text-align: center;
+        }
+        
+        .milestone.active .milestone-label {
+            color: #4361ee;
+            font-weight: 600;
+        }
+        
+        .milestone-connector {
+            position: absolute;
+            top: 12px;
+            left: 50%;
+            height: 2px;
+            background-color: #ddd;
+            width: 100%;
+            z-index: 0;
+        }
+        
+        .milestone:first-child .milestone-connector {
+            display: none;
+        }
+        
+        .update-progress-form {
+            background-color: #f9fafc;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .form-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 1rem;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .btn-primary {
+            background-color: #4361ee;
+            border-color: #4361ee;
+        }
+        
+        .btn-primary:hover {
+            background-color: #3a0ca3;
+            border-color: #3a0ca3;
+        }
+        
+        .designer-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .designer-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background-color: #4361ee;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+        
+        .designer-details {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .designer-name {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .designer-role {
+            font-size: 0.875rem;
+            color: #6c757d;
+        }
+        
+        .notes-section {
+            margin-top: 2rem;
+        }
+        
+        .notes-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 1rem;
+        }
+        
+        .notes-content {
+            background-color: #f9fafc;
+            border-radius: 8px;
+            padding: 1.25rem;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 1rem;
+        }
+        
+        .back-button {
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'company_dashboard' %}">AURA DESIGNS</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'company_dashboard' %}">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'company_projects' %}">Projects</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'company_workers' %}">Workers</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'company_profile' %}">Profile</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'logout' %}">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container py-5">
+        <a href="{% url 'company_dashboard' %}" class="btn btn-outline-primary back-button">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+        
+        <div class="consultation-container">
+            <div class="consultation-header">
+                <h1 class="consultation-title">{{ consultation.design_name }}</h1>
+                <span class="consultation-status status-{{ consultation.status }}">
+                    {{ consultation.status|title }}
+                </span>
+            </div>
+            
+            <div class="consultation-info">
+                <div class="info-card">
+                    <div class="info-label">Client</div>
+                    <div class="info-value">{{ consultation.client_name }}</div>
+                </div>
+                
+                <div class="info-card">
+                    <div class="info-label">Room Type</div>
+                    <div class="info-value">{{ consultation.room_type|title }}</div>
+                </div>
+                
+                <div class="info-card">
+                    <div class="info-label">Budget</div>
+                    <div class="info-value">₹{{ consultation.budget }}</div>
+                </div>
+                
+                <div class="info-card">
+                    <div class="info-label">Preferred Date</div>
+                    <div class="info-value">{{ consultation.preferred_date|date:"F d, Y" }}</div>
+                </div>
+                
+                <div class="info-card">
+                    <div class="info-label">Preferred Time</div>
+                    <div class="info-value">{{ consultation.preferred_time }}</div>
+                </div>
+                
+                <div class="info-card">
+                    <div class="info-label">Created On</div>
+                    <div class="info-value">{{ consultation.created_at|date:"F d, Y" }}</div>
+                </div>
+            </div>
+            
+            <div class="designer-section">
+                <h3 class="section-title mb-3">Designer Information</h3>
+                <div class="designer-info">
+                    <div class="designer-avatar">
+                        {{ consultation.designer.full_name|slice:":1" }}
+                    </div>
+                    <div class="designer-details">
+                        <div class="designer-name">{{ consultation.designer.full_name }}</div>
+                        <div class="designer-role">Interior Designer</div>
+                    </div>
+                </div>
+            </div>
+            
+            {% if consultation.status == 'accepted' or consultation.status == 'completed' %}
+            <div class="progress-section mt-4">
+                <div class="progress-header">
+                    <h3 class="progress-title">Project Progress</h3>
+                    <div class="progress-percentage">{{ consultation.completion_percentage }}%</div>
+                </div>
+                
+                <div class="progress-bar-container">
+                    <div class="progress-bar" style="width: {{ consultation.completion_percentage }}%;"></div>
+                </div>
+                
+                <div class="progress-milestones">
+                    <div class="milestone {% if consultation.completion_percentage >= 0 %}active{% endif %}">
+                        <div class="milestone-dot"></div>
+                        <div class="milestone-connector"></div>
+                        <div class="milestone-label">Started</div>
+                    </div>
+                    <div class="milestone {% if consultation.completion_percentage >= 33 %}active{% endif %}">
+                        <div class="milestone-dot"></div>
+                        <div class="milestone-connector"></div>
+                        <div class="milestone-label">In Progress</div>
+                    </div>
+                    <div class="milestone {% if consultation.completion_percentage >= 66 %}active{% endif %}">
+                        <div class="milestone-dot"></div>
+                        <div class="milestone-connector"></div>
+                        <div class="milestone-label">Advanced</div>
+                    </div>
+                    <div class="milestone {% if consultation.completion_percentage >= 100 %}active{% endif %}">
+                        <div class="milestone-dot"></div>
+                        <div class="milestone-label">Completed</div>
+                    </div>
+                </div>
+                
+                {% if consultation.status != 'completed' %}
+                <div class="update-progress-form">
+                    <h4 class="form-title">Update Project Progress</h4>
+                    <form method="POST" action="{% url 'company_view_consultation' consultation.id %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="completion_percentage" class="form-label">Completion Percentage</label>
+                            <input type="range" class="form-range" min="0" max="100" step="5" 
+                                id="completion_percentage" name="completion_percentage" 
+                                value="{{ consultation.completion_percentage }}"
+                                oninput="this.nextElementSibling.value = this.value + '%'">
+                            <output>{{ consultation.completion_percentage }}%</output>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Update Progress</button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+            {% elif consultation.status == 'pending' %}
+            <div class="action-buttons mt-4">
+                <form method="POST" action="{% url 'company_respond_consultation' consultation.id 'accept' %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success">Accept Request</button>
+                </form>
+                <form method="POST" action="{% url 'company_respond_consultation' consultation.id 'decline' %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Decline Request</button>
+                </form>
+            </div>
+            {% endif %}
+            
+            {% if consultation.notes %}
+            <div class="notes-section">
+                <h3 class="notes-title">Project Notes</h3>
+                <div class="notes-content">
+                    {{ consultation.notes|linebreaks }}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-light py-4 mt-5">
+        <div class="container text-center">
+            <p class="mb-0">© 2025 AURA DESIGNS. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Add any JavaScript functionality here
+        document.addEventListener('DOMContentLoaded', function() {
+            const rangeInput = document.getElementById('completion_percentage');
+            if (rangeInput) {
+                rangeInput.addEventListener('input', function() {
+                    // Update the progress bar dynamically
+                    document.querySelector('.progress-bar').style.width = this.value + '%';
+                    document.querySelector('.progress-percentage').textContent = this.value + '%';
+                    
+                    // Update milestone active states
+                    const milestones = document.querySelectorAll('.milestone');
+                    milestones.forEach((milestone, index) => {
+                        if (index === 0 && this.value >= 0) milestone.classList.add('active');
+                        else if (index === 1 && this.value >= 33) milestone.classList.add('active');
+                        else if (index === 2 && this.value >= 66) milestone.classList.add('active');
+                        else if (index === 3 && this.value >= 100) milestone.classList.add('active');
+                        else milestone.classList.remove('active');
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html> 
