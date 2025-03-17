@@ -2219,7 +2219,6 @@ def user_dashboard(request):
     }
     return render(request, 'user_dashboard.html', context)
 
-@login_required
 def book_consultation(request, design_id):
     if request.method == 'POST':
         try:
@@ -2247,7 +2246,45 @@ def book_consultation(request, design_id):
         'error': 'Invalid request method'
     })
 
-@login_required
+
 def view_consultations(request):
     consultations = Consultation.objects.filter(user=request.user).order_by('-created_at')
     return render(request, 'user_consultations.html', {'consultations': consultations})
+
+
+def assign_company_work(request):
+    # Get all companies
+    companies = Company.objects.all()
+    
+    if request.method == 'POST':
+        # Process form submission
+        company_id = request.POST.get('company')
+        company = Company.objects.get(id=company_id)
+        
+        # Create a new company assignment
+        assignment = CompanyAssignment(
+            designer=request.user,
+            company=company,
+            client_name=request.POST.get('full_name'),
+            client_email=request.POST.get('email'),
+            client_phone=request.POST.get('phone'),
+            room_type=request.POST.get('room_type'),
+            design_name=request.POST.get('design_name'),
+            design_style=request.POST.get('design_style'),
+            start_date=request.POST.get('start_date'),
+            end_date=request.POST.get('end_date'),
+            milestones=request.POST.get('milestones'),
+            update_frequency=request.POST.get('update_frequency'),
+            communication_method=','.join(request.POST.getlist('communication_method')),
+            meeting_times=request.POST.get('meeting_times'),
+            additional_notes=request.POST.get('additional_notes')
+        )
+        assignment.save()
+        
+        messages.success(request, 'Work assignment submitted successfully!')
+        return redirect('designer_dashboard')
+    
+    context = {
+        'companies': companies
+    }
+    return render(request, 'assign_company_work.html', context)

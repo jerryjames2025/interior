@@ -132,6 +132,7 @@ urlpatterns = [
     path('designer/handle-consultation/<int:consultation_id>/<str:action>/', views.handle_consultation, name='handle_consultation'),
     path('notifications/', views.get_notifications, name='get_notifications'),
     path('notifications/mark-read/<int:notification_id>/', views.mark_notification_read, name='mark_notification_read'),
+    path('designer/assign-company-work/', views.assign_company_work, name='assign_company_work'),
 ]
 
 

@@ -385,3 +385,32 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"{self.title} - {self.user.username}"
+
+class CompanyAssignment(models.Model):
+    designer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='company_assignments')
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='assignments')
+    client_name = models.CharField(max_length=100)
+    client_email = models.EmailField()
+    client_phone = models.CharField(max_length=20)
+    room_type = models.CharField(max_length=50)
+    design_name = models.CharField(max_length=100)
+    design_style = models.CharField(max_length=50)
+    start_date = models.DateField()
+    end_date = models.DateField()
+    milestones = models.TextField(blank=True, null=True)
+    update_frequency = models.CharField(max_length=20)
+    communication_method = models.CharField(max_length=100)
+    meeting_times = models.TextField(blank=True, null=True)
+    additional_notes = models.TextField(blank=True, null=True)
+    status = models.CharField(max_length=20, default='pending', choices=[
+        ('pending', 'Pending'),
+        ('accepted', 'Accepted'),
+        ('in_progress', 'In Progress'),
+        ('completed', 'Completed'),
+        ('rejected', 'Rejected')
+    ])
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"{self.design_name} - {self.company.name}"
