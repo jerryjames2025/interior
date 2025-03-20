@@ -89,8 +89,10 @@
         transform: translateY(-2px);
     }
 </style>
-{% endblock %}
 
+<!-- Include search CSS -->
+<link rel="stylesheet" href="{% static 'css/search.css' %}">
+{% endblock %}
 
 {% block body %}
 <nav class="navbar">
@@ -104,8 +106,7 @@
                     <a href="{% url 'products' %}" class="back-button">Back to Products</a>
                 </div>   
             </button>
-              
-
+            
             <button class="dropdown-trigger">
                 <div class="back-button-container" style="text-align: center; margin-top: 3px;">
                     <a href="{% url 'products' %}" class="back-button">Categories</a>
@@ -118,6 +119,10 @@
         <div class="search-bar">
             <input type="text" placeholder="Search products..." id="searchInput">
             <button type="submit" id="searchButton"><i class="fas fa-search"></i></button>
+        </div>
+        <div id="searchResults" class="search-results"></div>
+        <div class="search-loading">
+            <div class="spinner"></div>
         </div>
     </div>
 
@@ -290,9 +295,6 @@
 <div class="product-page-container">
     <!-- Main Content -->
     <main class="products-main">
-        <!-- Top Bar with Sort -->
-       
-
         <!-- Products Grid -->
         <div class="products-grid">
             {% for product in products %}
@@ -317,23 +319,12 @@
     </main>
 </div>
 
-
-
+<!-- Include the search.js file -->
+<script src="{% static 'js/search.js' %}"></script>
 <script>
-    document.getElementById('searchButton').addEventListener('click', function() {
-        const query = document.getElementById('searchInput').value;
-        if (query) {
-            // Redirect to the products page with the search query
-            window.location.href = "{% url 'products' %}?search=" + encodeURIComponent(query);
-        }
-    });
-
-    // Optional: Allow pressing 'Enter' to submit the search
-    document.getElementById('searchInput').addEventListener('keypress', function(event) {
-        if (event.key === 'Enter') {
-            document.getElementById('searchButton').click();
-        }
+    // Initialize the live search for products
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeSearch('products');
     });
 </script>
-
 {% endblock %}

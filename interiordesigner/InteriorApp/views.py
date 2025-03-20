@@ -2917,3 +2917,38 @@ def assign_company_work(request):
 # Try getting all companies without filtering by status
 companies = Company.objects.all()
 print(f"Found {companies.count()} total companies")
+
+def search_products(request):
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        query = request.GET.get('q', '').strip()
+        if len(query) >= 2:
+            try:
+                products = Product.objects.filter(
+                    Q(product_name__icontains=query) |
+                    Q(description__icontains=query) |
+                    Q(category__icontains=query)
+                ).distinct()[:10]
+                
+                results = [{
+                    'id': product.id,
+                    'name': product.product_name,
+                    'category': product.category,
+                    'description': product.description[:100] + '...' if product.description else '',
+                    'image': product.image.url if product.image else None,
+                    'price': str(product.price)
+                } for product in products]
+                
+                return JsonResponse({
+                    'success': True,
+                    'results': results
+                })
+            except Exception as e:
+                return JsonResponse({
+                    'success': False,
+                    'error': str(e)
+                })
+    
+    return JsonResponse({
+        'success': False,
+        'results': []
+    })

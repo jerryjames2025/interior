@@ -151,6 +151,8 @@ urlpatterns = [
     path('company/consultation/<int:consultation_id>/<str:action>/', views.company_respond_consultation, name='company_respond_consultation'),
     path('company/consultation/<int:consultation_id>/', views.company_view_consultation, name='company_view_consultation'),
     path('designer/consultation/<int:consultation_id>/', views.designer_view_consultation, name='designer_view_consultation'),
+    path('search-products/', views.search_products, name='search_products'),
+    path('search-designs/', views.search_designs, name='search_designs'),
 ]
 
 

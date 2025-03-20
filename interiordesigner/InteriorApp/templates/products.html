@@ -566,7 +566,7 @@
                     <h3 class="product-name">{{ product.product_name }}</h3>
                     <p class="product-description">{{ product.description|truncatechars:100 }}</p>
                     <div class="product-price">₹{{ product.price }}</div>
-                    <button class="add-to-cart-btn" onclick="addToCart({{ product.id }})">
+                    <button class="add-to-cart-btn" onclick="addToCart({{ product.id }})" id="add-to-cart-btn">
                         <i class="fas fa-shopping-cart"></i> Add to Cart
                     </button>
                 </div>
